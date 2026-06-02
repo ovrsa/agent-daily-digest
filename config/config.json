@@ -1,0 +1,45 @@
+{
+  "digest_dir": "digests",
+  "max_items_per_source": 12,
+  "summary_model": "claude-sonnet-4-6",
+  "sources": {
+    "simonw": true,
+    "ai_news_smol": true,
+    "latent_space": true,
+    "interconnects": true,
+    "hf_papers": true,
+    "hackernews": true,
+    "reddit": true,
+    "gh_releases": true
+  },
+  "hackernews_keywords": [
+    "llm",
+    "claude",
+    "coding agent",
+    "agent",
+    "rag",
+    "anthropic",
+    "openai",
+    "gpt",
+    "cursor",
+    "cline",
+    "aider",
+    "swe-bench",
+    "mcp"
+  ],
+  "reddit_subs": [
+    "LocalLLaMA",
+    "ClaudeAI",
+    "cursor",
+    "MachineLearning"
+  ],
+  "gh_repos": [
+    "anthropics/claude-code",
+    "Aider-AI/aider",
+    "cline/cline",
+    "continuedev/continue",
+    "openai/codex",
+    "princeton-nlp/SWE-agent",
+    "block/goose"
+  ]
+}

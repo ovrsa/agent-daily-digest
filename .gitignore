@@ -1,0 +1,29 @@
+# raw fetch output (transient)
+*.raw.json
+llm-digest-raw-*.json
+raw-*.json
+digest-check.json
+
+# logs
+logs/
+*.log
+
+# OS / editor
+.DS_Store
+*.swp
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# local Claude Code overrides
+.claude/settings.local.json
+
+# harness work artifacts (not part of the digest product)
+verification-summary.md
+observation-summary.md
+review-summary.md
+research.md
+progress.md
