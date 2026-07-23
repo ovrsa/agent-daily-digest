@@ -350,8 +350,9 @@ Tier C is dropped.
 For Tier B, a merely mentioned outbound repository is not sufficient. Concrete
 artifact evidence means either:
 
-- the canonical item is itself a public repository and its README is captured
-  through that repository's official API under the same network limits, or
+- the canonical item is itself a public repository and the normal
+  canonical-page extraction captures substantive rendered README, code, or
+  configuration text, or
 - the captured canonical text contains an actual code/configuration excerpt,
   quantitative result, or detailed operating procedure.
 
@@ -426,7 +427,7 @@ list of all supporting source IDs and URLs.
 - Cap the output at ten items. If more than ten pass, select the ten with the
   highest deterministic ranking tuple:
   1. evidence strength, descending
-  2. credibility tier (`S`, then `A`, then `B`)
+  2. credibility tier (`S`, then `S-preprint`, then `A`, then `B`)
   3. primary-category priority (`case-study`, `loop`, `orchestration`,
      `verification`, `isolation-control`, `operations`, `context-state`,
      `survey`)
@@ -519,8 +520,8 @@ Update `config/config.json` to:
 
 - remove the fixed HN keyword list
 - configure the exact defaults: HN 24-hour window, inclusive 30-point floor,
-  50-story cap, blog 72-hour window, release seven-day window, arXiv 30-day
-  window, and 14-day source-staleness threshold
+  blog 72-hour window, release seven-day window, arXiv 30-day window, and
+  14-day source-staleness threshold
 - configure arXiv categories and the case-insensitive discovery terms
   `survey`, `review`, and `systematization`; default categories are `cs.SE`,
   `cs.AI`, `cs.MA`, and `cs.CL`
