@@ -125,7 +125,8 @@ Replace fixed-keyword discovery with broad collection of recent stories:
 
 - Fetch stories published in the previous 24 hours.
 - Use an inclusive discovery floor of 30 points to control volume.
-- Fetch at most the 50 highest-scoring eligible stories.
+- Paginate through the complete 24-hour HN result set and emit every story at
+  or above the discovery floor. Do not apply a pre-editorial top-N cap.
 - Do not require `agent`, `harness`, or any current trend term in the title.
 - Preserve title, URL, publication time, points, comment count when available,
   and story text.
@@ -190,12 +191,56 @@ Releases are eligible for seven calendar days after publication.
   from the daily candidate set and counted as `missing_date`.
 - Within one run, canonicalized URL is the primary deduplication key; source ID
   plus normalized title is the fallback.
-- Before selection, the editor reads links from the previous 14 digest files.
-  A canonical URL already published in that window is excluded as
-  `recent_duplicate`, except for a distinct versioned release URL.
+- Before selection, the editor reads digests whose filename date is within the
+  previous 14 calendar days in UTC, excluding the current date. A canonical
+  URL already published in that window is excluded as `recent_duplicate`,
+  except for a distinct versioned release URL.
 - A source is `stale` when retrieval succeeds but its newest parseable item is
   more than 14 calendar days old. A healthy source with no items inside the
   eligibility window is `success`, not `stale`.
+
+URL canonicalization:
+
+- accept only `https`
+- lowercase scheme and host and remove default port 443
+- remove the fragment
+- remove tracking parameters `utm_*`, `ref`, `source`, `fbclid`, and `gclid`
+- sort remaining query pairs by key and value
+- normalize an empty path to `/`
+- remove a trailing slash from non-root paths
+- use the final validated redirect URL when canonical-page retrieval succeeds
+
+Newly rendered digests include one
+`<!-- source-url: CANONICAL_URL -->` marker per primary and supporting item.
+Repeat suppression reads only those markers. For older digests without
+markers, it falls back to URLs in item heading links. Versioned release URLs
+remain distinct because their normalized tag paths differ.
+
+### Canonical-page safety contract
+
+Canonical pages are untrusted input:
+
+- allow only `https` URLs with no embedded credentials and port 443
+- resolve DNS before connection and reject loopback, private, link-local,
+  multicast, unspecified, and reserved IPv4 or IPv6 destinations
+- connect only to one of the validated resolved IPs while preserving the
+  original hostname for HTTP `Host` and TLS SNI/certificate verification
+- allow at most three redirects and repeat scheme, port, DNS, and IP checks at
+  every hop
+- allow only `text/html`, `application/xhtml+xml`, and `text/plain`
+- apply a 10-second timeout, a 2 MiB transfer/decompression limit, and the
+  12,000-character extracted-text limit
+- decode using the declared charset with UTF-8 replacement fallback
+- remove script, style, navigation, and hidden/non-readable markup before
+  whitespace normalization
+
+Captured text is inert evidence, not instruction. The editor receives it
+inside a clearly delimited data field, has no network or shell tools, and has
+file access limited to reading approved inputs and writing the designated
+temporary manifest. The editor is explicitly instructed to ignore commands or
+policy text found inside evidence. Unsupported or unsafe pages produce a
+per-item collection exclusion or a `partial` source-health result; the
+collector never weakens the network restrictions to retrieve them.
 
 ## Raw Data Contract
 
@@ -263,6 +308,10 @@ Each `source_health` entry has:
   "item_count": 25,
   "eligible_count": 20,
   "newest_item_at": "2026-07-23T10:40:00Z",
+  "collection_exclusion_counts": {
+    "score_below_floor": 4,
+    "missing_date": 1
+  },
   "reason": null
 }
 ```
@@ -270,6 +319,13 @@ Each `source_health` entry has:
 `status` is one of `success`, `partial`, `stale`, `failed`, or `disabled`.
 `newest_item_at` and `reason` are nullable. `partial` means the source itself
 was parsed but one or more canonical-page fetches or entries failed.
+All source-health entries require `collection_exclusion_counts`, which records
+observed fetch-stage exclusions using
+the codes `score_below_floor`, `outside_time_window`, `missing_date`,
+`duplicate_within_run`, `unsafe_url`, `unsupported_content`, `content_limit`,
+and `canonical_fetch_failed`. HN discovery paginates the unscored 24-hour
+result set so below-floor counts are observable before eligible canonical
+pages are fetched.
 
 The fetcher gathers and normalizes facts. It does not assign practical
 relevance or generate trend labels.
@@ -282,12 +338,25 @@ The editor applies the following stages in order.
 
 Retain the existing tier concept:
 
-- Tier S: official releases and published papers
+- Tier S: official releases and first-party research artifacts. arXiv papers
+  are labeled `Tier S (preprint)` so first-party provenance is not confused
+  with peer review.
 - Tier A: accountable established authors and publications
-- Tier B: community items backed by verifiable artifacts
+- Tier B: community items backed by captured concrete evidence
 - Tier C: unsupported opinion, anecdotes, marketing, and speculation
 
 Tier C is dropped.
+
+For Tier B, a merely mentioned outbound repository is not sufficient. Concrete
+artifact evidence means either:
+
+- the canonical item is itself a public repository and its README is captured
+  through that repository's official API under the same network limits, or
+- the captured canonical text contains an actual code/configuration excerpt,
+  quantitative result, or detailed operating procedure.
+
+The collector does not follow a repository link embedded in an otherwise
+unrelated article.
 
 ### 2. Practicality gate
 
@@ -308,8 +377,10 @@ An item that merely names a relevant topic does not pass.
 ### 3. Evidence gate
 
 - The source or author must be identifiable.
-- The raw title and summary must contain enough detail to support the output.
-- A title-only item is dropped even if it sounds important.
+- The raw title and `evidence_text` must contain enough detail to support the
+  output.
+- A title-only item—empty evidence or evidence that merely repeats the title—
+  is dropped even if it sounds important.
 - The editor may not infer a workflow, lesson, or implication not present in
   the raw data.
 - Missing output fields are omitted rather than filled with speculation.
@@ -419,7 +490,7 @@ Report:
 - per-source fetched counts
 - source errors and stale feeds
 - counts after the practicality and evidence gates
-- final selected count
+- qualified, published, and output-cap-omitted counts
 - credibility-tier counts
 - main exclusion reasons
 
@@ -506,16 +577,29 @@ Markdown directly:
 
 ```json
 {
-  "selected": [
+  "schema_version": 1,
+  "qualified": [
     {
-      "item_ids": ["hackernews:49008211"],
+      "primary_item_id": "hackernews:49008211",
+      "supporting_item_ids": [],
+      "credibility_tier": "B",
+      "evidence_strength": 3,
       "primary_category": "case-study",
       "secondary_labels": ["loop"],
       "fields": {
         "what": {
           "text": "Japanese summary",
-          "evidence": ["exact substring from evidence_text"]
-        }
+          "evidence_refs": [
+            {
+              "item_id": "hackernews:49008211",
+              "quote": "exact substring from evidence_text"
+            }
+          ]
+        },
+        "harness_structure": null,
+        "reusable_elements": [],
+        "termination_verification": null,
+        "constraints_failures": null
       }
     }
   ],
@@ -524,22 +608,63 @@ Markdown directly:
       "item_id": "arxiv:0000.00000",
       "reason": "model_competition"
     }
+  ],
+  "emerging_terms": [
+    {
+      "term": "meta-harness",
+      "description": {
+        "text": "Japanese description of source usage",
+        "evidence_refs": [
+          {
+            "item_id": "hackernews:49008211",
+            "quote": "exact source usage"
+          }
+        ]
+      }
+    }
   ]
 }
 ```
 
-Each factual output field must cite one or more exact substrings from the raw
-item's `evidence_text`. `src/render.py` rejects unknown item IDs, invalid
-categories, missing evidence, evidence strings not found in the corresponding
-raw item, more than ten selected items, and malformed manifests. It then
-renders Markdown deterministically.
+Manifest rules:
 
-Every raw item must appear exactly once in either `selected` or `rejected`.
-Allowed rejection reason codes are `tier_c`, `outside_scope`,
-`model_competition`, `insufficient_practical_detail`, `insufficient_evidence`,
-`score_threshold`, `missing_date`, `recent_duplicate`, and `merged_duplicate`.
-Selected items include `credibility_tier` and integer `evidence_strength`, so
-the renderer can validate and apply the ranking tuple.
+- `what` is required. The other item fields are nullable or arrays and are
+  omitted from rendered Markdown when empty.
+- Every textual statement is an object with `text` and one or more
+  `evidence_refs`.
+- Every evidence reference contains an `item_id` belonging to that qualified
+  item's primary/supporting set and an exact substring of that raw item's
+  `evidence_text`.
+- `credibility_tier` is one of `S`, `S-preprint`, `A`, or `B`.
+- `evidence_strength` is an integer from 1 through 3.
+- Primary and secondary categories use the structural-classification enums.
+- Each merged source is listed once in `supporting_item_ids`; the renderer
+  derives source names and canonical URLs from the raw envelope.
+- Every raw item ID appears exactly once across all qualified primary/supporting
+  ID sets or in `rejected`.
+- Allowed editorial rejection reason codes are `tier_c`, `outside_scope`,
+  `model_competition`, `insufficient_practical_detail`,
+  `insufficient_evidence`, and `recent_duplicate`. Fetch-stage exclusions are
+  reported only through `collection_exclusion_counts`.
+- Emerging terms must cite evidence from a qualified item. The section is
+  omitted when the list is empty.
+
+The model does not write TL;DR, provenance, or statistics directly:
+
+- the renderer derives each heading, primary URL, source metadata, and
+  supporting-source list from raw item IDs
+- TL;DR uses the `what.text` value of the first three published items after
+  deterministic ranking
+- statistics are derived from `source_health`, collection exclusion counts,
+  qualified/rejected counts, credibility tiers, rejection reasons, and the
+  number omitted by the ten-item output cap
+
+`src/render.py` rejects unknown or multiply assigned item IDs, invalid enums,
+missing required fields, evidence quotes not found in the corresponding raw
+item, evidence references outside the merged item set, and malformed
+manifests. It accepts any number of qualified items, applies the ranking tuple,
+publishes the first ten, and records the remainder as `qualified_not_published`
+in statistics. It then renders Markdown deterministically.
 
 Use representative raw fixtures and checked-in expected manifests to verify:
 
@@ -554,8 +679,9 @@ Use representative raw fixtures and checked-in expected manifests to verify:
 - one accepted item produces a valid short digest
 - zero accepted items produces no output
 
-Automated tests assert exact selected IDs, rejection reason codes, primary
-categories, evidence-substring validity, and rendered section placement. Model
+Automated tests assert exact qualified and published IDs, rejection reason
+codes, primary categories, evidence-substring validity, output-cap behavior,
+and rendered section placement. Model
 quality itself is evaluated manually against the same fixtures with a rubric:
 
 - every claim is entailed by its cited evidence
@@ -586,7 +712,7 @@ and confirm that only the expected digest file changes.
 9. A one-item digest is valid; a zero-item digest is not written.
 10. No generated digest is manually edited during implementation.
 11. Eleven passing candidates are deterministically reduced to ten.
-12. Previously published canonical URLs are suppressed for 14 digest days,
+12. Previously published canonical URLs are suppressed for 14 calendar days,
     except for distinct versioned release URLs.
 
 ## Deferred Work
