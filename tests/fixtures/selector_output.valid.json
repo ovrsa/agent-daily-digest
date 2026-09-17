@@ -1,0 +1,86 @@
+{
+  "must_read": [
+    {
+      "article_id": "a001",
+      "scores": {
+        "practicality": 5,
+        "specificity_reproducibility": 5,
+        "novelty": 4,
+        "source_reliability": 5,
+        "reader_impact": 4,
+        "read_original_value": 5
+      },
+      "decision_reason": "Shows a reproducible change to a coding agent loop with measured results.",
+      "entry": {
+        "what_happened": {
+          "text": "The team split planning and execution into separate agent sessions and compared failure rates.",
+          "evidence_ids": ["a001-e1"]
+        },
+        "why_read": "Readers running long agent loops can compare the split against their own harness.",
+        "evidence": {
+          "text": "The post lists the configuration and a before/after table for 200 tasks.",
+          "evidence_ids": ["a001-e2", "a001-e3"]
+        },
+        "caveat": {
+          "text": "The comparison covers one internal task set.",
+          "evidence_ids": ["a001-e4"]
+        }
+      }
+    }
+  ],
+  "worth_knowing": [
+    {
+      "article_id": "a002",
+      "scores": {
+        "practicality": 4,
+        "specificity_reproducibility": 3,
+        "novelty": 4,
+        "source_reliability": 4,
+        "reader_impact": 3,
+        "read_original_value": 3
+      },
+      "decision_reason": "Adds a permission boundary option that changes tool configuration.",
+      "entry": {
+        "what_happened": {
+          "text": "A release added per-tool permission scopes.",
+          "evidence_ids": ["a002-e1"]
+        },
+        "why_read": "Harness operators can narrow tool permissions without wrapper scripts.",
+        "evidence": {
+          "text": "The release notes include the new configuration keys.",
+          "evidence_ids": ["a002-e2"]
+        },
+        "caveat": null
+      }
+    }
+  ],
+  "excluded": [
+    {
+      "article_id": "a003",
+      "scores": {
+        "practicality": 2,
+        "specificity_reproducibility": 1,
+        "novelty": 2,
+        "source_reliability": 3,
+        "reader_impact": 2,
+        "read_original_value": 1
+      },
+      "decision_reason": "Product announcement without concrete usage or numbers."
+    },
+    {
+      "article_id": "a004",
+      "scores": {
+        "practicality": 5,
+        "specificity_reproducibility": 5,
+        "novelty": 2,
+        "source_reliability": 4,
+        "reader_impact": 4,
+        "read_original_value": 3
+      },
+      "decision_reason": "Restates a001 from a secondary source."
+    }
+  ],
+  "duplicate_groups": [
+    {"representative_id": "a001", "duplicate_ids": ["a004"]}
+  ]
+}

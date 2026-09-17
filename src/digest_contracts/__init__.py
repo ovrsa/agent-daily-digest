@@ -57,7 +57,20 @@ from .metrics import (
     StageStatus,
     TokenUsage,
 )
-from .selection import MUST_READ_MAX, WORTH_KNOWING_MAX, AxisScores, Decision, Tier
+from .selection import (
+    MUST_READ_MAX,
+    WORTH_KNOWING_MAX,
+    AxisScores,
+    Decision,
+    DigestEntry,
+    DuplicateGroup,
+    EvidenceRef,
+    ExcludedArticle,
+    FactStatement,
+    IncludedArticle,
+    SelectorOutput,
+    Tier,
+)
 
 __all__ = [
     "ALLOWED_RUN_TRANSITIONS",
@@ -83,8 +96,13 @@ __all__ = [
     "CostBasis",
     "CostRecord",
     "Decision",
+    "DigestEntry",
+    "DuplicateGroup",
     "ErrorKind",
     "ErrorRecord",
+    "EvidenceRef",
+    "ExcludedArticle",
+    "FactStatement",
     "FindingAssessment",
     "FindingMetrics",
     "GateExclusionReason",
@@ -93,6 +111,7 @@ __all__ = [
     "GateResult",
     "HttpUrlStr",
     "ImprovementCandidate",
+    "IncludedArticle",
     "InvalidTransitionError",
     "JudgeFinding",
     "JudgeReport",
@@ -105,6 +124,7 @@ __all__ = [
     "ProcessedState",
     "RunMetrics",
     "RunStatus",
+    "SelectorOutput",
     "Severity",
     "SourceFetchResult",
     "SourceFetchStatus",
