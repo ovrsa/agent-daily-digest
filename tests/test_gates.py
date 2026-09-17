@@ -88,9 +88,9 @@ class TestGateOutcome:
     @pytest.mark.parametrize(
         "results",
         [
-            [failed("required_fields", "missing_url"), failed("not_known_duplicate", "duplicate_of_known_article")],
+            [f.passed_gate_results()[0], failed("not_previously_processed", "already_processed_url")],
             [failed("content_available", "body_fetch_failed")],
-            [failed("required_fields", "missing_url"), f.passed_gate_results()[1]],
+            f.passed_gate_results()[:2],
             [failed("required_fields", "missing_url"), failed("content_available", "body_fetch_failed")],
         ],
         ids=["gap", "not-from-first-gate", "ends-with-pass", "continues-after-failure"],
