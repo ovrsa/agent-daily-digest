@@ -10,6 +10,8 @@ from pydantic import StringConstraints, ValidationError
 from ._base import ContractModel, NonBlankStr
 
 ERROR_DETAIL_MAX_CHARS = 500
+_LOC_MAX_CHARS = 200
+_EXTRA_KEY_TOKEN = "<extra>"
 
 
 class ErrorKind(str, Enum):
@@ -40,7 +42,7 @@ class ErrorRecord(ContractModel):
 class ValidationIssue(ContractModel):
     """Location and error type of one Pydantic validation error, without the input."""
 
-    loc: Annotated[NonBlankStr, StringConstraints(max_length=200)]
+    loc: Annotated[NonBlankStr, StringConstraints(max_length=_LOC_MAX_CHARS)]
     type: Annotated[NonBlankStr, StringConstraints(max_length=100)]
 
     @classmethod
@@ -48,6 +50,15 @@ class ValidationIssue(ContractModel):
         # `include_input=False` keeps the rejected model output out of metrics.
         # Messages are dropped too, because custom validator messages may quote values.
         return tuple(
-            cls(loc=".".join(str(part) for part in item["loc"]) or "__root__", type=item["type"])
+            cls(loc=_safe_loc(item["loc"], item["type"]), type=item["type"])
             for item in error.errors(include_url=False, include_context=False, include_input=False)
         )
+
+
+def _safe_loc(parts: tuple[int | str, ...], error_type: str) -> str:
+    # The last part of an `extra_forbidden` loc is a key the model wrote, so it
+    # can be any length, blank, or an instruction; it must not reach metrics.
+    if error_type == "extra_forbidden" and parts:
+        parts = (*parts[:-1], _EXTRA_KEY_TOKEN)
+    loc = ".".join(str(part) for part in parts)[:_LOC_MAX_CHARS]
+    return loc if loc and not loc.isspace() else "__root__"
