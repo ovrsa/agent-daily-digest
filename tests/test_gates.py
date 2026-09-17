@@ -81,6 +81,27 @@ class TestGateOutcome:
         with pytest.raises(ValidationError):
             GateOutcome.model_validate(f.gate_outcome(results=results))
 
+    @pytest.mark.parametrize(
+        "results",
+        [
+            [failed("required_fields", "missing_url"), failed("not_known_duplicate", "duplicate_of_known_article")],
+            [failed("content_available", "body_fetch_failed")],
+            [failed("required_fields", "missing_url"), f.passed_gate_results()[1]],
+            [failed("required_fields", "missing_url"), failed("content_available", "body_fetch_failed")],
+        ],
+        ids=["gap", "not-from-first-gate", "ends-with-pass", "continues-after-failure"],
+    )
+    def test_partial_evaluation_other_than_first_failure_is_forbidden(
+        self, results: list[dict[str, object]]
+    ) -> None:
+        with pytest.raises(ValidationError):
+            GateOutcome.model_validate(f.gate_outcome(results=results))
+
+    def test_short_circuit_after_passed_gates(self) -> None:
+        results = [*f.passed_gate_results()[:2], failed("not_previously_processed", "already_processed_url")]
+        outcome = GateOutcome.model_validate(f.gate_outcome(results=results))
+        assert outcome.exclusion_reasons == (GateExclusionReason.ALREADY_PROCESSED_URL,)
+
     def test_gates_must_follow_canonical_order(self) -> None:
         results = list(reversed(f.passed_gate_results()))
         with pytest.raises(ValidationError):

@@ -72,10 +72,10 @@ class GateResult(ContractModel):
 
 
 class GateOutcome(ContractModel):
-    """Gate results for one article, in `GATE_ORDER`.
+    """Gate results for one article, in `GATE_ORDER` from the first gate without gaps.
 
-    Evaluation may stop at the first failure or run every gate. An article
-    passes only when every gate was evaluated and passed.
+    Evaluation either stops right after the first failed gate or runs every
+    gate. An article passes only when every gate was evaluated and passed.
     """
 
     article_id: ArticleId
@@ -91,9 +91,11 @@ class GateOutcome(ContractModel):
 
     @model_validator(mode="after")
     def _check_results(self) -> GateOutcome:
-        positions = [GATE_ORDER.index(result.gate) for result in self.results]
-        if positions != sorted(set(positions)):
-            raise ValueError("gates must be unique and follow GATE_ORDER")
-        if self.passed and len(self.results) != len(GATE_ORDER):
-            raise ValueError("an article passes only after every gate is evaluated")
+        gates = tuple(result.gate for result in self.results)
+        if gates != GATE_ORDER[: len(gates)]:
+            raise ValueError("gates must follow GATE_ORDER from the first gate without gaps or repeats")
+        if len(gates) < len(GATE_ORDER):
+            *evaluated, last = self.results
+            if last.passed or not all(result.passed for result in evaluated):
+                raise ValueError("a partial evaluation must stop right after the first failed gate")
         return self
