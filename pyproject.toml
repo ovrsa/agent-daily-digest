@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agent-daily-digest"
+version = "0.1.0"
+description = "Evidence-backed daily digest for AI Agent and Coding Agent developers"
+readme = "README.md"
+# `X | None` in Pydantic model annotations is evaluated at runtime and needs 3.10.
+# The scheduled job runtime is not confirmed yet (#2).
+requires-python = ">=3.10"
+dependencies = [
+    # 2.11 is required by `mcp>=1.23.0`, which `claude-agent-sdk` depends on.
+    "pydantic>=2.11,<3",
+]
+
+[dependency-groups]
+dev = [
+    "jsonschema>=4.18",
+    "pytest>=8",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/digest_contracts"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--strict-markers", "-ra"]
+xfail_strict = true
