@@ -134,6 +134,9 @@ class TestNormalizedArticle:
             "https://",
             "https://example.com/has space",
             "javascript:alert(1)",
+            "https://example.com/a\n",
+            "https://user:secret@example.com/posts/1",
+            "https://token@example.com/posts/1",
         ],
     )
     def test_canonical_url_must_be_absolute_http(self, url: str) -> None:

@@ -31,6 +31,9 @@ def _check_http_url(value: str) -> str:
     parts = urlsplit(value)
     if parts.scheme not in ("http", "https") or not parts.hostname:
         raise ValueError("absolute http(s) URL required")
+    # Canonical URLs are written to the Git-tracked processing state.
+    if parts.username is not None or parts.password is not None:
+        raise ValueError("URL must not contain credentials")
     return value
 
 
