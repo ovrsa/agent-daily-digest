@@ -16,6 +16,7 @@ class ContractModel(BaseModel):
     Unknown keys are rejected (JSON Schema `additionalProperties: false`) and
     instances are frozen, so a status change has to go through the model's
     transition methods instead of attribute assignment.
+    Do not change a status with `model_copy(update=...)`; it skips validation.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)

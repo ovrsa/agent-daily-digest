@@ -19,6 +19,8 @@ FindingId = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9][A-Za-z0-9_-]
 
 
 class AuditTargetKind(str, Enum):
+    """Kind of audit target, used by #8 when it selects the articles the Judge audits."""
+
     MUST_READ = "must_read"
     WORTH_KNOWING = "worth_knowing"
     BOUNDARY_EXCLUDED = "boundary_excluded"

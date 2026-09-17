@@ -11,6 +11,7 @@ readme = "README.md"
 # The scheduled job runtime is not confirmed yet (#2).
 requires-python = ">=3.10"
 dependencies = [
+    # 2.11 is required by `mcp>=1.23.0`, which `claude-agent-sdk` depends on.
     "pydantic>=2.11,<3",
 ]
 
