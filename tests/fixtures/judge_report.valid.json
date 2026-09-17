@@ -1,0 +1,32 @@
+{
+  "findings": [
+    {
+      "finding_id": "F1",
+      "article_id": "a001",
+      "assessment": {
+        "category": "summary_faithfulness",
+        "severity": "high",
+        "problem": "The entry states a 40% cost reduction, but the body reports it for one benchmark only.",
+        "source_evidence": "Section 3: cost fell by 40% on the synthetic benchmark A.",
+        "confidence": "medium"
+      },
+      "improvement": {
+        "suggested_fix": "Limit the claim to benchmark A and add the condition to the caveat."
+      }
+    },
+    {
+      "finding_id": "F2",
+      "article_id": "a007",
+      "assessment": {
+        "category": "exclusion_validity",
+        "severity": "low",
+        "problem": "The exclusion reason says no code is shown, but a configuration example exists.",
+        "source_evidence": "Section 2 includes a settings example.",
+        "confidence": "high"
+      },
+      "improvement": {
+        "suggested_fix": "Re-evaluate specificity_reproducibility with the configuration example."
+      }
+    }
+  ]
+}
