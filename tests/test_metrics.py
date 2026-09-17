@@ -11,6 +11,8 @@ import factories as f
 from digest_contracts import (
     ALLOWED_RUN_TRANSITIONS,
     ALLOWED_STAGE_TRANSITIONS,
+    MUST_READ_MAX,
+    WORTH_KNOWING_MAX,
     ArticleMetrics,
     ErrorKind,
     ErrorRecord,
@@ -42,9 +44,14 @@ def pending(stage: str = "collect") -> StageMetrics:
 
 def running_run(**overrides: object) -> RunMetrics:
     stages = [f.stage(stage=name, status="pending", started_at=None, ended_at=None) for name in f.ALL_STAGES]
-    data = f.run_metrics(status="running", ended_at=None, stages=stages)
+    # Nothing is published before the publish stage succeeds.
+    data = f.run_metrics(status="running", ended_at=None, stages=stages, published_must_read_count=0)
     data.update(overrides)
     return RunMetrics.model_validate(data)
+
+
+def tiered_article(article_id: str, tier: str) -> dict[str, object]:
+    return f.article_metrics(article_id=article_id, gate=f.gate_outcome(article_id=article_id), tier=tier)
 
 
 def finished_stages(**statuses: str) -> list[dict[str, object]]:
@@ -375,7 +382,9 @@ class TestRunLifecycle:
 
     def test_aborted_run_with_closed_stages(self) -> None:
         stages = finished_stages(select="failed", render="skipped", publish="skipped", judge="skipped", comment="skipped")
-        run = RunMetrics.model_validate(f.run_metrics(status="aborted", stages=stages))
+        run = RunMetrics.model_validate(
+            f.run_metrics(status="aborted", stages=stages, published_must_read_count=0)
+        )
         assert run.status is RunStatus.ABORTED
 
     @pytest.mark.parametrize("target", [RunStatus.SUCCEEDED, RunStatus.FAILED, RunStatus.RUNNING])
@@ -420,9 +429,62 @@ class TestRunLifecycle:
             running_run(ended_at=f.T2)
 
     @pytest.mark.parametrize(
+        "status,stage_statuses,must_read,worth_knowing",
+        [
+            (
+                "failed",
+                {"select": "failed", "render": "skipped", "publish": "skipped", "judge": "skipped", "comment": "skipped"},
+                MUST_READ_MAX,
+                WORTH_KNOWING_MAX,
+            ),
+            ("failed", {"publish": "failed", "judge": "skipped", "comment": "skipped"}, 1, 0),
+            ("succeeded", {"render": "skipped", "publish": "skipped", "judge": "skipped", "comment": "skipped"}, 0, 1),
+        ],
+        ids=["publish-skipped", "publish-failed", "worth-knowing-only"],
+    )
+    def test_published_counts_must_match_publish_stage(
+        self, status: str, stage_statuses: dict[str, str], must_read: int, worth_knowing: int
+    ) -> None:
+        with pytest.raises(ValidationError):
+            RunMetrics.model_validate(
+                f.run_metrics(
+                    status=status,
+                    stages=finished_stages(**stage_statuses),
+                    published_must_read_count=must_read,
+                    published_worth_knowing_count=worth_knowing,
+                )
+            )
+
+    def test_published_counts_must_match_missing_publish_stage(self) -> None:
+        with pytest.raises(ValidationError):
+            RunMetrics.model_validate(f.run_metrics(stages=[]))
+
+    def test_published_counts_must_match_pending_publish_stage(self) -> None:
+        with pytest.raises(ValidationError):
+            running_run(published_must_read_count=1)
+
+    @pytest.mark.parametrize("tier,limit", [("must_read", MUST_READ_MAX), ("worth_knowing", WORTH_KNOWING_MAX)])
+    def test_articles_per_tier_over_limit(self, tier: str, limit: int) -> None:
+        articles = [tiered_article(f"a{i:03d}", tier) for i in range(limit + 1)]
+        with pytest.raises(ValidationError):
+            RunMetrics.model_validate(f.run_metrics(articles=articles))
+
+    def test_articles_per_tier_at_limit(self) -> None:
+        articles = [tiered_article(f"m{i:03d}", "must_read") for i in range(MUST_READ_MAX)]
+        articles += [tiered_article(f"w{i:03d}", "worth_knowing") for i in range(WORTH_KNOWING_MAX)]
+        run = RunMetrics.model_validate(
+            f.run_metrics(
+                articles=articles,
+                published_must_read_count=MUST_READ_MAX,
+                published_worth_knowing_count=WORTH_KNOWING_MAX,
+            )
+        )
+        assert len(run.articles) == MUST_READ_MAX + WORTH_KNOWING_MAX
+
+    @pytest.mark.parametrize(
         "field,duplicate",
         [
-            ("stages", lambda: [f.stage(), f.stage()]),
+            ("stages", lambda: [*finished_stages(), f.stage()]),
             ("sources", lambda: [f.source_metrics(), f.source_metrics()]),
             ("articles", lambda: [f.article_metrics(), f.article_metrics()]),
             ("llm_calls", lambda: [f.llm_call(), f.llm_call()]),

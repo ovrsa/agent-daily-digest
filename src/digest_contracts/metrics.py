@@ -294,6 +294,15 @@ class RunMetrics(ContractModel):
             if first_duplicate(keys) is not None:
                 raise ValueError(f"{label} must be unique")
 
+        for tier, limit in ((Tier.MUST_READ, MUST_READ_MAX), (Tier.WORTH_KNOWING, WORTH_KNOWING_MAX)):
+            if sum(article.tier is tier for article in self.articles) > limit:
+                raise ValueError(f"at most {limit} {tier.value} articles")
+        published = self.published_must_read_count or self.published_worth_knowing_count
+        if published and not any(
+            s.stage is StageName.PUBLISH and s.status is StageStatus.SUCCEEDED for s in self.stages
+        ):
+            raise ValueError("published counts require a succeeded publish stage")
+
         if (self.ended_at is None) != (self.status is RunStatus.RUNNING):
             raise ValueError("ended_at is required once the run is finished and forbidden while running")
         _check_order(self.started_at, self.ended_at)
