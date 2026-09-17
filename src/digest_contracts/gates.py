@@ -30,6 +30,8 @@ class GateExclusionReason(str, Enum):
     INVALID_URL = "invalid_url"
     MISSING_TITLE = "missing_title"
     MISSING_PUBLISHED_AT = "missing_published_at"
+    INVALID_PUBLISHED_AT = "invalid_published_at"
+    """`published_at` is present but cannot be parsed into a timezone-aware date-time."""
     BODY_FETCH_FAILED = "body_fetch_failed"
     """Fetching failed and the feed lacks enough primary information."""
     BODY_EXTRACTION_FAILED = "body_extraction_failed"
@@ -43,7 +45,13 @@ _R = GateExclusionReason
 GATE_REASONS: Mapping[GateName, frozenset[GateExclusionReason]] = MappingProxyType(
     {
         GateName.REQUIRED_FIELDS: frozenset(
-            {_R.MISSING_URL, _R.INVALID_URL, _R.MISSING_TITLE, _R.MISSING_PUBLISHED_AT}
+            {
+                _R.MISSING_URL,
+                _R.INVALID_URL,
+                _R.MISSING_TITLE,
+                _R.MISSING_PUBLISHED_AT,
+                _R.INVALID_PUBLISHED_AT,
+            }
         ),
         GateName.CONTENT_AVAILABLE: frozenset({_R.BODY_FETCH_FAILED, _R.BODY_EXTRACTION_FAILED}),
         GateName.NOT_PREVIOUSLY_PROCESSED: frozenset(

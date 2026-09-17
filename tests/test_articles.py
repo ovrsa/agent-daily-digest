@@ -41,9 +41,13 @@ class TestCollectedItem:
         with pytest.raises(ValidationError):
             CollectedItem.model_validate(f.collected_item(source_kind="survey"))
 
-    def test_naive_published_at_is_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            CollectedItem.model_validate(f.collected_item(published_at="2026-09-17T06:00:00"))
+    @pytest.mark.parametrize(
+        "published_at",
+        [f.T0, "2026-09-17T06:00:00", "2026-09-17", "Wed, 17 Sep 2026 06:00:00 +0900", "not a date"],
+    )
+    def test_published_at_is_kept_raw_for_the_required_fields_gate(self, published_at: str) -> None:
+        item = CollectedItem.model_validate(f.collected_item(published_at=published_at))
+        assert item.published_at == published_at
 
     def test_extra_fields_are_rejected(self) -> None:
         with pytest.raises(ValidationError):
@@ -142,6 +146,11 @@ class TestNormalizedArticle:
     def test_canonical_url_must_be_absolute_http(self, url: str) -> None:
         with pytest.raises(ValidationError):
             NormalizedArticle.model_validate(f.normalized_article(canonical_url=url))
+
+    @pytest.mark.parametrize("published_at", ["2026-09-17T06:00:00", "2026-09-17", "not a date"])
+    def test_published_at_must_be_timezone_aware(self, published_at: str) -> None:
+        with pytest.raises(ValidationError):
+            NormalizedArticle.model_validate(f.normalized_article(published_at=published_at))
 
     def test_canonical_url_is_not_rewritten(self) -> None:
         article = NormalizedArticle.model_validate(

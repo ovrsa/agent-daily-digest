@@ -45,6 +45,10 @@ class TestGateResult:
         with pytest.raises(ValidationError):
             GateResult.model_validate({"gate": "required_fields", "passed": "yes", "reason": None})
 
+    def test_unparseable_published_at_is_a_required_fields_reason(self) -> None:
+        result = GateResult.model_validate(failed("required_fields", "invalid_published_at"))
+        assert result.reason in GATE_REASONS[GateName.REQUIRED_FIELDS]
+
     def test_every_reason_belongs_to_exactly_one_gate(self) -> None:
         owners = [gate for reason in GateExclusionReason for gate in GATE_ORDER if reason in GATE_REASONS[gate]]
         assert len(owners) == len(GateExclusionReason)

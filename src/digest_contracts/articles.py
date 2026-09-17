@@ -44,9 +44,12 @@ class BodySource(str, Enum):
 class CollectedItem(ContractModel):
     """One candidate as a source returned it, before any gate.
 
-    Web content is untrusted input. `title`, `url` and `published_at` stay
-    optional and unvalidated here so the `required_fields` gate can record why
-    an item was dropped instead of the collector failing on it.
+    Web content is untrusted input. `title`, `url` and `published_at` keep the
+    raw values, optional and unvalidated here, so the `required_fields` gate
+    can record why an item was dropped instead of the collector failing on it.
+    That gate parses `published_at` into the timezone-aware
+    `NormalizedArticle.published_at` and records `invalid_published_at` when
+    it cannot.
     """
 
     article_id: ArticleId
@@ -54,7 +57,7 @@ class CollectedItem(ContractModel):
     source_kind: SourceKind
     title: str | None = None
     url: str | None = None
-    published_at: AwareDatetime | None = None
+    published_at: str | None = None
     feed_summary: str | None = None
 
 
