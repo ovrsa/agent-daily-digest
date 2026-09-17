@@ -14,6 +14,7 @@ from digest_contracts import (
     MUST_READ_MAX,
     WORTH_KNOWING_MAX,
     AxisScores,
+    CaveatStatement,
     Decision,
     DigestEntry,
     SelectorOutput,
@@ -80,6 +81,29 @@ class TestDigestEntry:
         del data["caveat"]
         assert DigestEntry.model_validate(data).caveat is None
 
+    def test_caveat_may_carry_no_evidence(self) -> None:
+        """留保 can name something the article does not say, so it cites nothing."""
+        text = "The post does not say which model version produced the numbers."
+        parsed = DigestEntry.model_validate(entry(caveat={"text": text, "evidence_ids": []}))
+        assert isinstance(parsed.caveat, CaveatStatement)
+        assert parsed.caveat.evidence_ids == ()
+        omitted = DigestEntry.model_validate(entry(caveat={"text": text}))
+        assert omitted.caveat is not None and omitted.caveat.evidence_ids == ()
+
+    def test_caveat_keeps_the_evidence_it_has(self) -> None:
+        caveat = {"text": "The comparison covers one internal task set.", "evidence_ids": ["e1", "e2"]}
+        parsed = DigestEntry.model_validate(entry(caveat=caveat))
+        assert parsed.caveat is not None and parsed.caveat.evidence_ids == ("e1", "e2")
+
+    @pytest.mark.parametrize(
+        "evidence_ids",
+        [["e1", "e1"], [""], ["   "], ["e" * 129]],
+        ids=["duplicate", "empty", "blank", "too-long"],
+    )
+    def test_caveat_evidence_ids_keep_their_constraints(self, evidence_ids: list[str]) -> None:
+        with pytest.raises(ValidationError):
+            DigestEntry.model_validate(entry(caveat={"text": "caveat", "evidence_ids": evidence_ids}))
+
     @pytest.mark.parametrize("field", ["what_happened", "why_read", "evidence"])
     def test_core_fields_are_required(self, field: str) -> None:
         data = entry()
@@ -93,6 +117,7 @@ class TestDigestEntry:
             {"why_read": ""},
             {"why_read": "   "},
             {"what_happened": {"text": " ", "evidence_ids": ["e1"]}},
+            {"what_happened": {"text": "fact", "evidence_ids": []}},
             {"evidence": {"text": "fact", "evidence_ids": []}},
             {"evidence": {"text": "fact", "evidence_ids": ["e1", "e1"]}},
             {"evidence": {"text": "fact", "evidence_ids": [""]}},
@@ -255,6 +280,21 @@ class TestSelectorStructuredOutput:
         data["excluded"][0]["scores"]["novelty"] = 6
         errors = list(Draft202012Validator(self.schema).iter_errors(data))
         assert {e.validator for e in errors} >= {"maxItems", "maximum"}
+
+    def test_only_the_caveat_may_omit_evidence(self) -> None:
+        defs = self.schema["$defs"]
+        fact, caveat = defs["FactStatement"], defs["CaveatStatement"]
+        assert list(caveat["properties"]) == ["text", "evidence_ids"]
+        assert fact["properties"]["evidence_ids"]["minItems"] == 1
+        assert "minItems" not in caveat["properties"]["evidence_ids"]
+        assert set(fact["required"]) == {"text", "evidence_ids"}
+        assert set(caveat["required"]) == {"text"}
+
+    def test_schema_accepts_a_caveat_without_evidence(self) -> None:
+        data = output()
+        data["must_read"][0]["entry"]["caveat"] = {"text": "The model version is not given.", "evidence_ids": []}
+        Draft202012Validator(self.schema).validate(data)
+        assert SelectorOutput.model_validate(data).must_read[0].entry.caveat is not None
 
     def test_scores_come_before_reason_and_entry(self) -> None:
         included_def = self.schema["$defs"]["IncludedArticle"]
