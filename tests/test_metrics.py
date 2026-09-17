@@ -300,10 +300,8 @@ class TestRunLifecycle:
         assert run.duration_ms == 9000
 
     def test_running_to_succeeded(self) -> None:
-        run = running_run().model_copy()
-        finished = RunMetrics.model_validate(
-            {**run.model_dump(), "stages": finished_stages()}
-        ).finish(RunStatus.SUCCEEDED, AT2)
+        run = RunMetrics.model_validate({**running_run().model_dump(), "stages": finished_stages()})
+        finished = run.finish(RunStatus.SUCCEEDED, AT2)
         assert finished.status is RunStatus.SUCCEEDED
         assert finished.ended_at == AT2
 

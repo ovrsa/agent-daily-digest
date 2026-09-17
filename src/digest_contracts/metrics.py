@@ -26,7 +26,8 @@ from .gates import GateOutcome
 from .judge import FindingMetrics
 from .selection import MUST_READ_MAX, WORTH_KNOWING_MAX, AxisScores, Decision, Tier
 
-RunId = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$")]
+RecordId = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$")]
+"""Identifier of a run or an LLM call."""
 ShortLabel = Annotated[NonBlankStr, StringConstraints(max_length=100)]
 
 
@@ -155,7 +156,7 @@ class LLMAttempt(ContractModel):
 
     @property
     def duration_ms(self) -> int:
-        return _duration_ms(self.started_at, self.ended_at)  # type: ignore[return-value]
+        return round((self.ended_at - self.started_at).total_seconds() * 1000)
 
     @model_validator(mode="after")
     def _check_status_fields(self) -> LLMAttempt:
@@ -170,7 +171,7 @@ class LLMAttempt(ContractModel):
 class LLMCallMetrics(ContractModel):
     """One logical LLM call (Selector, Judge or Research) and its retries."""
 
-    call_id: RunId
+    call_id: RecordId
     role: LLMRole
     model: ShortLabel
     prompt_version: ShortLabel
@@ -265,7 +266,7 @@ ALLOWED_RUN_TRANSITIONS: Mapping[RunStatus, frozenset[RunStatus]] = MappingProxy
 
 
 class RunMetrics(ContractModel):
-    run_id: RunId
+    run_id: RecordId
     status: RunStatus
     started_at: AwareDatetime
     ended_at: AwareDatetime | None = None

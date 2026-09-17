@@ -21,14 +21,12 @@ def test_all_names_resolve_and_are_unique() -> None:
 
 def test_no_sdk_or_network_dependency_is_imported() -> None:
     # A fresh interpreter, so modules loaded by pytest plugins do not count.
-    code = (
-        "import sys, digest_contracts;"
-        "bad = [m for m in sys.modules if m.split('.')[0] in "
-        "{'claude_agent_sdk', 'anthropic', 'httpx', 'requests', 'urllib.request'} or m == 'urllib.request'];"
-        "print(','.join(bad))"
-    )
+    code = "import sys, digest_contracts; print('\\n'.join(sys.modules))"
     result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)
-    assert result.stdout.strip() == ""
+    loaded = set(result.stdout.split())
+    forbidden = {"claude_agent_sdk", "anthropic", "httpx", "requests", "urllib.request"}
+    assert loaded.isdisjoint(forbidden)
+    assert "digest_contracts" in loaded
 
 
 def test_sources_do_not_mention_the_sdk() -> None:
