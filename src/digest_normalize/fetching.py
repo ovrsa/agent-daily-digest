@@ -3,15 +3,22 @@
 The pipeline takes a `BodyFetcher` rather than calling the network itself, so
 gate behaviour can be tested without a connection and #10 can wrap the call in
 its own timing and retry policy. `fetch_page` is the ordinary implementation:
-standard library only, with a byte cap, a content-type check and no redirect to
-a scheme other than http(s).
+standard library only, with a byte cap, a content-type check, and a refusal to
+open or follow a redirect to any address that is not publicly routable.
+
+That last check is what stops a feed from using the digest as a proxy into the
+network the scheduled job runs in: an item whose URL resolves to loopback, a
+private range or the link-local metadata address would otherwise be fetched and
+its response carried into the Selector prompt and the published digest.
 """
 
 from __future__ import annotations
 
+import ipaddress
 import re
 import socket
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from collections.abc import Callable
@@ -22,9 +29,14 @@ from digest_contracts import ERROR_DETAIL_MAX_CHARS, ErrorKind, ErrorRecord
 MAX_BODY_BYTES = 2 * 1024 * 1024
 """Bytes read from one page before the fetch is abandoned."""
 
+MAX_REDIRECTS = 5
+"""Redirects followed before the fetch is abandoned. Every hop is re-checked."""
+
 DEFAULT_TIMEOUT_SECONDS = 20.0
 
 USER_AGENT = "agent-daily-digest/0.1 (+https://github.com/ovrsa/agent-daily-digest)"
+
+DEFAULT_SCHEMES = ("http", "https")
 
 _HTML_TYPES = ("text/html", "application/xhtml+xml", "application/xml", "text/xml", "text/plain")
 
@@ -57,6 +69,58 @@ class FetchFailure:
 FetchOutcome = FetchedPage | FetchFailure
 BodyFetcher = Callable[[str], FetchOutcome]
 
+Resolver = Callable[..., list]
+"""`socket.getaddrinfo`, or a stand-in so tests can resolve without a network."""
+
+
+class BlockedTarget(Exception):
+    """A URL that does not resolve to a publicly routable address."""
+
+
+def is_public_address(host: str, *, resolve: Resolver = socket.getaddrinfo) -> bool:
+    """True when every address `host` resolves to is publicly routable.
+
+    A host that does not resolve, resolves to nothing, or resolves to anything
+    loopback, private, link-local, multicast or otherwise reserved is refused.
+    One non-public address is enough to refuse the host, so a name that answers
+    with both a public and a private address does not get through.
+    """
+    try:
+        infos = resolve(host, None)
+    except (socket.gaierror, UnicodeError, ValueError):
+        return False
+    addresses = [info[4][0] for info in infos]
+    if not addresses:
+        return False
+    for raw in addresses:
+        try:
+            # A scoped IPv6 address arrives as `fe80::1%en0`.
+            address = ipaddress.ip_address(raw.split("%", 1)[0])
+        except ValueError:
+            return False
+        if not address.is_global or address.is_multicast:
+            return False
+    return True
+
+
+class _GuardedRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Applies the scheme and address checks again at every redirect hop."""
+
+    max_redirections = MAX_REDIRECTS
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001, ANN201
+        _check_target(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def _check_target(url: str) -> None:
+    parts = urllib.parse.urlsplit(url)
+    if parts.scheme.lower() not in DEFAULT_SCHEMES:
+        raise BlockedTarget(f"scheme {parts.scheme!r}")
+    host = parts.hostname
+    if not host or not is_public_address(host):
+        raise BlockedTarget("host does not resolve to a public address")
+
 
 def is_html_content_type(value: str | None) -> bool:
     """True when the response is text this layer can extract from."""
@@ -85,8 +149,10 @@ def fetch_page(
 ) -> FetchOutcome:
     """Read one page over http(s). Every failure is returned, never raised."""
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html"})
+    opener = urllib.request.build_opener(_GuardedRedirectHandler)
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - scheme checked
+        _check_target(url)
+        with opener.open(request, timeout=timeout) as response:
             content_type = response.headers.get("Content-Type")
             if not is_html_content_type(content_type):
                 return FetchFailure(kind=ErrorKind.PARSE, detail=f"unsupported content type: {content_type}")
@@ -94,6 +160,8 @@ def fetch_page(
             if len(raw) > max_bytes:
                 return FetchFailure(kind=ErrorKind.PARSE, detail=f"body over {max_bytes} bytes")
             final_url = response.geturl()
+    except BlockedTarget as blocked:
+        return FetchFailure(kind=ErrorKind.NETWORK, detail=f"blocked target: {blocked}")
     except urllib.error.HTTPError as error:
         return FetchFailure(kind=ErrorKind.HTTP_STATUS, detail=f"HTTP {error.code}")
     except socket.timeout:
