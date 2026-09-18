@@ -1,6 +1,6 @@
 # spikes/runtime
 
-Issue #2（scheduled job 実行環境と GitHub 権限の検証）で使った1回きりのプローブ。
+Issue #2（定期実行環境と GitHub 権限の検証）で使った1回きりのプローブ。
 **パイプラインの一部ではない。** 再実測が必要になったときだけ使う。
 
 ## 中身
@@ -11,7 +11,6 @@ Issue #2（scheduled job 実行環境と GitHub 権限の検証）で使った1�
 | `sdk_probe.py` | Agent SDK の最小呼び出し。`init.apiKeySource` と `ResultMessage` のメトリクスを出す |
 | `schema_probe.py` | `SelectorOutput` の JSON Schema をそのまま構造化出力に渡し、制約が守られるかと SDK の例外種別を出す |
 | `pattern_probe.py` | `pattern` / `minItems` / `anyOf(null)` の強制を個別に確かめる |
-| `routine-prompt.md` | remote routine に渡すプロンプト。この `spikes/runtime/` のスクリプトを実行させる |
 
 ## 守っていること
 
@@ -36,9 +35,18 @@ macOS には `timeout` が無いので、`probe.sh` の SDK 呼び出しは `cor
 LLM を呼ぶので実行ごとに課金される。2026-09-18 の実測では `schema_probe.py` 1回で 0.17 USD、
 `pattern_probe.py` 1回で 0.03〜0.11 USD だった。
 
-## remote で動かす
+## launchd 相当の最小環境で動かす
 
-`routine-prompt.md` の `---` より下をそのまま、1回限りの routine（`run_once_at`）のプロンプトにする。
-routine の作成には cloud environment の ID が要る（`job_config.ccr.environment_id`、または
-`job_config.ccr.self_hosted_runner_pool_id`）。どちらも無いと `POST /v1/code/triggers` は 400 を返す。
-実験後は routine を消す。
+定期実行は launchd から起動する（#1 の Change log、2026-09-18 に remote routine から変更）。
+launchd は対話シェルより環境変数が少ないので、`env -i` で近似して確かめる。
+
+```bash
+env -i HOME="$HOME" PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin USER="$USER" \
+  /tmp/spike2/venv/bin/python spikes/runtime/sdk_probe.py claude-sonnet-5
+```
+
+**`USER` を外すと Claude Code は `Not logged in · Please run /login` で終了する。**
+`LOGNAME` では代替できない。`gh` と git の認証取得は `USER` に依存しない。
+plist の `EnvironmentVariables` には `PATH` と `USER` の両方を書く。
+
+remote routine 経路は使わない。この検証で作った routine プロンプトは削除した。
