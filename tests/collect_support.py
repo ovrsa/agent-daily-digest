@@ -1,7 +1,9 @@
 """Recorded responses and a fetcher that replays them.
 
 Every fixture under `tests/fixtures/collect/` is a real response, trimmed to
-a few entries and with article bodies cut out. No test here opens a socket:
+a few entries and with article bodies cut out. The one exception is
+`sitemap_index.xml`, a document shape no source serves today; its own comment
+says so. No test here opens a socket:
 `FixtureFetcher` answers from a map, and a URL it does not know raises, so a
 connector that reaches for an unexpected address fails loudly.
 """
@@ -111,17 +113,27 @@ def failure(name: str) -> BaseException:
     return FAILURE_BUILDERS[name]()
 
 
-def config(*sources: dict, window_days: int = 7, max_items: int = 12) -> CollectionConfig:
+HTTP_SETTINGS = {
+    "timeout_seconds": 20,
+    "user_agent": "agent-daily-digest/test",
+    "max_response_bytes": 1 << 20,
+}
+
+
+def config(
+    *sources: dict,
+    window_days: int = 7,
+    max_items: int = 12,
+    http: dict | None = None,
+    **extra,
+) -> CollectionConfig:
     return CollectionConfig.model_validate(
         {
             "window_days": window_days,
             "max_items_per_source": max_items,
-            "http": {
-                "timeout_seconds": 20,
-                "user_agent": "agent-daily-digest/test",
-                "max_response_bytes": 1 << 20,
-            },
+            "http": HTTP_SETTINGS if http is None else http,
             "sources": list(sources),
+            **extra,
         }
     )
 

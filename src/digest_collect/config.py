@@ -21,7 +21,6 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
 
 from digest_contracts import HttpUrlStr, NonBlankStr, SourceId, SourceKind
 
-DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "config.json"
 COLLECTION_KEY = "collection"
 
 
@@ -137,8 +136,14 @@ class CollectionConfig(BaseModel):
         return self
 
 
-def load_collection_config(path: Path | str = DEFAULT_CONFIG_PATH) -> CollectionConfig:
-    """Read and validate the `collection` block of a config file."""
+def load_collection_config(path: Path | str) -> CollectionConfig:
+    """Read and validate the `collection` block of a config file.
+
+    The caller names the file. A default derived from `__file__` only
+    resolved inside the source tree, and pointed outside site-packages once
+    the package shipped as a wheel, so the path comes from the caller: #10
+    passes the one the routine runs with.
+    """
     raw = json.loads(Path(path).read_text(encoding="utf-8"))
     if COLLECTION_KEY not in raw:
         raise KeyError(f"{path} has no {COLLECTION_KEY!r} block")

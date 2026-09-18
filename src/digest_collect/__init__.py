@@ -12,7 +12,6 @@ retires it.
 from .collector import CollectionReport, SourceProbeStats, collect_all, collect_source
 from .config import (
     COLLECTION_KEY,
-    DEFAULT_CONFIG_PATH,
     CollectionConfig,
     FeedSource,
     GitHubReleasesSource,
@@ -37,9 +36,11 @@ from .transport import (
     Fetcher,
     HttpResponse,
     ResponseTooLargeError,
+    SitemapIndexError,
     UnsafeXmlError,
     UrllibFetcher,
     classify_failure,
+    make_fetcher,
     parse_json,
     parse_xml,
 )
@@ -47,7 +48,6 @@ from .transport import (
 __all__ = [
     "CONNECTORS",
     "COLLECTION_KEY",
-    "DEFAULT_CONFIG_PATH",
     "DEFAULT_MAX_RESPONSE_BYTES",
     "DETAIL_MAX_CHARS",
     "CollectContext",
@@ -63,6 +63,7 @@ __all__ = [
     "PageMetadata",
     "ProbeRecorder",
     "ResponseTooLargeError",
+    "SitemapIndexError",
     "SitemapSource",
     "SourceProbeStats",
     "SourceSpec",
@@ -73,6 +74,7 @@ __all__ = [
     "collect_source",
     "load_collection_config",
     "make_article_id",
+    "make_fetcher",
     "parse_json",
     "parse_xml",
     "read_head_metadata",

@@ -21,6 +21,8 @@ from xml.parsers import expat
 
 from digest_contracts import ErrorKind, ErrorRecord
 
+from .config import HttpSettings
+
 DETAIL_MAX_CHARS = 200
 """Cap for `ErrorRecord.detail` written here.
 
@@ -57,6 +59,15 @@ class UnsafeXmlError(Exception):
     """The document declared an XML entity. Feeds have no reason to."""
 
 
+class SitemapIndexError(Exception):
+    """The sitemap is an index of sitemaps, not a list of URLs.
+
+    Raised by the sitemap connector, but declared here with the layer's other
+    refusals so `classify_failure` covers every exception this layer raises
+    on its own.
+    """
+
+
 class UrllibFetcher:
     """Standard-library fetcher. No third-party HTTP client is needed."""
 
@@ -86,6 +97,20 @@ class UrllibFetcher:
             if len(body) > self._max_bytes:
                 raise ResponseTooLargeError(f"over {self._max_bytes} bytes")
             return HttpResponse(url=response.geturl(), status=response.status, body=body)
+
+
+def make_fetcher(settings: HttpSettings) -> UrllibFetcher:
+    """Build the fetcher a run uses from the config's `collection.http` block.
+
+    The one place the three HTTP settings are applied. Without it a caller had
+    to repeat them at every construction site, and a value that disagreed with
+    the config went unnoticed.
+    """
+    return UrllibFetcher(
+        timeout_seconds=settings.timeout_seconds,
+        user_agent=settings.user_agent,
+        max_response_bytes=settings.max_response_bytes,
+    )
 
 
 def parse_xml(data: bytes) -> ET.Element:
@@ -162,6 +187,7 @@ def _classify_kind(exc: BaseException) -> ErrorKind:
             ET.ParseError,
             expat.ExpatError,
             UnsafeXmlError,
+            SitemapIndexError,
             json.JSONDecodeError,
             UnicodeDecodeError,
         ),

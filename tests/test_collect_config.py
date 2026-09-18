@@ -8,7 +8,14 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from digest_collect import CollectionConfig, SitemapSource, load_collection_config
+import digest_collect
+from digest_collect import (
+    CollectionConfig,
+    SitemapSource,
+    UrllibFetcher,
+    load_collection_config,
+    make_fetcher,
+)
 from digest_contracts import SourceKind
 
 import collect_support as s
@@ -25,6 +32,14 @@ REQUIRED_BLOG_URLS = {
     "addyosmani": "https://addyosmani.com/",
 }
 """The six blogs #1 says to check every run, by the source that covers each."""
+
+CLAUDE_BLOG_WINDOW_VOLUME = 34
+"""URLs under `https://claude.com/blog/` with a `lastmod` inside the 7-day
+window, counted from the live sitemap on 2026-09-18.
+
+The site re-generates in bulk — 23 of the 34 moved on one day — so a cap
+below this fills up with old posts whose `lastmod` happens to be recent and
+pushes the day's new ones out."""
 
 LEGACY_TO_NEW = {
     "simonw": ("simonw",),
@@ -101,6 +116,21 @@ class TestShippedRegistry:
         for source_id in ("simonw", "boristane", "nyosegawa", "addyosmani"):
             assert loaded.source(source_id).connector == "feed"
 
+    def test_the_claude_blog_caps_reach_the_volume_its_sitemap_shows(
+        self, loaded: CollectionConfig
+    ) -> None:
+        # Both caps have to clear the volume or the other one truncates. A
+        # cap on items alone lets the extra candidates through without a
+        # title, and #5 drops those on `missing_title`.
+        spec = loaded.source("claude_blog")
+        assert loaded.items_for(spec) >= CLAUDE_BLOG_WINDOW_VOLUME
+        assert spec.max_metadata_probes >= CLAUDE_BLOG_WINDOW_VOLUME
+
+    def test_the_shipped_http_block_builds_the_fetcher_the_run_uses(
+        self, loaded: CollectionConfig
+    ) -> None:
+        assert isinstance(make_fetcher(loaded.http), UrllibFetcher)
+
     def test_metadata_probes_are_capped(self, loaded: CollectionConfig) -> None:
         for spec in loaded.sources:
             if isinstance(spec, SitemapSource):
@@ -175,6 +205,14 @@ class TestValidation:
     def test_an_unknown_key_is_rejected(self) -> None:
         with pytest.raises(ValidationError):
             s.config(s.feed_source(selector=".post"))
+
+    def test_an_unknown_top_level_key_is_rejected(self) -> None:
+        with pytest.raises(ValidationError):
+            s.config(s.feed_source(), retries=3)
+
+    def test_an_unknown_http_key_is_rejected(self) -> None:
+        with pytest.raises(ValidationError):
+            s.config(s.feed_source(), http=s.HTTP_SETTINGS | {"verify_tls": False})
 
     def test_an_unknown_kind_is_rejected(self) -> None:
         with pytest.raises(ValidationError):
@@ -251,3 +289,21 @@ class TestValidation:
     def test_an_unknown_source_id_raises(self, loaded: CollectionConfig) -> None:
         with pytest.raises(KeyError):
             loaded.source("nope")
+
+
+class TestConfigPath:
+    """The caller names the config file. There is no default.
+
+    The default was `Path(__file__).parents[2] / "config" / "config.json"`,
+    which only resolves inside the source tree; from an installed wheel it
+    pointed outside site-packages. No test called `load_collection_config()`
+    without a path, so the breakage was invisible. #10 passes the path.
+    """
+
+    def test_a_path_is_required(self) -> None:
+        with pytest.raises(TypeError):
+            load_collection_config()
+
+    def test_the_package_exports_no_default_path(self) -> None:
+        assert "DEFAULT_CONFIG_PATH" not in digest_collect.__all__
+        assert not hasattr(digest_collect, "DEFAULT_CONFIG_PATH")

@@ -9,10 +9,12 @@ import pytest
 from digest_collect import (
     DETAIL_MAX_CHARS,
     HttpResponse,
+    HttpSettings,
     ResponseTooLargeError,
     UnsafeXmlError,
     UrllibFetcher,
     classify_failure,
+    make_fetcher,
     parse_json,
     parse_xml,
 )
@@ -74,6 +76,34 @@ class TestParseXml:
     def test_broken_documents_raise_parse_error(self, document: bytes) -> None:
         with pytest.raises(ET.ParseError):
             parse_xml(document)
+
+
+    def test_the_parser_refuses_external_entity_references(self) -> None:
+        """Pinned on the parser, because no document can reach the handler.
+
+        `EntityDeclHandler` refuses the declaration, so expat never gets as
+        far as resolving a reference, and removing this second handler changes
+        no parse result. It is the layer that would hold if the first one were
+        ever relaxed, so it is pinned where it is set.
+        """
+        built = []
+        real = transport.expat.ParserCreate
+
+        def recording(*args, **kwargs):
+            parser = real(*args, **kwargs)
+            built.append(parser)
+            return parser
+
+        transport.expat.ParserCreate = recording
+        try:
+            parse_xml(b"<feed/>")
+        finally:
+            transport.expat.ParserCreate = real
+
+        handler = built[0].ExternalEntityRefHandler
+        assert handler is not None
+        with pytest.raises(UnsafeXmlError):
+            handler("ctx", "base", "sysid", "pubid")
 
 
 class TestParseJson:
@@ -166,3 +196,53 @@ class TestHttpResponse:
 
     def test_text_can_be_limited(self) -> None:
         assert HttpResponse(url="u", status=200, body=b"abcdef").text(limit=3) == "abc"
+
+
+@contextmanager
+def _urlopen_recording(body: bytes):
+    """Like `_urlopen_returning`, but keeps what the fetcher asked for."""
+    calls: list[tuple[object, dict]] = []
+    original = transport.urllib.request.urlopen
+
+    def fake(request, **kwargs):
+        calls.append((request, kwargs))
+        return _FakeResponse(body)
+
+    transport.urllib.request.urlopen = fake
+    try:
+        yield calls
+    finally:
+        transport.urllib.request.urlopen = original
+
+
+class TestMakeFetcher:
+    """Every value in `collection.http` has to reach the fetcher.
+
+    Nothing read `HttpSettings` before: the block was declared in
+    `config/config.json` and no code applied it, so a caller could build a
+    `UrllibFetcher` with other values and the config would say nothing.
+    """
+
+    SETTINGS = HttpSettings(
+        timeout_seconds=7.5,
+        user_agent="agent-daily-digest/test (+https://example.com)",
+        max_response_bytes=2048,
+    )
+
+    def test_the_timeout_reaches_the_request(self) -> None:
+        with _urlopen_recording(b"ok") as calls:
+            make_fetcher(self.SETTINGS).get("https://example.com/x")
+        assert calls[0][1]["timeout"] == 7.5
+
+    def test_the_user_agent_reaches_the_request(self) -> None:
+        with _urlopen_recording(b"ok") as calls:
+            make_fetcher(self.SETTINGS).get("https://example.com/x")
+        assert calls[0][0].get_header("User-agent") == self.SETTINGS.user_agent
+
+    def test_the_byte_cap_reaches_the_reader(self) -> None:
+        with _urlopen_recording(b"x" * 2049), pytest.raises(ResponseTooLargeError):
+            make_fetcher(self.SETTINGS).get("https://example.com/x")
+
+    def test_a_response_inside_the_cap_is_returned_whole(self) -> None:
+        with _urlopen_recording(b"x" * 2048):
+            assert len(make_fetcher(self.SETTINGS).get("https://example.com/x").body) == 2048

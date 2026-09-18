@@ -6,7 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from digest_collect import CollectionReport, SourceProbeStats, collect_all, collect_source
-from digest_contracts import SourceFetchStatus, SourceKind, SourceMetrics
+from digest_contracts import ErrorKind, SourceFetchStatus, SourceKind, SourceMetrics
 
 import collect_support as s
 
@@ -112,6 +112,27 @@ class TestOneSource:
         # Without this the whole source would fail the contract's uniqueness rule.
         assert report.result("simonw").item_count == 1
         assert report.result("simonw").status is SourceFetchStatus.SUCCEEDED
+
+
+class TestSitemapIndex:
+    """A sitemap that grew into an index is a failure, not an empty source."""
+
+    def report(self):
+        return collect_all(
+            s.config(s.sitemap_source()),
+            fetcher=s.FixtureFetcher({s.CLAUDE_SITEMAP: s.read("sitemap_index.xml")}),
+            now=s.NOW,
+        )
+
+    def test_the_source_is_recorded_as_failed(self) -> None:
+        result = self.report().result("claude_blog")
+        assert result.status is SourceFetchStatus.FAILED
+        assert result.item_count == 0
+
+    def test_the_failure_carries_a_machine_readable_reason(self) -> None:
+        failure = self.report().result("claude_blog").failure
+        assert failure.kind is ErrorKind.PARSE
+        assert failure.detail.startswith("SitemapIndexError:")
 
 
 class TestFailureIsolation:

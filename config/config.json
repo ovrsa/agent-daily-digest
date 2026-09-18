@@ -86,7 +86,8 @@
         "enabled": true,
         "url": "https://claude.com/sitemap.xml",
         "url_prefix": "https://claude.com/blog/",
-        "max_metadata_probes": 10
+        "max_items": 40,
+        "max_metadata_probes": 40
       },
       {
         "id": "anthropic_engineering",

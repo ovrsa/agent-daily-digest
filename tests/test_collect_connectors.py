@@ -11,6 +11,7 @@ from digest_collect import (
     CollectContext,
     PageMetadata,
     ProbeRecorder,
+    SitemapIndexError,
     make_article_id,
     read_head_metadata,
 )
@@ -379,6 +380,89 @@ class TestSitemapConnector:
         items, ctx = run(s.sitemap_source(), fetcher, known_urls=known)
         assert items == ()
         assert ctx.probe.attempted == 0
+
+    def test_the_connector_caps_its_own_candidates(self) -> None:
+        # `collect_source` slices again, so dropping the cap here changes
+        # nothing a collector test can see. The connector's own contract is
+        # that it never returns more than `max_items`.
+        loose, _ = run(
+            s.sitemap_source(max_metadata_probes=0),
+            s.FixtureFetcher(self.routes(), default=b"<html></html>"),
+        )
+        assert len(loose) > 2
+        capped, _ = run(
+            s.sitemap_source(max_metadata_probes=0),
+            s.FixtureFetcher(self.routes(), default=b"<html></html>"),
+            max_items=2,
+        )
+        assert len(capped) == 2
+
+    def test_a_probe_that_redirects_off_the_prefix_supplies_no_metadata(self) -> None:
+        # `<loc>` comes from the sitemap, which is untrusted input, and
+        # `url_prefix` is the only thing bounding it. `urlopen` follows
+        # redirects, so the page that answers has to be checked again.
+        elsewhere = s.HttpResponse(
+            url="https://attacker.example/post",
+            status=200,
+            body=s.read("claude_post_head.html"),
+        )
+        fetcher = s.FixtureFetcher(
+            {s.CLAUDE_SITEMAP: s.read("claude_sitemap.xml")}, default=elsewhere
+        )
+        items, ctx = run(s.sitemap_source(max_metadata_probes=1), fetcher)
+        assert items
+        assert items[0].title is None
+        assert items[0].feed_summary is None
+        assert items[0].url.startswith("https://claude.com/blog/")
+        assert ctx.probe.attempted == 1
+        assert ctx.probe.failed == 1
+        assert ctx.probe.succeeded == 0
+
+    def test_a_probe_that_redirects_within_the_prefix_still_supplies_metadata(self) -> None:
+        moved = s.HttpResponse(
+            url="https://claude.com/blog/build-artifacts-2",
+            status=200,
+            body=s.read("claude_post_head.html"),
+        )
+        fetcher = s.FixtureFetcher(
+            {s.CLAUDE_SITEMAP: s.read("claude_sitemap.xml")}, default=moved
+        )
+        items, ctx = run(s.sitemap_source(max_metadata_probes=1), fetcher)
+        assert items[0].title == "Turn ideas into interactive AI-powered apps"
+        assert ctx.probe.succeeded == 1
+
+    def test_a_sitemap_index_fails_instead_of_yielding_nothing(self) -> None:
+        # `<sitemapindex>` holds sitemaps, not URLs, so the `<url>` search
+        # matches nothing and the source would report a clean zero. A blog
+        # that outgrows one sitemap must not look like a blog with no posts.
+        fetcher = s.FixtureFetcher({s.CLAUDE_SITEMAP: s.read("sitemap_index.xml")})
+        with pytest.raises(SitemapIndexError):
+            run(s.sitemap_source(), fetcher)
+
+    def test_processed_urls_are_dropped_before_the_cap_not_after(self) -> None:
+        # What the caps cost in the steady state. `known_urls` is subtracted
+        # while the candidates are still being gathered, so posts already
+        # processed take neither an item slot nor a probe. Were they dropped
+        # after the cap, the most recently modified old posts would fill the
+        # budget and the run would collect nothing.
+        seen, _ = run(
+            s.sitemap_source(max_metadata_probes=0),
+            s.FixtureFetcher(self.routes(), default=b"<html></html>"),
+        )
+        assert len(seen) > 3
+        already_processed = frozenset(item.url for item in seen[:3])
+        expected = [item.url for item in seen[3:]][:3]
+
+        fetcher = s.FixtureFetcher(self.routes(), default=b"<html></html>")
+        items, ctx = run(
+            s.sitemap_source(max_metadata_probes=40),
+            fetcher,
+            max_items=3,
+            known_urls=already_processed,
+        )
+        assert [item.url for item in items] == expected
+        assert ctx.probe.attempted == len(expected)
+        assert fetcher.requested[1:] == expected
 
     def test_a_url_without_a_lastmod_is_left_out(self) -> None:
         sitemap = (

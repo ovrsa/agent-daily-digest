@@ -31,7 +31,7 @@ from .config import (
     SitemapSource,
     SourceSpec,
 )
-from .transport import Fetcher, parse_json, parse_xml
+from .transport import Fetcher, SitemapIndexError, parse_json, parse_xml
 
 ATOM_NS = "http://www.w3.org/2005/Atom"
 SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -286,7 +286,13 @@ class _SitemapRow:
 
 def collect_sitemap(spec: SitemapSource, ctx: CollectContext) -> tuple[CollectedItem, ...]:
     response = ctx.fetcher.get(spec.url, accept="application/xml")
-    rows = _sitemap_rows(parse_xml(response.body), spec.url_prefix, ctx)
+    root = parse_xml(response.body)
+    if root.tag == f"{{{SITEMAP_NS}}}sitemapindex":
+        # An index holds sitemaps, not URLs, so `.//{ns}url` would match
+        # nothing and the source would report a clean zero. A site that
+        # outgrows one sitemap must not read as a site with no new posts.
+        raise SitemapIndexError("sitemap index, not a urlset; nested sitemaps are not followed")
+    rows = _sitemap_rows(root, spec.url_prefix, ctx)
     rows.sort(key=lambda row: row.lastmod, reverse=True)
     rows = rows[: ctx.max_items]
     ctx.probe.skipped_over_cap = max(0, len(rows) - spec.max_metadata_probes)
@@ -294,7 +300,9 @@ def collect_sitemap(spec: SitemapSource, ctx: CollectContext) -> tuple[Collected
     items = []
     for index, row in enumerate(rows):
         metadata = (
-            _probe(row.loc, ctx) if index < spec.max_metadata_probes else PageMetadata(None, None, None)
+            _probe(row.loc, spec.url_prefix, ctx)
+            if index < spec.max_metadata_probes
+            else PageMetadata(None, None, None)
         )
         items.append(
             _item(
@@ -326,12 +334,25 @@ def _sitemap_rows(root: ET.Element, prefix: str, ctx: CollectContext) -> list[_S
     return rows
 
 
-def _probe(url: str, ctx: CollectContext) -> PageMetadata:
+class _OffPrefixRedirect(Exception):
+    """The probe was answered from outside the source's `url_prefix`.
+
+    Never leaves `_probe`, which counts it as a failed probe.
+    """
+
+
+def _probe(url: str, prefix: str, ctx: CollectContext) -> PageMetadata:
     """Fetch one page's head metadata. A failure costs the title, not the item."""
     started = time.monotonic_ns()
     ctx.probe.attempted += 1
     try:
         response = ctx.fetcher.get(url, accept="text/html")
+        if not response.url.startswith(prefix):
+            # `<loc>` is untrusted input and `url_prefix` is the only bound on
+            # it, but `urlopen` follows redirects. The page that answered is
+            # not the one the prefix vouched for, so its title and description
+            # are not this item's. The item keeps `row.loc` as its URL.
+            raise _OffPrefixRedirect(f"answered from outside {prefix}")
         metadata = read_head_metadata(response.body)
     except Exception:
         ctx.probe.failed += 1
