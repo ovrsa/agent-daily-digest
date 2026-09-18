@@ -1,0 +1,150 @@
+{
+  "must_read": [
+    {
+      "article_id": "a001",
+      "scores": {
+        "practicality": 5,
+        "specificity_reproducibility": 5,
+        "novelty": 4,
+        "source_reliability": 5,
+        "reader_impact": 4,
+        "read_original_value": 5
+      },
+      "decision_reason": "計画と実行の分割を、測定結果つきで再現できる粒度で示している。",
+      "entry": {
+        "what_happened": {
+          "text": "開発チームが計画と実行を別セッションに分け、200件のタスクで失敗率を比較した。",
+          "evidence_ids": ["a001-e1"]
+        },
+        "why_read": "長いエージェントループを運用する読者は、同じ分割を自分のハーネスと比較できる。",
+        "evidence": {
+          "text": "記事に設定値と、200件を対象にした変更前後の失敗率の表がある。",
+          "evidence_ids": ["a001-e2", "a001-e3"]
+        },
+        "caveat": {
+          "text": "比較対象は社内の1つのタスクセットに限られる。",
+          "evidence_ids": ["a001-e4"]
+        }
+      }
+    },
+    {
+      "article_id": "a002",
+      "scores": {
+        "practicality": 4,
+        "specificity_reproducibility": 4,
+        "novelty": 4,
+        "source_reliability": 5,
+        "reader_impact": 3,
+        "read_original_value": 3
+      },
+      "decision_reason": "ツール権限の設定方法が変わる。",
+      "entry": {
+        "what_happened": {
+          "text": "v0.9 がツールごとの権限スコープを追加した。",
+          "evidence_ids": ["a002-e1"]
+        },
+        "why_read": "ハーネス運用者はラッパースクリプトを書かずにツール権限を絞れる。",
+        "evidence": {
+          "text": "リリースノートが新しい設定キーと既定値を列挙している。",
+          "evidence_ids": ["a002-e2"]
+        },
+        "caveat": null
+      }
+    },
+    {
+      "article_id": "a003",
+      "scores": {
+        "practicality": 5,
+        "specificity_reproducibility": 4,
+        "novelty": 3,
+        "source_reliability": 5,
+        "reader_impact": 4,
+        "read_original_value": 4
+      },
+      "decision_reason": "再試行上限の根拠を実測値に置き換えられる。",
+      "entry": {
+        "what_happened": {
+          "text": "著者が再試行1回あたりの入力トークン数を計測し、ループ全体のコストに占める割合を示した。",
+          "evidence_ids": ["a003-e1", "a003-e2"]
+        },
+        "why_read": "再試行の上限を決める根拠を、勘ではなく実測値に置き換えられる。",
+        "evidence": {
+          "text": "計測スクリプトと、3モデル分のトークン数の表を掲載している。",
+          "evidence_ids": ["a003-e3"]
+        },
+        "caveat": {
+          "text": "モデル価格は記事公開時点のもので、更新の有無は本文にない。",
+          "evidence_ids": []
+        }
+      }
+    }
+  ],
+  "worth_knowing": [
+    {
+      "article_id": "a004",
+      "scores": {
+        "practicality": 4,
+        "specificity_reproducibility": 3,
+        "novelty": 3,
+        "source_reliability": 4,
+        "reader_impact": 3,
+        "read_original_value": 3
+      },
+      "decision_reason": "キャッシュ前提のプロンプト設計を見直す材料になる。",
+      "entry": {
+        "what_happened": {
+          "text": "運用チームがプロンプトキャッシュのヒット率を1週間記録し、プレフィックス長との関係を示した。",
+          "evidence_ids": ["a004-e1"]
+        },
+        "why_read": "キャッシュ前提のプロンプト設計を、実測のヒット率から見直せる。",
+        "evidence": {
+          "text": "日次のヒット率と、プレフィックス長を変えた3条件の比較がある。",
+          "evidence_ids": ["a004-e2"]
+        },
+        "caveat": null
+      }
+    },
+    {
+      "article_id": "a005",
+      "scores": {
+        "practicality": 3,
+        "specificity_reproducibility": 3,
+        "novelty": 3,
+        "source_reliability": 5,
+        "reader_impact": 3,
+        "read_original_value": 2
+      },
+      "decision_reason": "起動時間が問題になっている読者には更新の判断材料になる。",
+      "entry": {
+        "what_happened": {
+          "text": "2026-09-16 のリリースがリポジトリマップの生成をインクリメンタルに変更した。",
+          "evidence_ids": ["a005-e1"]
+        },
+        "why_read": "大きなリポジトリで起動時間が問題になっている場合、更新するかを判断できる。",
+        "evidence": {
+          "text": "リリースノートに生成時間の変更前後の数値がある。",
+          "evidence_ids": ["a005-e2"]
+        },
+        "caveat": {
+          "text": "数値は著者の環境で計測したもの。",
+          "evidence_ids": ["a005-e3"]
+        }
+      }
+    }
+  ],
+  "excluded": [
+    {
+      "article_id": "a006",
+      "scores": {
+        "practicality": 2,
+        "specificity_reproducibility": 1,
+        "novelty": 2,
+        "source_reliability": 3,
+        "reader_impact": 2,
+        "read_original_value": 1
+      },
+      "decision_reason": "具体的な利用方法も数値もない製品発表。"
+    }
+  ],
+  "duplicate_groups": []
+}

@@ -22,7 +22,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/digest_contracts"]
+packages = ["src/digest_contracts", "src/digest_render"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
