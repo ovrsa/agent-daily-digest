@@ -44,17 +44,33 @@ EvidenceRef = Annotated[str, StringConstraints(min_length=1, max_length=128, pat
 """Opaque Evidence ID. Its format and resolution to the source belong to #12."""
 
 
-class FactStatement(ContractModel):
-    """A factual sentence and the Evidence IDs that support it."""
+class _Statement(ContractModel):
+    """A sentence of the 掲載文 and the Evidence IDs behind it."""
 
     text: NonBlankStr
-    evidence_ids: tuple[EvidenceRef, ...] = Field(min_length=1)
+    evidence_ids: tuple[EvidenceRef, ...]
 
     @model_validator(mode="after")
-    def _check_unique(self) -> FactStatement:
+    def _check_unique(self) -> _Statement:
         if first_duplicate(self.evidence_ids) is not None:
             raise ValueError("evidence_ids must be unique")
         return self
+
+
+class FactStatement(_Statement):
+    """A factual sentence and the Evidence IDs that support it."""
+
+    evidence_ids: tuple[EvidenceRef, ...] = Field(min_length=1)
+
+
+class CaveatStatement(_Statement):
+    """A 留保 and the Evidence IDs behind it, when there are any.
+
+    留保は本文に無いこと（未確認事項、測定条件の欠落）を書く場合があるので、
+    対応する Evidence ID を持たないことがある。1件以上を求めると ID の捏造を招く。
+    """
+
+    evidence_ids: tuple[EvidenceRef, ...] = ()
 
 
 class DigestEntry(ContractModel):
@@ -63,7 +79,10 @@ class DigestEntry(ContractModel):
     what_happened: FactStatement = Field(description="何をしたか／何が分かったか。本文で確認できる事実だけ")
     why_read: NonBlankStr = Field(description="読む理由。編集上の判断で、事実とは分ける")
     evidence: FactStatement = Field(description="根拠。コード、設定、数値、比較条件、失敗例など")
-    caveat: FactStatement | None = Field(default=None, description="留保。本文に制約や未確認事項がある場合だけ")
+    caveat: CaveatStatement | None = Field(
+        default=None,
+        description="留保。本文の制約か、本文に書かれていない未確認事項。Evidence ID は無くてよい",
+    )
 
 
 class IncludedArticle(ContractModel):

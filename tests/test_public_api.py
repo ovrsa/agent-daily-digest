@@ -7,6 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from pydantic import BaseModel
+
 import digest_contracts
 
 PACKAGE_DIR = Path(digest_contracts.__file__).parent
@@ -17,6 +19,19 @@ def test_all_names_resolve_and_are_unique() -> None:
     assert len(names) == len(set(names))
     for name in names:
         assert getattr(digest_contracts, name) is not None
+
+
+def test_every_model_is_reachable_from_the_package_root() -> None:
+    """A model a caller can build has to be in `__all__`, not only in its submodule."""
+    for path in PACKAGE_DIR.glob("*.py"):
+        if path.stem == "__init__":
+            continue
+        module = importlib.import_module(f"digest_contracts.{path.stem}")
+        for name, obj in vars(module).items():
+            if name.startswith("_") or not isinstance(obj, type):
+                continue
+            if issubclass(obj, BaseModel) and obj.__module__ == module.__name__:
+                assert name in digest_contracts.__all__, f"{module.__name__}.{name}"
 
 
 def test_no_sdk_or_network_dependency_is_imported() -> None:
