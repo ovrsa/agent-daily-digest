@@ -29,7 +29,7 @@ from digest_contracts import (
 )
 
 from ._text import collapse_text, is_blank
-from .dates import PublishedAtRejected, parse_published_at
+from .dates import PublishedAtProblem, PublishedAtRejected, parse_published_at
 from .extract import ExtractedDocument, extract_document
 from .fetching import BodyFetcher, FetchedPage
 from .state import ProcessedIndex
@@ -47,7 +47,14 @@ which puts the bar at half of what a feed can carry.
 
 @dataclass(frozen=True)
 class NormalizationResult:
-    """What one collected item produced: the gate record, and the article if it passed."""
+    """What one collected item produced: the gate record, and the article if it passed.
+
+    `failure` is the fetch failure, if there was one. It is also set on a result
+    that passed, because an article can pass on the feed's primary information
+    after the page could not be read, and #9 records why the body came from there.
+    `extracted` is the page as it was read; it stays in memory for the run and is
+    never written to the processing state.
+    """
 
     article_id: str
     outcome: GateOutcome
@@ -117,7 +124,7 @@ def normalize_item(
     try:
         published_at = parse_published_at(item.published_at)
     except PublishedAtRejected as rejected:
-        return _excluded(item, passed, _PUBLISHED_AT_REASONS[rejected.problem.value])
+        return _excluded(item, passed, _PUBLISHED_AT_REASONS[rejected.problem])
     passed.append(_passed(GateName.REQUIRED_FIELDS))
 
     # 2. content_available -----------------------------------------------
@@ -193,8 +200,8 @@ def normalize_item(
 
 
 _PUBLISHED_AT_REASONS = {
-    "missing": GateExclusionReason.MISSING_PUBLISHED_AT,
-    "unparseable": GateExclusionReason.INVALID_PUBLISHED_AT,
+    PublishedAtProblem.MISSING: GateExclusionReason.MISSING_PUBLISHED_AT,
+    PublishedAtProblem.UNPARSEABLE: GateExclusionReason.INVALID_PUBLISHED_AT,
 }
 
 

@@ -164,7 +164,8 @@ class _Extractor(HTMLParser):
     def handle_comment(self, data: str) -> None:
         """Comments are a channel readers never see. They are dropped."""
 
-    def close(self) -> None:  # noqa: D102 - inherited
+    def close(self) -> None:
+        """Flush what the last element left buffered, including an unclosed one."""
         super().close()
         self._flush()
         self._flush_row()
@@ -206,29 +207,25 @@ class _Extractor(HTMLParser):
         if self._kind == _TABLE_ROW:
             self._cells.append(text)
             return
-        self.blocks.append(
-            _Block(
-                kind=self._kind,
-                text=_render(self._kind, text, self._heading_level),
-                article_id=self._enclosing_article,
-                in_main=any(frame.is_main for frame in self._stack),
-                in_role_main=any(frame.is_role_main for frame in self._stack),
-            )
-        )
+        self._emit(self._kind, _render(self._kind, text, self._heading_level))
 
     def _flush_row(self) -> None:
         if not self._cells:
             return
+        self._emit(_TABLE_ROW, " | ".join(self._cells))
+        self._cells.clear()
+
+    def _emit(self, kind: str, text: str) -> None:
+        # Where the block sits is recorded now, while its element is still open.
         self.blocks.append(
             _Block(
-                kind=_TABLE_ROW,
-                text=" | ".join(self._cells),
+                kind=kind,
+                text=text,
                 article_id=self._enclosing_article,
                 in_main=any(frame.is_main for frame in self._stack),
                 in_role_main=any(frame.is_role_main for frame in self._stack),
             )
         )
-        self._cells.clear()
 
     @property
     def _enclosing_article(self) -> int | None:
