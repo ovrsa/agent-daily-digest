@@ -1,0 +1,26 @@
+[
+  {
+    "tag_name": "v2.1.275",
+    "name": "v2.1.275",
+    "html_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.275",
+    "published_at": "2026-09-17T22:33:17Z",
+    "created_at": "2026-09-17T22:32:56Z",
+    "body": "## What's changed\n\n- Added the signed-in account to Claude apps gateway sign-in: when the gateway names it, you confirm it before the credential is saved, and `/status` shows it\n- Added a send-now key (ctrl+enter, or ctrl+x ctrl+s) that interrupts the current turn and sends all queued messages at on"
+  },
+  {
+    "tag_name": "v2.1.274",
+    "name": "v2.1.274",
+    "html_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.274",
+    "published_at": "2026-09-17T00:12:02Z",
+    "created_at": "2026-09-17T00:11:55Z",
+    "body": "## What's changed\n\n- Added a visible warning when memory usage is critical, with steps to free memory or restart safely\n- Added `CLAUDE_CODE_MCP_STARTUP_WAIT_MS` to bound how long the first non-interactive turn waits for connecting MCP servers (`0` = don't wait)\n- Added `effort` attribute to the `cl"
+  },
+  {
+    "tag_name": "v2.1.273",
+    "name": "v2.1.273",
+    "html_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.273",
+    "published_at": "2026-09-15T20:23:03Z",
+    "created_at": "2026-09-15T20:22:56Z",
+    "body": "## What's changed\n\n- Added `x-claude-code-request-class`, `x-claude-code-agent-type`, `x-claude-code-prev-tool-durations`, `x-claude-code-compaction` and `x-claude-code-context-compacted` request headers for LLM gateways; opt in with `CLAUDE_CODE_GATEWAY_HINT_HEADERS=1`\n- Added a notification when a"
+  }
+]

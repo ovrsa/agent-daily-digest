@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xml:lang="en-us" xmlns="http://www.w3.org/2005/Atom"><title>Simon Willison's Weblog</title><link href="http://simonwillison.net/" rel="alternate"/><link href="http://simonwillison.net/atom/everything/" rel="self"/><id>http://simonwillison.net/</id><updated>2026-09-17T23:59:19+00:00</updated><author><name>Simon Willison</name></author><entry><title>Be alert: targeted attacks on prominent Rustaceans</title><link href="https://simonwillison.net/2026/Sep/17/targeted-attacks-on-rustaceans/" rel="alternate"/><published>2026-09-17T23:59:19+00:00</published><updated>2026-09-17T23:59:19+00:00</updated><id>https://simonwillison.net/2026/Sep/17/targeted-attacks-on-rustaceans/</id><summary type="html">
+    
+&lt;p&gt;&lt;strong&gt;&lt;a href="https://blog.rust-lang.org/2026/09/17/targeted-attacks/"&gt;Be alert: targeted attacks on prominent Rustaceans&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+Important warning from Adam Harvey and the crates security team:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;We believe [fixture truncated]</summary><category term="open-source"/><category term="security"/><category term="rust"/><category term="supply-chain"/><category term="dependency-cooldowns"/></entry><entry><title>How To Write With An LLM</title><link href="https://simonwillison.net/2026/Sep/17/how-to-write-with-an-llm/" rel="alternate"/><published>2026-09-17T23:37:27+00:00</published><updated>2026-09-17T23:37:27+00:00</updated><id>https://simonwillison.net/2026/Sep/17/how-to-write-with-an-llm/</id><summary type="html">
+    
+&lt;p&gt;&lt;strong&gt;&lt;a href="https://sockpuppet.org/blog/2026/09/17/how-to-write-with-an-llm/"&gt;How To Write With An LLM&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+Thomas Ptacek on using LLMs as copyeditors, not as writing assistants:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Rule Nu [fixture truncated]</summary><category term="thomas-ptacek"/><category term="writing"/><category term="ai"/><category term="generative-ai"/><category term="llms"/></entry><entry><title>Self-generated prompt injections in compaction summaries</title><link href="https://simonwillison.net/2026/Sep/17/compaction-summaries/" rel="alternate"/><published>2026-09-17T20:57:55+00:00</published><updated>2026-09-17T20:57:55+00:00</updated><id>https://simonwillison.net/2026/Sep/17/compaction-summaries/</id><summary type="html">
+    
+&lt;p&gt;&lt;strong&gt;&lt;a href="https://alignment.openai.com/misalignment-reports/self-generated-prompt-injections-in-compaction-summaries/"&gt;Self-generated prompt injections in compaction summaries&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+In &lt;a href="https://openai.com/index/model-misalignm [fixture truncated]</summary><category term="ai"/><category term="openai"/><category term="prompt-injection"/><category term="generative-ai"/><category term="llms"/><category term="ai-personality"/></entry></feed>

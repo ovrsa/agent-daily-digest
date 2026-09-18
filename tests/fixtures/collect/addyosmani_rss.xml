@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>AddyOsmani.com</title>
+    <description>Addy Osmani is an engineering and evangelism leader who spent over 14 years at Google leading developer experience across Chrome and, in recent years, AI (Gemini, coding agents, and agentic engineering), most recently as a Director at Google Cloud AI.</description>
+    <link>https://addyosmani.com</link>
+    <atom:link href="https://addyosmani.com/feed.xml" rel="self" type="application/rss+xml" />
+    
+      <item>
+        <title>Human judgment doesn&apos;t leave the software factory. It relocates.</title>
+        
+        
+          <description>A field guide to building a software factory that still has an owner.</description>
+        
+        <pubDate>Fri, 21 Aug 2026 00:00:00 +0000</pubDate>
+        <link>https://addyosmani.com/blog/human-judgment-doesnt-leave-the-software/</link>
+        <guid isPermaLink="true">https://addyosmani.com/blog/human-judgment-doesnt-leave-the-software/</guid>
+      </item>
+    
+      <item>
+        <title>Practical Loop Engineering</title>
+        
+        
+          <description>Goals, loops, and the discipline of not delegating your judgment</description>
+        
+        <pubDate>Fri, 14 Aug 2026 00:00:00 +0000</pubDate>
+        <link>https://addyosmani.com/blog/practical-loop-engineering/</link>
+        <guid isPermaLink="true">https://addyosmani.com/blog/practical-loop-engineering/</guid>
+      </item>
+    
+      <item>
+        <title>Agentic Code Quality</title>
+        
+        
+          <description>Quality now depends on the constraints you set around your agents.</description>
+        
+        <pubDate>Sat, 08 Aug 2026 00:00:00 +0000</pubDate>
+        <link>https://addyosmani.com/blog/agentic-code-quality/</link>
+        <guid isPermaLink="true">https://addyosmani.com/blog/agentic-code-quality/</guid>
+      </item>
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </channel>
+</rss>
