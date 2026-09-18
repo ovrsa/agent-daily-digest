@@ -57,18 +57,20 @@ class TestOneSource:
     @pytest.mark.parametrize(
         ("answer", "kind"),
         [
-            (b"<rss><channel", "parse"),
-            (b"", "parse"),
-            (s.timeout(), "timeout"),
-            (s.http_error(500), "http_status"),
-            (s.http_error(429), "rate_limit"),
-            (s.http_error(403), "authentication"),
+            ("truncated feed", "parse"),
+            ("empty body", "parse"),
+            ("url timeout", "timeout"),
+            ("http 500", "http_status"),
+            ("http 429", "rate_limit"),
+            ("http 403", "authentication"),
         ],
     )
-    def test_a_failing_source_records_a_classified_reason(self, answer, kind: str) -> None:
+    def test_a_failing_source_records_a_classified_reason(self, answer: str, kind: str) -> None:
+        bodies = {"truncated feed": b"<rss><channel", "empty body": b""}
+        served = bodies[answer] if answer in bodies else s.failure(answer)
         report = collect_all(
             s.config(s.feed_source(url=SIMONW_URL)),
-            fetcher=s.FixtureFetcher({SIMONW_URL: answer}),
+            fetcher=s.FixtureFetcher({SIMONW_URL: served}),
             now=s.NOW,
         )
         result = report.result("simonw")

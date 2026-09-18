@@ -9,10 +9,16 @@ connector that reaches for an unexpected address fails loudly.
 from __future__ import annotations
 
 import datetime as dt
+import json
+import socket
+import ssl
 import urllib.error
+import xml.etree.ElementTree as ET
+from collections.abc import Callable
 from pathlib import Path
 
-from digest_collect import CollectionConfig, HttpResponse
+from digest_collect import CollectionConfig, HttpResponse, ResponseTooLargeError, UnsafeXmlError
+from digest_contracts import ErrorKind
 
 FIXTURES = Path(__file__).parent / "fixtures" / "collect"
 
@@ -55,6 +61,54 @@ def http_error(code: int, url: str = "https://example.com/x") -> urllib.error.HT
 
 def timeout() -> urllib.error.URLError:
     return urllib.error.URLError(TimeoutError("timed out"))
+
+
+# Exceptions are built on demand, never passed to `parametrize` as values:
+# pytest 8.0 asks every parameter for `__name__`, and `HTTPError` answers that
+# by reaching into a file object it does not have, which fails collection.
+FAILURE_BUILDERS: dict[str, Callable[[], BaseException]] = {
+    "http 429": lambda: http_error(429),
+    "http 401": lambda: http_error(401),
+    "http 403": lambda: http_error(403),
+    "http 500": lambda: http_error(500),
+    "http 404": lambda: http_error(404),
+    "builtin timeout": lambda: TimeoutError("slow"),
+    "socket timeout": lambda: socket.timeout("slow"),
+    "url timeout": timeout,
+    "url unreachable": lambda: urllib.error.URLError("no route"),
+    "tls": lambda: ssl.SSLError("handshake"),
+    "connection reset": lambda: ConnectionResetError("reset"),
+    "xml parse": lambda: ET.ParseError("bad"),
+    "xml entity": lambda: UnsafeXmlError("entity"),
+    "json parse": lambda: json.JSONDecodeError("bad", "{", 0),
+    "undecodable": lambda: UnicodeDecodeError("utf-8", b"\xff", 0, 1, "bad"),
+    "programming error": lambda: ValueError("something else"),
+    "oversized response": lambda: ResponseTooLargeError("over 8 MB"),
+}
+
+FAILURE_KINDS: dict[str, ErrorKind] = {
+    "http 429": ErrorKind.RATE_LIMIT,
+    "http 401": ErrorKind.AUTHENTICATION,
+    "http 403": ErrorKind.AUTHENTICATION,
+    "http 500": ErrorKind.HTTP_STATUS,
+    "http 404": ErrorKind.HTTP_STATUS,
+    "builtin timeout": ErrorKind.TIMEOUT,
+    "socket timeout": ErrorKind.TIMEOUT,
+    "url timeout": ErrorKind.TIMEOUT,
+    "url unreachable": ErrorKind.NETWORK,
+    "tls": ErrorKind.NETWORK,
+    "connection reset": ErrorKind.NETWORK,
+    "xml parse": ErrorKind.PARSE,
+    "xml entity": ErrorKind.PARSE,
+    "json parse": ErrorKind.PARSE,
+    "undecodable": ErrorKind.PARSE,
+    "programming error": ErrorKind.UNEXPECTED,
+    "oversized response": ErrorKind.UNEXPECTED,
+}
+
+
+def failure(name: str) -> BaseException:
+    return FAILURE_BUILDERS[name]()
 
 
 def config(*sources: dict, window_days: int = 7, max_items: int = 12) -> CollectionConfig:

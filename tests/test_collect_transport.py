@@ -1,9 +1,6 @@
 from __future__ import annotations
 
 import json
-import socket
-import ssl
-import urllib.error
 import xml.etree.ElementTree as ET
 from contextlib import contextmanager
 
@@ -89,30 +86,9 @@ class TestParseJson:
 
 
 class TestClassifyFailure:
-    @pytest.mark.parametrize(
-        ("exc", "kind"),
-        [
-            (s.http_error(429), ErrorKind.RATE_LIMIT),
-            (s.http_error(401), ErrorKind.AUTHENTICATION),
-            (s.http_error(403), ErrorKind.AUTHENTICATION),
-            (s.http_error(500), ErrorKind.HTTP_STATUS),
-            (s.http_error(404), ErrorKind.HTTP_STATUS),
-            (TimeoutError("slow"), ErrorKind.TIMEOUT),
-            (socket.timeout("slow"), ErrorKind.TIMEOUT),
-            (s.timeout(), ErrorKind.TIMEOUT),
-            (urllib.error.URLError("no route"), ErrorKind.NETWORK),
-            (ssl.SSLError("handshake"), ErrorKind.NETWORK),
-            (ConnectionResetError("reset"), ErrorKind.NETWORK),
-            (ET.ParseError("bad"), ErrorKind.PARSE),
-            (UnsafeXmlError("entity"), ErrorKind.PARSE),
-            (json.JSONDecodeError("bad", "{", 0), ErrorKind.PARSE),
-            (UnicodeDecodeError("utf-8", b"\xff", 0, 1, "bad"), ErrorKind.PARSE),
-            (ValueError("something else"), ErrorKind.UNEXPECTED),
-            (ResponseTooLargeError("over 8 MB"), ErrorKind.UNEXPECTED),
-        ],
-    )
-    def test_kind(self, exc: BaseException, kind: ErrorKind) -> None:
-        assert classify_failure(exc).kind is kind
+    @pytest.mark.parametrize(("name", "kind"), sorted(s.FAILURE_KINDS.items(), key=str))
+    def test_kind(self, name: str, kind: ErrorKind) -> None:
+        assert classify_failure(s.failure(name)).kind is kind
 
     def test_an_http_error_detail_is_the_status_only(self) -> None:
         # The exception's own message repeats the URL; the status is enough.
