@@ -58,7 +58,34 @@ _BLOCK_TAGS = frozenset(
 )
 
 _HIDDEN_CLASSES = ("sr-only", "visually-hidden", "visuallyhidden", "screen-reader", "skip-link")
-_HIDDEN_STYLE = re.compile(r"(display\s*:\s*none|visibility\s*:\s*hidden)", re.IGNORECASE)
+
+# A zero length, written any of the ways CSS allows, up to the next declaration.
+_ZERO = r"(?:0+(?:\.0+)?|\.0+)(?:px|pt|em|rem|ex|ch|vw|vh|vmin|vmax|cm|mm|in|pc|%)?\s*(?:;|!|$)"
+
+_HIDDEN_STYLES = tuple(
+    re.compile(pattern, re.IGNORECASE)
+    for pattern in (
+        r"display\s*:\s*none",
+        r"visibility\s*:\s*hidden",
+        rf"opacity\s*:\s*{_ZERO}",
+        rf"font-size\s*:\s*{_ZERO}",
+        # Moved far enough out of the viewport to be off-screen rather than nudged.
+        r"text-indent\s*:\s*-\s*\d{3,}",
+        r"(?<![-\w])(?:left|right|top|bottom)\s*:\s*-\s*\d{3,}",
+        r"clip-path\s*:\s*inset\(\s*(?:50|100)%",
+        r"clip\s*:\s*rect\(\s*0",
+    )
+)
+"""Declarations that put text outside what a reader sees.
+
+Text hidden this way is a channel for instructions and it counts toward the
+primary-information floor, so it is dropped the same way `display:none` is.
+Text hidden by painting it the colour of its background is not detected: that
+needs the cascade and a colour model, neither of which this parser has.
+"""
+
+_ZERO_BOX = re.compile(rf"(?<![-\w])(?:max-)?(?:width|height)\s*:\s*{_ZERO}", re.IGNORECASE)
+_CLIPPED_OVERFLOW = re.compile(r"overflow(?:-[xy])?\s*:\s*hidden", re.IGNORECASE)
 
 _PARAGRAPH = "paragraph"
 _LIST_ITEM = "list_item"
@@ -345,10 +372,17 @@ def _is_hidden(values: dict[str, str]) -> bool:
         return True
     if values.get("aria-hidden", "").strip().lower() == "true":
         return True
-    if _HIDDEN_STYLE.search(values.get("style", "")):
+    if _is_hidden_style(values.get("style", "")):
         return True
     classes = values.get("class", "").lower().split()
     return any(name in classes for name in _HIDDEN_CLASSES)
+
+
+def _is_hidden_style(style: str) -> bool:
+    if any(pattern.search(style) for pattern in _HIDDEN_STYLES):
+        return True
+    # A zero-sized box hides what it holds only when the overflow is clipped.
+    return bool(_ZERO_BOX.search(style) and _CLIPPED_OVERFLOW.search(style))
 
 
 def _author_or_none(content: str) -> str | None:
