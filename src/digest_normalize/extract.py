@@ -40,6 +40,13 @@ _SKIP_TAGS = frozenset(
     }
 )
 
+_METADATA_CONTAINERS = frozenset({"head", "title"})
+"""Skipped as text, yet still where a page is allowed to declare its metadata.
+
+Every other skipped element is a channel the reader never sees, so a `<meta>`,
+`<link rel=canonical>` or `<time>` planted inside one is not read either.
+"""
+
 _HEADINGS = {f"h{level}": level for level in range(1, 7)}
 
 _BLOCK_TAGS = frozenset(
@@ -94,6 +101,7 @@ class _Block:
 class _Open:
     tag: str
     skipped: bool = False
+    hides_metadata: bool = False
     article_id: int | None = None
     is_main: bool = False
     is_role_main: bool = False
@@ -116,19 +124,26 @@ class _Extractor(HTMLParser):
     # -- structure ------------------------------------------------------
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = {name.lower(): (value or "") for name, value in attrs}
-        self._read_metadata(tag, values)
+        if not self._hiding_metadata:
+            self._read_metadata(tag, values)
 
         if tag in _VOID_TAGS:
             if tag == "br" and not self._skipping:
                 self._buffer.append(" ")
             return
 
-        skipped = self._skipping or tag in _SKIP_TAGS or _is_hidden(values)
+        hidden = _is_hidden(values)
+        skipped = self._skipping or tag in _SKIP_TAGS or hidden
+        # `<head>` is skipped as text but is where metadata belongs, so the two
+        # reasons to stop reading are tracked apart.
+        hides_metadata = (
+            self._hiding_metadata or hidden or (tag in _SKIP_TAGS and tag not in _METADATA_CONTAINERS)
+        )
         # Whatever is buffered belongs to the element that is still open.
         if skipped or tag in _BLOCK_TAGS:
             self._flush()
 
-        open_tag = _Open(tag, skipped=skipped)
+        open_tag = _Open(tag, skipped=skipped, hides_metadata=hides_metadata)
         if not skipped:
             if tag == "article":
                 self._articles += 1
@@ -194,6 +209,10 @@ class _Extractor(HTMLParser):
     @property
     def _skipping(self) -> bool:
         return bool(self._stack) and self._stack[-1].skipped
+
+    @property
+    def _hiding_metadata(self) -> bool:
+        return bool(self._stack) and self._stack[-1].hides_metadata
 
     def _flush(self) -> None:
         raw = "".join(self._buffer)
