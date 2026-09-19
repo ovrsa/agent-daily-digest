@@ -151,7 +151,8 @@ class _Extractor(HTMLParser):
     # -- structure ------------------------------------------------------
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = {name.lower(): (value or "") for name, value in attrs}
-        if not self._hiding_metadata:
+        hidden = _is_hidden(values)
+        if not self._hiding_metadata and not hidden:
             self._read_metadata(tag, values)
 
         if tag in _VOID_TAGS:
@@ -159,7 +160,6 @@ class _Extractor(HTMLParser):
                 self._buffer.append(" ")
             return
 
-        hidden = _is_hidden(values)
         skipped = self._skipping or tag in _SKIP_TAGS or hidden
         # `<head>` is skipped as text but is where metadata belongs, so the two
         # reasons to stop reading are tracked apart.

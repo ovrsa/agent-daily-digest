@@ -224,6 +224,23 @@ class TestMetadataFromSkippedElements:
         )
         assert extract_document(html).published_at_raw == "2026-09-15T00:00:00Z"
 
+    @pytest.mark.parametrize(
+        "attribute",
+        ['hidden', 'style="display:none"', 'style="opacity:0"', 'aria-hidden="true"', 'class="sr-only"'],
+    )
+    def test_a_metadata_element_that_is_itself_hidden_is_not_read(self, attribute: str) -> None:
+        html = (
+            "<html><head></head><body><article><p>Visible.</p>"
+            f'<time {attribute} datetime="1999-01-01T00:00:00Z">then</time>'
+            f'<meta {attribute} name="author" content="Planted Author">'
+            f'<link {attribute} rel="canonical" href="https://elsewhere.example/other">'
+            "</article></body></html>"
+        )
+        extracted = extract_document(html)
+        assert extracted.published_at_raw is None
+        assert extracted.author is None
+        assert extracted.canonical_url_raw is None
+
     def test_head_metadata_wins_over_a_later_planted_one(self) -> None:
         html = (
             '<html><head><meta name="author" content="Ada Lovelace"></head>'
