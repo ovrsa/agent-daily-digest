@@ -40,7 +40,6 @@ BANNED = [
     (ForbiddenRule.HYPE, "開発体験が激変する。"),
     (ForbiddenRule.HYPE, "ゲームチェンジャーになる。"),
     (ForbiddenRule.HYPE, "This is a game-changer for harness authors."),
-    (ForbiddenRule.MECHANICAL_CONTRAST, "速度だけでなく、精度も上がった。"),
     (ForbiddenRule.MECHANICAL_CONTRAST, "問題はモデルではなく、ハーネスの設計だ。"),
     (ForbiddenRule.MECHANICAL_CONTRAST, "これは単なる速度改善ではない。"),
 ]
@@ -56,7 +55,19 @@ ALLOWED = [
     "一方の条件では失敗率が上がった。",
     "ASCII hyphens -- and --- are untouched.",
     "採用は Must Read が 3 件、Worth Knowing が 2 件だった。",
+    # `だけでなく` は機械的な二項対比の型であると同時に事実の列挙にも出る。
+    # 検出は公開を止めるので、このルールでは見ない(文体の指摘は Judge #8)。
+    "この変更は CLI だけでなく SDK にも入った。",
+    "計測対象は Sonnet だけでなく Haiku も含む。",
+    "速度だけでなく、精度も上がった。",
+    "評価は ✓ と ✗ で表されている。",
 ]
+
+CHECK_MARKS = "\u2713\u2714\u2717\u2718"
+"""`✓✔✗✘`. 比較表の記号として本文に出るので、装飾絵文字から外してある。"""
+
+NEIGHBOURING_EMOJI = "\u2705\u2712\u2715\u2716\u2719"
+"""`✅✒✕✖✙`. 外した範囲が広がっていないことを両隣で押さえる。"""
 
 
 @pytest.mark.parametrize(("rule", "text"), BANNED, ids=[t for _, t in BANNED])
@@ -68,6 +79,17 @@ def test_a_banned_artifact_is_reported(rule: ForbiddenRule, text: str) -> None:
 @pytest.mark.parametrize("text", ALLOWED)
 def test_ordinary_technical_prose_is_left_alone(text: str) -> None:
     assert check_forbidden_artifacts(text) == ()
+
+
+@pytest.mark.parametrize("mark", CHECK_MARKS)
+def test_a_check_or_ballot_mark_is_not_decoration(mark: str) -> None:
+    assert check_forbidden_artifacts(f"対応は {mark} で示されている。") == ()
+
+
+@pytest.mark.parametrize("char", NEIGHBOURING_EMOJI)
+def test_the_symbols_next_to_the_check_marks_stay_decoration(char: str) -> None:
+    findings = check_forbidden_artifacts(f"対応は {char} で示されている。")
+    assert [finding.rule for finding in findings] == [ForbiddenRule.DECORATIVE_EMOJI]
 
 
 def test_every_rule_has_a_description_and_a_case_covering_it() -> None:

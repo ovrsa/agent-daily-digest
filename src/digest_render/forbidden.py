@@ -9,6 +9,11 @@ article title or URL, which are quoted source text kept as they were published.
 A propositional heading (命題型見出し) has no rule here: every heading the
 renderer emits is either a fixed section name or a quoted article title, so
 there is no generated heading a pattern could judge.
+
+A finding stops the day's digest from being published, so a pattern earns its
+place only when a match is far more often the artifact than ordinary prose.
+Wordings that read as the artifact but also carry plain factual weight are left
+to the Judge (#8) and the weekly human review, which comment rather than block.
 """
 
 from __future__ import annotations
@@ -46,10 +51,19 @@ RULE_DESCRIPTIONS: dict[ForbiddenRule, str] = {
 # thematic breaks are unaffected.
 _DASHES = "–—―⸺⸻︱︲﹘－"
 
-# Arrow blocks are deliberately absent: `→` is ordinary technical punctuation.
+# `→` (U+2192) and the rest of the Arrows block are ordinary technical
+# punctuation and stay out. The arrows inside U+2B00 are in: they render as
+# emoji (`⬅` `⬆` `⬇`), which is the decorative use the contract bans.
+#
+# Check and ballot marks are cut out of the U+2600 block on purpose: `✓`
+# (U+2713), `✔` (U+2714), `✗` (U+2717) and `✘` (U+2718) are how a
+# comparison table is written in running prose, and a finding stops the day's
+# publication. `✅` (U+2705) still matches, so the decorative use is covered.
 _EMOJI = (
     "‼⁉"
-    "☀-➿"
+    "☀-✒"  # U+2600-U+2712, stopping before `✓` and `✔`
+    "✕✖"  # U+2715-U+2716, between the two cuts
+    "✙-➿"  # U+2719-U+27BF, resuming after `✗` and `✘`
     "⬀-⯿"
     "〰〽"
     "️"
@@ -75,8 +89,12 @@ _PATTERNS: dict[ForbiddenRule, re.Pattern[str]] = {
     ForbiddenRule.HYPE: re.compile(
         r"必見|見逃せな|衝撃|激変|一変させ|驚くべき|革命的|ゲームチェンジャー|[Gg]ame[ -][Cc]hanger"
     ),
+    # `だけでなく` is not here: it is the artifact often enough to notice, but it
+    # is also how a factual enumeration is written (「CLI だけでなく SDK にも入った」),
+    # and a false positive here would stop the day's publication. The two
+    # remaining wordings are narrow enough to be the artifact on their own.
     ForbiddenRule.MECHANICAL_CONTRAST: re.compile(
-        r"だけでなく|ではなく[、,].{0,30}?(?:である|だ)[。.]|単なる.{0,20}?ではな"
+        r"ではなく[、,].{0,30}?(?:である|だ)[。.]|単なる.{0,20}?ではな"
     ),
 }
 

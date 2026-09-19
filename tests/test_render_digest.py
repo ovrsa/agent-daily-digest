@@ -147,6 +147,26 @@ def test_a_newline_inside_a_field_stays_on_one_line() -> None:
     assert "- 読む理由: 一行目 二行目 三行目" in rendered
 
 
+def test_a_newline_in_a_title_cannot_open_a_new_section() -> None:
+    """A title is untrusted input, so a raw newline must not reach the heading."""
+    articles = f.articles()
+    articles["a001"] = f.normalized_article(title="Plan and act\n## injected heading")
+    rendered = f.render(articles=articles)
+    assert rendered is not None
+    assert "### [Plan and act ## injected heading]" in rendered
+    assert "\n## injected heading" not in rendered
+
+
+def test_a_newline_in_an_author_stays_on_the_meta_line() -> None:
+    """Same for the author: the meta line is one line whatever the source sent."""
+    articles = f.articles()
+    articles["a001"] = f.normalized_article(author="Alice\nKim")
+    rendered = f.render(articles=articles)
+    assert rendered is not None
+    assert "ソース: anthropic_engineering / 著者: Alice Kim / 公開: 2026-09-17" in rendered
+    assert "\nKim" not in rendered
+
+
 def test_the_published_date_keeps_the_offset_the_article_carries() -> None:
     late = f.articles()
     late["a001"] = f.normalized_article(

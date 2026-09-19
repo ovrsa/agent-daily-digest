@@ -69,6 +69,26 @@ def test_only_the_marked_region_is_replaced() -> None:
     assert index_body(updated) == "- [2026-09-18](./2026-09-18.md)"
 
 
+def test_a_section_after_the_end_marker_is_kept() -> None:
+    """`README_TEMPLATE` ends at the marker, so the tail is covered separately."""
+    readme = (
+        "# Digests\n"
+        "\n"
+        "アーカイブ。\n"
+        "\n"
+        f"{INDEX_BEGIN}\n"
+        "古い一覧\n"
+        f"{INDEX_END}\n"
+        "\n"
+        "## ライセンス\n"
+        "\n"
+        "本文は CC BY 4.0。\n"
+    )
+    updated = update_index(readme, [date(2026, 9, 18)])
+    assert updated.endswith(f"{INDEX_END}\n\n## ライセンス\n\n本文は CC BY 4.0。\n")
+    assert index_body(updated) == "- [2026-09-18](./2026-09-18.md)"
+
+
 def test_updating_an_already_filled_index_replaces_it() -> None:
     once = update_index(f.README_TEMPLATE, [date(2026, 9, 17)])
     twice = update_index(once, [date(2026, 9, 18), date(2026, 9, 17)])
