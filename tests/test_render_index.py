@@ -169,6 +169,19 @@ def test_a_rejected_digest_writes_nothing(tmp_path: Path) -> None:
     assert {p.name: p.read_bytes() for p in sorted(directory.iterdir())} == before
 
 
+def test_a_crlf_readme_is_written_back_with_lf(tmp_path: Path) -> None:
+    """改行コードは LF に揃える。同じ入力を同じバイトにすることを優先した判断。"""
+    directory = digests_dir(tmp_path)
+    crlf = f.README_TEMPLATE.replace("\n", "\r\n")
+    (directory / "README.md").write_bytes(crlf.encode("utf-8"))
+
+    write_digest(f.selector_output(), f.articles(), f.DIGEST_DATE, directory)
+
+    written = (directory / "README.md").read_bytes()
+    assert b"\r\n" not in written
+    assert index_body(written.decode("utf-8")) == "- [2026-09-18](./2026-09-18.md)"
+
+
 def test_a_readme_without_markers_stops_the_write(tmp_path: Path) -> None:
     directory = digests_dir(tmp_path)
     (directory / "README.md").write_text("# Digests\n", encoding="utf-8")
