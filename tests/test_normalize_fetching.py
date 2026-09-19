@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import io
 import ipaddress
 import socket
 import urllib.request
+import urllib.response
+from email.message import Message
 
 import pytest
 
@@ -287,3 +290,118 @@ class TestFetchPageRefusesBlockedTargets:
         outcome = fetch_page(url, timeout=0.01)
         assert isinstance(outcome, FetchFailure)
         assert "blocked target" in (outcome.detail or "")
+
+
+class _CannedHTTPHandler(urllib.request.HTTPHandler):
+    """Answers an http request from memory, so no test here opens a socket."""
+
+    def __init__(
+        self,
+        body: bytes = b"<html><body><article><p>x</p></article></body></html>",
+        content_type: str | None = "text/html; charset=utf-8",
+        *,
+        code: int = 200,
+        location: str | None = None,
+    ) -> None:
+        super().__init__()
+        self.body = body
+        self.content_type = content_type
+        self.code = code
+        self.location = location
+        self.requested: list[str] = []
+
+    def http_open(self, req: urllib.request.Request):  # noqa: ANN201
+        self.requested.append(req.full_url)
+        headers = Message()
+        if self.content_type is not None:
+            headers["Content-Type"] = self.content_type
+        if self.location is not None:
+            headers["Location"] = self.location
+        response = urllib.response.addinfourl(io.BytesIO(self.body), headers, req.full_url, self.code)
+        response.msg = "Found" if self.location else "OK"  # urllib reads it off the response
+        return response
+
+
+PUBLIC = "http://page.example/posts/1"
+
+
+def public_resolver(host: str, port: object) -> list:
+    """Names answer with a public address; an address literal answers with itself."""
+    try:
+        address = str(ipaddress.ip_address(host))
+    except ValueError:
+        address = "93.184.216.34"
+    family = socket.AF_INET6 if ":" in address else socket.AF_INET
+    return [(family, socket.SOCK_STREAM, 6, "", (address, 0))]
+
+
+class TestFetchPageReadsTheResponse:
+    """The checks that run after the connection opens, without opening one."""
+
+    def test_html_is_returned(self) -> None:
+        handler = _CannedHTTPHandler()
+        outcome = fetch_page(PUBLIC, handlers=(handler,), resolve=public_resolver)
+        assert isinstance(outcome, FetchedPage)
+        assert "<article>" in outcome.html
+        assert outcome.final_url == PUBLIC
+        assert handler.requested == [PUBLIC]
+
+    @pytest.mark.parametrize(
+        "content_type",
+        ["application/pdf", "image/png", "application/octet-stream", "video/mp4", None],
+    )
+    def test_a_content_type_this_layer_cannot_read_is_refused(self, content_type: str | None) -> None:
+        handler = _CannedHTTPHandler(body=b"%PDF-1.7", content_type=content_type)
+        outcome = fetch_page(PUBLIC, handlers=(handler,), resolve=public_resolver)
+        assert isinstance(outcome, FetchFailure)
+        assert outcome.kind is ErrorKind.PARSE
+        assert "unsupported content type" in (outcome.detail or "")
+
+    @pytest.mark.parametrize("content_type", ["text/html", "text/plain; charset=utf-8", "application/xml"])
+    def test_a_content_type_this_layer_reads_is_accepted(self, content_type: str) -> None:
+        handler = _CannedHTTPHandler(content_type=content_type)
+        assert isinstance(fetch_page(PUBLIC, handlers=(handler,), resolve=public_resolver), FetchedPage)
+
+    def test_a_body_over_the_cap_is_refused(self) -> None:
+        handler = _CannedHTTPHandler(body=b"a" * 1025)
+        outcome = fetch_page(PUBLIC, handlers=(handler,), resolve=public_resolver, max_bytes=1024)
+        assert isinstance(outcome, FetchFailure)
+        assert outcome.kind is ErrorKind.PARSE
+        assert "over 1024 bytes" in (outcome.detail or "")
+
+    def test_a_body_at_the_cap_is_read(self) -> None:
+        handler = _CannedHTTPHandler(body=b"a" * 1024)
+        outcome = fetch_page(PUBLIC, handlers=(handler,), resolve=public_resolver, max_bytes=1024)
+        assert isinstance(outcome, FetchedPage)
+        assert len(outcome.html) == 1024
+
+    def test_the_default_cap_is_the_declared_one(self) -> None:
+        handler = _CannedHTTPHandler(body=b"a" * (MAX_BODY_BYTES + 1))
+        outcome = fetch_page(PUBLIC, handlers=(handler,), resolve=public_resolver)
+        assert isinstance(outcome, FetchFailure)
+        assert f"over {MAX_BODY_BYTES} bytes" in (outcome.detail or "")
+
+
+class TestTheSeamDoesNotWeakenTheGuard:
+    """A handler passed in must not be a way past the address checks."""
+
+    def test_the_target_is_still_checked(self) -> None:
+        handler = _CannedHTTPHandler()
+        outcome = fetch_page("http://127.0.0.1/admin", handlers=(handler,))
+        assert isinstance(outcome, FetchFailure)
+        assert "blocked target" in (outcome.detail or "")
+        assert handler.requested == []
+
+    def test_a_redirect_is_still_checked(self) -> None:
+        handler = _CannedHTTPHandler(code=302, location="http://169.254.169.254/latest/meta-data/")
+        outcome = fetch_page(PUBLIC, handlers=(handler,), resolve=public_resolver)
+        assert isinstance(outcome, FetchFailure)
+        assert outcome.kind is ErrorKind.NETWORK
+        assert "blocked target" in (outcome.detail or "")
+
+    def test_the_resolver_decides_the_target(self) -> None:
+        handler = _CannedHTTPHandler()
+        outcome = fetch_page(PUBLIC, handlers=(handler,), resolve=resolver("10.0.0.5"))
+        assert isinstance(outcome, FetchFailure)
+        assert "blocked target" in (outcome.detail or "")
+        assert handler.requested == []

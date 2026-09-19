@@ -185,17 +185,21 @@ class _GuardedRedirectHandler(urllib.request.HTTPRedirectHandler):
 
     max_redirections = MAX_REDIRECTS
 
+    def __init__(self, *, resolve: Resolver = socket.getaddrinfo) -> None:
+        super().__init__()
+        self._resolve = resolve
+
     def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001, ANN201
-        _check_target(newurl)
+        _check_target(newurl, resolve=self._resolve)
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-def _check_target(url: str) -> None:
+def _check_target(url: str, *, resolve: Resolver = socket.getaddrinfo) -> None:
     parts = urllib.parse.urlsplit(url)
     if parts.scheme.lower() not in DEFAULT_SCHEMES:
         raise BlockedTarget(f"scheme {parts.scheme!r}")
     host = parts.hostname
-    if not host or not is_public_address(host):
+    if not host or not is_public_address(host, resolve=resolve):
         raise BlockedTarget("host does not resolve to a public address")
 
 
@@ -223,12 +227,20 @@ def fetch_page(
     *,
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
     max_bytes: int = MAX_BODY_BYTES,
+    handlers: tuple[urllib.request.BaseHandler, ...] = (),
+    resolve: Resolver = socket.getaddrinfo,
 ) -> FetchOutcome:
-    """Read one page over http(s). Every failure is returned, never raised."""
+    """Read one page over http(s). Every failure is returned, never raised.
+
+    `handlers` and `resolve` are seams, so the checks that run once a response
+    arrives can be exercised without a connection. Neither is a way past the
+    address checks: the guarded redirect handler is always installed, and the
+    target is checked before the opener is asked for anything.
+    """
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html"})
-    opener = urllib.request.build_opener(_GuardedRedirectHandler)
+    opener = urllib.request.build_opener(_GuardedRedirectHandler(resolve=resolve), *handlers)
     try:
-        _check_target(url)
+        _check_target(url, resolve=resolve)
         with opener.open(request, timeout=timeout) as response:
             content_type = response.headers.get("Content-Type")
             if not is_html_content_type(content_type):
