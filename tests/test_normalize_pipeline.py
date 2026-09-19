@@ -86,6 +86,29 @@ class TestRequiredFields:
         result = normalize_item(collected(url=url), fetch=basic_fetch())
         assert only_reason(result) is GateExclusionReason.INVALID_URL
 
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "https://[not-an-address]/x",
+            "https://[2001:db8::1::2]/x",
+            "https://[8.8.8.8]/x",
+            "https://[fe80::1%25en0]/x",
+        ],
+    )
+    def test_a_bracketed_host_that_is_not_an_address_is_invalid(self, url: str) -> None:
+        """The gate decides it. 3.12 raises out of `urlsplit` where 3.10 does not."""
+        result = normalize_item(collected(url=url), fetch=basic_fetch())
+        assert only_reason(result) is GateExclusionReason.INVALID_URL
+
+    def test_an_ipv6_url_keeps_its_brackets_through_the_gates(self) -> None:
+        """The canonical URL is the identity written to the state and published."""
+        canonical = "https://[2001:db8::1]/posts/1"
+        fetch = StubFetcher({canonical: page("article_basic", url=canonical)})
+        result = normalize_item(collected(url="https://[2001:0DB8::0:1]:443/posts/1"), fetch=fetch)
+        assert fetch.requested == [canonical]
+        assert result.article is not None
+        assert result.article.canonical_url == canonical
+
     @pytest.mark.parametrize("title", [None, "", "  ", "\u200b"])
     def test_a_blank_title_is_missing(self, title: str | None) -> None:
         result = normalize_item(collected(title=title), fetch=basic_fetch())

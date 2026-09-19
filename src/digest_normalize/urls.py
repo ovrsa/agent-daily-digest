@@ -12,6 +12,7 @@ canonical URL is also the link the digest publishes.
 
 from __future__ import annotations
 
+import ipaddress
 import re
 from enum import Enum
 from urllib.parse import quote, urlsplit, urlunsplit
@@ -77,7 +78,10 @@ def canonicalize_url(raw: str | None) -> str:
     if _CONTROL.search(value):
         raise UrlRejected(UrlProblem.INVALID)
 
-    parts = urlsplit(value)
+    try:
+        parts = urlsplit(value)
+    except ValueError:  # 3.12 and later reject a bracketed host that is not an address
+        raise UrlRejected(UrlProblem.INVALID) from None
     scheme = parts.scheme.lower()
     if scheme not in DEFAULT_PORTS:
         raise UrlRejected(UrlProblem.INVALID)
@@ -91,12 +95,37 @@ def canonicalize_url(raw: str | None) -> str:
     host = host.rstrip(".")
     if not host:
         raise UrlRejected(UrlProblem.INVALID)
+    if "[" in parts.netloc or ":" in host:
+        host = _canonical_ipv6_host(host)
     netloc = host if port in (None, DEFAULT_PORTS[scheme]) else f"{host}:{port}"
 
     canonical = urlunsplit((scheme, netloc, _canonical_path(parts.path), _canonical_query(parts.query), ""))
     if len(canonical) > MAX_URL_CHARS:
         raise UrlRejected(UrlProblem.INVALID)
     return canonical
+
+
+def _canonical_ipv6_host(host: str) -> str:
+    """Return an IPv6 host as one bracketed spelling, or reject it.
+
+    `urlsplit` hands back the address without the brackets a URL needs, so
+    writing it straight into the netloc produces a string no client resolves -
+    and that string would become the article's identity in the state file and
+    the link the digest publishes. An address also has several spellings, so it
+    is compressed here: two feeds writing the same host must reach one identity.
+
+    Rejecting what is not an address keeps the answer the same on every
+    interpreter. `urlsplit` itself only started refusing `[not-an-address]` in
+    3.12, and brackets are for an IPv6 literal alone, so `[8.8.8.8]` is refused
+    on both ends rather than on one.
+    """
+    try:
+        address = ipaddress.IPv6Address(host)
+    except ValueError:
+        raise UrlRejected(UrlProblem.INVALID) from None
+    if address.scope_id is not None:  # `fe80::1%en0` names an interface, not a site
+        raise UrlRejected(UrlProblem.INVALID)
+    return f"[{address.compressed}]"
 
 
 def same_site(one: str, other: str) -> bool:
