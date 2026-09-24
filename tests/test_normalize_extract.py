@@ -343,3 +343,28 @@ class TestDeterminism:
     def test_windows_line_endings_do_not_change_the_result(self) -> None:
         html = read_html("article_basic")
         assert extract_document(html.replace("\n", "\r\n")).body_text == BASIC_BODY
+
+
+def test_links_are_the_ones_the_body_cites_in_page_order() -> None:
+    """Research (#12) may follow only links the article itself cites."""
+    html = read_html("article_links")
+    links = extract_document(html).links
+    assert links == (
+        "https://github.com/example/harness-eval/blob/main/RESULTS.md",
+        "/posts/eval-method",
+        "#section-2",
+        "mailto:author@example.com",
+    )
+
+
+def test_links_in_chrome_or_hidden_elements_are_dropped() -> None:
+    html = read_html("article_links")
+    links = extract_document(html).links
+    for dropped in ("/", "https://example.com/archive", "https://attacker.example/steal",
+                    "https://example.com/related", "https://example.com/privacy"):
+        assert dropped not in links
+
+
+def test_links_follow_the_same_content_root_as_the_text() -> None:
+    html = "<main><p>Body with <a href='https://a.example/x'>a link</a>.</p></main><div><a href='https://b.example/y'>b</a></div>"
+    assert extract_document(html).links == ("https://a.example/x",)

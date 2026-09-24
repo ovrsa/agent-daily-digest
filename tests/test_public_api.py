@@ -49,8 +49,13 @@ def test_sources_do_not_mention_the_sdk() -> None:
         assert "claude_agent_sdk" not in path.read_text(encoding="utf-8"), path.name
 
 
-def test_research_contracts_are_left_to_issue_12() -> None:
+def test_research_contracts_are_defined_only_in_the_research_module() -> None:
+    """#3 left these to #12; #12 put them in one module, exported from the root."""
     owned_by_research = {"SourceDocument", "Evidence", "Claim", "EvidencePacket", "ResearchBudget"}
-    for module_name in ("digest_contracts", *(f"digest_contracts.{p.stem}" for p in PACKAGE_DIR.glob("*.py"))):
-        module = importlib.import_module(module_name)
-        assert owned_by_research.isdisjoint(vars(module)), module_name
+    for path in PACKAGE_DIR.glob("*.py"):
+        module = importlib.import_module(f"digest_contracts.{path.stem}")
+        defined_here = {
+            name for name in owned_by_research if getattr(getattr(module, name, None), "__module__", None) == module.__name__
+        }
+        assert defined_here == (owned_by_research if path.stem == "research" else set()), path.stem
+    assert owned_by_research <= set(digest_contracts.__all__)
