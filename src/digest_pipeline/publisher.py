@@ -6,8 +6,11 @@ Every side effect of a run goes through a `Publisher`, so a dry run swaps in
 decision), never a token of its own.
 
 `GitPublisher.publish` either pushes a commit or leaves the branch where it
-was: when the push fails, the commit is undone and the paths are unstaged, so
-the caller can put the files back and the next run starts from the same place.
+was: when anything stops it before the push completes, an interrupt included,
+the commit is undone and the paths are unstaged, so the caller can put the
+files back and the next run starts from the same place. An interrupt that
+lands after the remote accepted the push leaves the commit on the remote only;
+the next run's fast-forward brings it back.
 """
 
 from __future__ import annotations
@@ -86,17 +89,21 @@ class GitPublisher:
         self._git("pull", "--ff-only", self.remote, self.branch)
 
     def publish(self, paths: Sequence[Path], message: str) -> str:
-        relative = [str(Path(path).resolve().relative_to(self.repo.resolve())) for path in paths]
-        self._git("add", "--", *relative)
-        # `--` with paths commits only these files, whatever else is staged in the checkout.
-        self._git("commit", "--quiet", "-m", message, "--", *relative)
+        relative = [self._relative(path) for path in paths]
+        before = self._head()
         try:
+            self._git("add", "--", *relative)
+            # `--` with paths commits only these files, whatever else is staged in the checkout.
+            self._git("commit", "--quiet", "-m", message, "--", *relative)
             self._git("push", "--quiet", self.remote, f"HEAD:{self.branch}")
-        except StageFailed:
-            self._git("reset", "--soft", "HEAD~1")
+        except BaseException:
+            # Whatever stopped the push, an interrupt included, a commit left behind would
+            # ride along with the next run's push. Return to where the branch was.
+            if self._head() != before:
+                self._git("reset", "--soft", before)
             self._git("reset", "--quiet", "--", *relative)
             raise
-        return self._git("rev-parse", "HEAD").strip()
+        return self._head()
 
     def comment(self, commit: str, body: str) -> None:
         # `{owner}/{repo}` is filled in by gh from the checkout's remote; the body goes in on stdin.
@@ -108,6 +115,15 @@ class GitPublisher:
 
     def _git(self, *args: str) -> str:
         return self.run(["git", *args], self.repo, None)
+
+    def _head(self) -> str:
+        return self._git("rev-parse", "HEAD").strip()
+
+    def _relative(self, path: Path) -> str:
+        try:
+            return str(Path(path).resolve().relative_to(self.repo.resolve()))
+        except ValueError as exc:
+            raise StageFailed(ErrorKind.UNEXPECTED, "a path to publish is outside the repository") from exc
 
 
 @dataclass

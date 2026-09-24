@@ -95,8 +95,9 @@ def build(
 
 def summary(result: RunResult, out_dir: Path | None) -> str:
     lines = [f"run: {result.run_id}", f"status: {result.status.value}"]
-    if result.error is not None:
-        lines.append(f"error: {result.error.kind.value}" + (f" ({result.error.detail})" if result.error.detail else ""))
+    for label, error in (("error", result.error), ("metrics error", result.metrics_error)):
+        if error is not None:
+            lines.append(f"{label}: {error.kind.value}" + (f" ({error.detail})" if error.detail else ""))
     if result.commit is not None:
         lines.append(f"commit: {result.commit}")
     if result.digest_path is not None:
@@ -117,7 +118,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     result = plan.pipeline.run(args.date or date.today(), run_id=plan.run_id)
     print(summary(result, plan.out_dir))
     # An error after a finished run is the metrics record failing to be written: report it.
-    return 0 if result.status in OK_STATUSES and result.error is None else 1
+    clean = result.status in OK_STATUSES and result.error is None and result.metrics_error is None
+    return 0 if clean else 1
 
 
 if __name__ == "__main__":

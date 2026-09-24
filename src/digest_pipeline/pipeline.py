@@ -88,7 +88,9 @@ class RunResult:
     digest_path: Path | None = None
     """Set when a digest was published."""
     error: ErrorRecord | None = None
-    """Why the run stopped, when an exception ended it."""
+    """Why the run stopped, when an exception ended it, or why its metrics could not be written."""
+    metrics_error: ErrorRecord | None = None
+    """Set when the metrics record failed while another failure was already ending the run."""
 
     @property
     def published(self) -> bool:
@@ -124,7 +126,7 @@ class Pipeline:
                 run.execute()
         except Exception as exc:
             status = recorder.result.status if recorder.result is not None else RunStatus.FAILED
-            return RunResult(recorder.run_id, status, run.commit, run.digest_path, classify_exception(exc))
+            return RunResult(recorder.run_id, status, run.commit, run.digest_path, classify_exception(exc), _sink_error(recorder))
         return RunResult(recorder.run_id, recorder.result.status, run.commit, run.digest_path)
 
 
@@ -252,7 +254,8 @@ class _Run:
 
     def _comment(self, judged: JudgeResult, packets: Sequence[EvidencePacket]) -> None:
         """Post the report on the digest commit, or keep it in the local log when that fails."""
-        assert self.commit is not None, "a comment follows a published digest"
+        if self.commit is None:
+            raise RuntimeError("a comment follows a published digest")
         body = comment_body(self.recorder.run_id, self.digest_date, render_report(judged, packets))
         try:
             with self.recorder.stage(StageName.COMMENT):
@@ -273,6 +276,10 @@ class _Run:
             self.recorder.record_article(
                 article_metrics(item, result.outcome, result.article, selection=selection, extracted_chars=extracted)
             )
+
+
+def _sink_error(recorder: RunRecorder) -> ErrorRecord | None:
+    return classify_exception(recorder.sink_error) if recorder.sink_error is not None else None
 
 
 def comment_body(run_id: str, digest_date: date, report: str) -> str:

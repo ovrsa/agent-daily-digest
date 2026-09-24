@@ -95,7 +95,11 @@ def test_the_exit_code_is_zero_only_when_the_digest_run_finished_cleanly(tmp_pat
     broken = RunResult(RUN_ID, RunStatus.SUCCEEDED, error=ErrorRecord(kind=ErrorKind.UNEXPECTED))
     monkeypatch.setattr(cli, "build", lambda repo, **kw: cli.Plan(_Stub(broken), RUN_ID, None))
     assert cli.main(["--repo", str(tmp_path)]) == 1
-    assert f"run: {RUN_ID}" in capsys.readouterr().out
+    failed_twice = RunResult(RUN_ID, RunStatus.PARTIALLY_FAILED, metrics_error=ErrorRecord(kind=ErrorKind.UNEXPECTED))
+    monkeypatch.setattr(cli, "build", lambda repo, **kw: cli.Plan(_Stub(failed_twice), RUN_ID, None))
+    assert cli.main(["--repo", str(tmp_path)]) == 1
+    out = capsys.readouterr().out
+    assert f"run: {RUN_ID}" in out and "metrics error: unexpected" in out
 
 
 class _Stub:

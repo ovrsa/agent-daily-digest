@@ -124,6 +124,15 @@ def test_article_bodies_are_kept_out_of_the_metrics(tmp_path) -> None:
     assert MetricsStore(tmp_path / "metrics").load() == ()
 
 
+def test_a_metrics_failure_on_top_of_a_run_failure_is_reported_too(tmp_path) -> None:
+    body = extract_document(read_html("article_basic")).body_text
+    leaky = decision()
+    leaky["must_read"][0]["decision_reason"] = f"本文: {max(body.split(chr(10) * 2), key=len)[:120]}"
+    result = pipeline(tmp_path, happy_model(selector=[leaky]), FakePublisher(fail_on="publish")).run(DIGEST_DATE, run_id=RUN_ID)
+    assert result.status is RunStatus.FAILED and result.error.kind is ErrorKind.NETWORK
+    assert result.metrics_error is not None and result.metrics_error.kind is ErrorKind.UNEXPECTED
+
+
 # -- nothing to publish ------------------------------------------------------------------
 
 
@@ -226,6 +235,22 @@ def test_a_selector_whose_model_call_fails_publishes_nothing(tmp_path) -> None:
     assert result.status is RunStatus.FAILED and publisher.names() == ["sync"]
     select = next(stage for stage in metrics.stages if stage.stage is StageName.SELECT)
     assert select.error.kind is ErrorKind.AUTHENTICATION
+
+
+def test_a_render_failure_publishes_nothing(tmp_path, monkeypatch) -> None:
+    # The Selector already rejects what the renderer bans, so this guard is a second line;
+    # force it to prove the stage stops the run on its own.
+    from digest_pipeline import pipeline as module
+    from digest_render import ForbiddenArtifactError
+
+    def refuse(*args, **kwargs):
+        raise ForbiddenArtifactError(())
+
+    monkeypatch.setattr(module, "render_digest", refuse)
+    result, publisher, metrics = run(tmp_path, happy_model())
+    assert result.status is RunStatus.FAILED and not result.published
+    assert publisher.names() == ["sync"] and stages(metrics)["render"] == "failed"
+    assert not (tmp_path / "state" / "processed.json").exists()
 
 
 def test_a_failed_publish_puts_the_files_back_and_skips_the_audit(tmp_path) -> None:

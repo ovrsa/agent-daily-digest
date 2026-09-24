@@ -73,6 +73,54 @@ def test_a_rejected_push_undoes_the_commit_and_unstages_the_paths(repo: Path) ->
     assert raised.value.detail.startswith("git push exited 1")
 
 
+def interrupted_at(step: str):
+    """A runner that raises `KeyboardInterrupt` once `git <step>` has run (or, for push, instead of it)."""
+
+    def run(args, cwd, stdin):
+        if list(args[:2]) == ["git", step]:
+            if step == "push":
+                raise KeyboardInterrupt
+            run_command(args, cwd, stdin)
+            raise KeyboardInterrupt
+        return run_command(args, cwd, stdin)
+
+    return run
+
+
+@pytest.mark.parametrize("step", ["push", "commit"])
+def test_an_interrupt_before_the_push_completes_leaves_no_commit_behind(repo: Path, step: str) -> None:
+    before = git(repo, "rev-parse", "HEAD")
+    digest = repo / "digests" / "2026-09-25.md"
+    digest.write_text("digest of a failed run\n", encoding="utf-8")
+
+    with pytest.raises(KeyboardInterrupt):
+        GitPublisher(repo, run=interrupted_at(step)).publish([digest], "digest: 2026-09-25")
+
+    assert git(repo, "rev-parse", "HEAD") == before == remote_head(repo)
+    assert git(repo, "diff", "--cached", "--name-only") == ""
+    # The caller puts the files back; the next run's push must not carry the failed run's content.
+    digest.unlink()
+    nextday = repo / "digests" / "2026-09-26.md"
+    nextday.write_text("digest\n", encoding="utf-8")
+    GitPublisher(repo).publish([nextday], "digest: 2026-09-26")
+    assert git(repo, "log", "--format=%s", "origin/main").splitlines()[:2] == ["digest: 2026-09-26", "init"]
+    assert subprocess.run(
+        ["git", "cat-file", "-e", "main:digests/2026-09-25.md"], cwd=repo.parent / "origin.git", capture_output=True
+    ).returncode != 0
+
+
+def test_a_path_outside_the_repository_is_refused_before_any_command(repo: Path, tmp_path: Path) -> None:
+    ran: list[list[str]] = []
+
+    def record(args, cwd, stdin):
+        ran.append(list(args))
+        return run_command(args, cwd, stdin)
+
+    with pytest.raises(StageFailed, match="outside the repository"):
+        GitPublisher(repo, run=record).publish([tmp_path / "elsewhere.md"], "digest: 2026-09-25")
+    assert ran == []
+
+
 def test_sync_fast_forwards_to_the_remote(repo: Path, tmp_path: Path) -> None:
     other = tmp_path / "other"
     subprocess.run(["git", "clone", "--quiet", str(repo.parent / "origin.git"), str(other)], check=True, capture_output=True)
