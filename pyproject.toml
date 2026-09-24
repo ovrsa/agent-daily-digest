@@ -8,11 +8,14 @@ version = "0.1.0"
 description = "Evidence-backed daily digest for AI Agent and Coding Agent developers"
 readme = "README.md"
 # `X | None` in Pydantic model annotations is evaluated at runtime and needs 3.10.
-# The scheduled job runtime is not confirmed yet (#2).
+# The scheduled job runs on the local Mac with Python 3.13 (#2); 3.10 stays the floor.
 requires-python = ">=3.10"
 dependencies = [
     # 2.11 is required by `mcp>=1.23.0`, which `claude-agent-sdk` depends on.
     "pydantic>=2.11,<3",
+    # The model is called through the Agent SDK with the local claude.ai login (#2).
+    # 0.2.155 is the version the #2 spike measured structured output and errors on.
+    "claude-agent-sdk>=0.2.155",
 ]
 
 [dependency-groups]
@@ -25,7 +28,9 @@ dev = [
 packages = [
     "src/digest_collect",
     "src/digest_contracts",
+    "src/digest_llm",
     "src/digest_normalize",
+    "src/digest_observe",
     "src/digest_render",
 ]
 

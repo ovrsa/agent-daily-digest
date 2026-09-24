@@ -240,5 +240,25 @@
         "max_items": 3
       }
     ]
+  },
+  "models": {
+    "research": "claude-sonnet-5",
+    "selector": "claude-sonnet-5",
+    "judge": "claude-sonnet-5",
+    "pricing_source": "Anthropic list price per million tokens, 2026-06-24. cache_write is the 5-minute write (1.25x input), cache_read is 0.1x input.",
+    "pricing_usd_per_mtok": {
+      "claude-sonnet-5": {
+        "input": 2.0,
+        "output": 10.0,
+        "cache_write": 2.5,
+        "cache_read": 0.2
+      },
+      "claude-haiku-4-5": {
+        "input": 1.0,
+        "output": 5.0,
+        "cache_write": 1.25,
+        "cache_read": 0.1
+      }
+    }
   }
 }
