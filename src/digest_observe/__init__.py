@@ -49,6 +49,7 @@ from .recorder import (
 )
 from .report import render_summary
 from .safety import (
+    LEAK_MIN_CHARS,
     LEAK_WINDOW_CHARS,
     SECRET_PATTERNS,
     Leak,
@@ -64,6 +65,7 @@ from .summary import RoleUsage, RunSummary, StageLine, summarize
 __all__ = [
     "DEFAULT_MAX_ATTEMPTS",
     "DEFAULT_METRICS_DIR",
+    "LEAK_MIN_CHARS",
     "LEAK_WINDOW_CHARS",
     "MAX_RUN_FILES",
     "MODELS_KEY",

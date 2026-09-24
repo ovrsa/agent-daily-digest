@@ -151,11 +151,26 @@ def test_a_run_recorded_end_to_end_carries_no_body_or_prompt(tmp_path: Path) -> 
     assert BODY[:64] not in text and "記事の内容" not in text
 
 
-@pytest.mark.parametrize("length", [1, 47, 63])
+@pytest.mark.parametrize("length", [16, 47, 63])
 def test_a_sensitive_text_shorter_than_the_window_is_caught_when_copied_whole(length: int) -> None:
     short = BODY[:length]
     assert find_leaks({"decision_reason": f"see: {short}"}, (short,))[0].kind == "sensitive_text"
 
 
-def test_a_password_containing_at_signs_is_redacted_whole() -> None:
-    assert redact_secrets("clone https://user:p@ss@example.com/path failed") == "clone <redacted>example.com/path failed"
+@pytest.mark.parametrize("tiny", ["a", "e", "on", "run", "fifteen chars.."])
+def test_a_sensitive_text_below_the_floor_never_flags_the_record(tiny: str) -> None:
+    run = RunMetrics.model_validate(f.run_metrics())
+    assert len(tiny) < 16
+    assert find_leaks(run.model_dump(mode="json"), (tiny,)) == ()
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://user:p@ss@example.com/path",
+        "https://user:tok#en@example.com/path",
+        "https://user:to?ken@example.com/path",
+    ],
+)
+def test_a_password_with_reserved_characters_is_redacted_whole(url: str) -> None:
+    assert redact_secrets(f"clone {url} failed") == "clone <redacted>example.com/path failed"
