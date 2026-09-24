@@ -72,6 +72,8 @@ def test_a_real_run_works_in_the_repository_and_publishes_with_git(tmp_path: Pat
     assert plan.pipeline.store.directory == repo / "logs" / "metrics"
     assert plan.pipeline.models.selector == "claude-sonnet-5"
     assert plan.pipeline.max_articles is None
+    capped = build(repo, dry_run=True, run_id=RUN_ID, invoke=RoutedModel(), fetch=fetcher(), collect=lambda known: report(), max_articles=7)
+    assert capped.pipeline.max_articles == 7
 
 
 def test_the_article_cap_is_passed_through_and_must_be_positive(tmp_path: Path, monkeypatch, capsys) -> None:

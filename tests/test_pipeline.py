@@ -173,6 +173,7 @@ def test_the_cap_takes_fixed_watch_first_then_the_newest() -> None:
     ]
     ids = lambda rs: [r.article.article_id for r in rs]  # noqa: E731
     # The chosen keep their collection order.
+    assert ids(_within(1, passed)) == ["blog_new"]
     assert ids(_within(2, passed)) == ["blog_old", "blog_new"]
     assert ids(_within(3, passed)) == ["hn_new", "blog_old", "blog_new"]
     assert _within(None, passed) == passed and _within(9, passed) == passed
