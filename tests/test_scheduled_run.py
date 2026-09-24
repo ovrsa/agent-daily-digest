@@ -120,3 +120,34 @@ def test_a_placeholder_the_installer_does_not_fill_stops_it(tmp_path: Path) -> N
     )
     done = subprocess.run(["/bin/bash", str(repo / "launchd" / "install.sh"), "--print"], capture_output=True, text=True)
     assert done.returncode != 0 and "left unfilled" in done.stderr and done.stdout == ""
+
+
+@pytest.mark.skipif(shutil.which("plutil") is None, reason="plutil is macOS only")
+def test_a_failed_install_leaves_the_installed_agent_as_it_was(tmp_path: Path) -> None:
+    repo = checkout(tmp_path)
+    template = repo / "launchd" / "com.ovrsa.agent-daily-digest.plist.template"
+    template.write_text(
+        template.read_text(encoding="utf-8").replace("<key>RunAtLoad</key>", "<key>Extra</key>\n    <string>@NEW@</string>\n    <key>RunAtLoad</key>"),
+        encoding="utf-8",
+    )
+    home = tmp_path / "home"
+    agents = home / "Library" / "LaunchAgents"
+    agents.mkdir(parents=True)
+    installed = agents / "com.ovrsa.agent-daily-digest.plist"
+    installed.write_text("the agent installed earlier\n", encoding="utf-8")
+
+    # A stand-in launchctl first on PATH, so a regression here can never load a real agent.
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    called = tmp_path / "launchctl-called"
+    stub = bin_dir / "launchctl"
+    stub.write_text(f'#!/bin/sh\necho "$@" >> "{called}"\nexit 1\n', encoding="utf-8")
+    stub.chmod(0o755)
+    env = {**os.environ, "HOME": str(home), "PATH": f"{bin_dir}:{os.environ['PATH']}"}
+
+    done = subprocess.run(["/bin/bash", str(repo / "launchd" / "install.sh")], env=env, capture_output=True, text=True)
+    # The render fails before launchctl is reached, and the installed file is untouched.
+    assert done.returncode != 0 and "left unfilled" in done.stderr
+    assert not called.exists()
+    assert installed.read_text(encoding="utf-8") == "the agent installed earlier\n"
+    assert sorted(p.name for p in agents.iterdir()) == ["com.ovrsa.agent-daily-digest.plist"]

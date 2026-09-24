@@ -52,7 +52,12 @@ case "${1:-}" in
     ;;
   "")
     mkdir -p "$(dirname "$TARGET")" "$REPO_ROOT/logs"
-    render "$TARGET"
+    # Render beside the target and move it into place only once it checks out,
+    # so a failed render never replaces an agent that is already installed.
+    rendered="$(mktemp "$TARGET.XXXXXX")"
+    trap 'rm -f "$rendered"' EXIT
+    render "$rendered"
+    mv "$rendered" "$TARGET"
     launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
     launchctl bootstrap "$DOMAIN" "$TARGET"
     echo "loaded $LABEL from $TARGET"
