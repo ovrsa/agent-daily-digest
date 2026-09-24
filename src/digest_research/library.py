@@ -44,12 +44,22 @@ class SourceLibrary:
         return self.document(location.article_id, location.doc_id).paragraph(location.paragraph_id)
 
     def excerpt(self, evidence_ids: Iterable[str], *, max_chars: int = 4_000) -> str:
-        """The paragraphs behind `evidence_ids`, each once, as one untrusted block."""
+        """The paragraphs behind `evidence_ids`, each once, as one untrusted block.
+
+        An ID is model-written text: one that is not an Evidence ID, or names
+        a paragraph the library does not hold, is reported as not found, and
+        every ID is escaped like the rest of the block.
+        """
         lines = [UNTRUSTED_OPEN, HEADER]
         used = 0
         seen: set[tuple[str, str, str]] = set()
         for evidence_id in evidence_ids:
-            location = parse_evidence_id(evidence_id)
+            label = escape_untrusted(evidence_id)
+            try:
+                location = parse_evidence_id(evidence_id)
+            except ValueError:
+                lines.append(f"[{label}] (原文が見つからない)")
+                continue
             key = (location.article_id, location.doc_id, location.paragraph_id)
             if key in seen:
                 continue
@@ -57,13 +67,13 @@ class SourceLibrary:
             try:
                 paragraph = self.resolve(evidence_id)
             except KeyError:
-                lines.append(f"[{evidence_id}] (原文が見つからない)")
+                lines.append(f"[{label}] (原文が見つからない)")
                 continue
             if used + len(paragraph.text) > max_chars:
-                lines.append(f"[{evidence_id}] (文字数の上限で省略)")
+                lines.append(f"[{label}] (文字数の上限で省略)")
                 continue
             used += len(paragraph.text)
-            lines.append(f"[{evidence_id}] {escape_untrusted(paragraph.text)}")
+            lines.append(f"[{label}] {escape_untrusted(paragraph.text)}")
         lines.append(UNTRUSTED_CLOSE)
         return "\n".join(lines)
 
