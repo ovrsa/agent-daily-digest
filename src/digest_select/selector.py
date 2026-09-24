@@ -16,13 +16,20 @@ policy):
 - the 根拠 line cites at least one concrete piece of evidence
 - no article whose research is `insufficient`, and no supporting article of a
   research cluster, is adopted
-- the entry text carries none of the artifacts the renderer bans
+- the entry text carries none of the artifacts the renderer bans, and each
+  field stays within `ENTRY_TEXT_MAX` (a digest is read in five minutes)
+
+A retry is told which rules the last decision broke, by location and rule
+name only, appended after the unchanged prompt so the cached prefix still
+applies. The rejected text itself is never sent back.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+
+from pydantic import ValidationError
 
 from digest_contracts import (
     CONCRETE_EVIDENCE_KINDS,
@@ -45,7 +52,21 @@ from .prompt import PROMPT_VERSION, SYSTEM_PROMPT, selection_prompt
 Invoker = Callable[[StructuredRequest], LLMResponse]
 
 DEFAULT_RETRY = RetryPolicy(max_attempts=3)
-"""Up to two retries: a rejected decision is sent back with nothing but a fresh attempt."""
+"""Up to two retries, each told which rules the previous decision broke."""
+
+ENTRY_TEXT_MAX: Mapping[str, int] = {"what_happened": 300, "why_read": 200, "evidence": 300, "caveat": 200}
+"""Characters per entry field. The contract has no cap; the published digest needs one."""
+
+RULE_HINTS: Mapping[str, str] = {
+    "missing_article": "入力の記事が must_read / worth_knowing / excluded のどこにも入っていない",
+    "unknown_article": "入力に無い article_id を使った",
+    "unknown_evidence_id": "その記事の evidence に無い ID を引いた",
+    "evidence_not_concrete": "根拠の evidence_ids に code / config / number / comparison / failure / procedure の根拠が無い",
+    "insufficient_research_included": "research が insufficient の記事を採用した",
+    "supporting_article_included": "represented_by がある記事を採用した",
+    "entry_too_long": "掲載文が長すぎる（what_happened と evidence は300字、why_read と caveat は200字まで）",
+}
+"""What a rule name means, for the retry note. `forbidden_*` rules are explained by their own name."""
 
 EXCERPT_CHARS_PER_PACKET = 1_500
 
@@ -91,10 +112,27 @@ class Selector:
             schema=SelectorOutput.model_json_schema(),
             max_budget_usd=self.max_call_usd,
         )
+        broken: list[ValidationIssue] = []
+
+        def invoke(attempt: int) -> LLMResponse:
+            if attempt == 1 or not broken:
+                return self.invoke(request)
+            return self.invoke(replace(request, prompt=request.prompt + retry_note(broken)))
+
+        def parse(value: object) -> SelectorOutput:
+            try:
+                return checked(SelectorOutput.model_validate(value), by_id)
+            except OutputRejected as exc:
+                broken[:] = exc.issues
+                raise
+            except ValidationError as exc:
+                broken[:] = ValidationIssue.from_validation_error(exc)
+                raise
+
         outcome = measured_call(
             CallSpec(call_id=CALL_ID, role=LLMRole.SELECTOR, model=self.model, prompt_version=PROMPT_VERSION),
-            lambda _attempt: self.invoke(request),
-            lambda value: checked(SelectorOutput.model_validate(value), by_id),
+            invoke,
+            parse,
             pricing=self.pricing,
             policy=self.policy,
             record=self.record,
@@ -119,6 +157,15 @@ class Selector:
                 )
             blocks.append(block)
         return selection_prompt(tuple(blocks))
+
+
+def retry_note(issues: Sequence[ValidationIssue]) -> str:
+    """The rules the last decision broke, by location and rule name. No rejected text."""
+    lines = ["", "", "前回の出力は次の規則に違反したため受け付けなかった。すべて直して、全体を出し直す:"]
+    for issue in issues:
+        hint = RULE_HINTS.get(issue.type)
+        lines.append(f"- {issue.loc}: {issue.type}" + (f"（{hint}）" if hint else ""))
+    return "\n".join(lines)
 
 
 def checked(output: SelectorOutput, packets: Mapping[str, EvidencePacket]) -> SelectorOutput:
@@ -163,6 +210,10 @@ def _included_issues(at: str, article: IncludedArticle, packet: EvidencePacket) 
     statements = [("what_happened", entry.what_happened), ("evidence", entry.evidence)]
     if entry.caveat is not None:
         statements.append(("caveat", entry.caveat))
+    texts = {name: statement.text for name, statement in statements} | {"why_read": entry.why_read}
+    for name, text in texts.items():
+        if len(text) > ENTRY_TEXT_MAX[name]:
+            issues.append(ValidationIssue(loc=f"{at}.entry.{name}", type="entry_too_long"))
     for name, statement in statements:
         for position, evidence_id in enumerate(statement.evidence_ids):
             if evidence_id not in packet.evidence_ids:

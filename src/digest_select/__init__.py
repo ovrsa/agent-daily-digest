@@ -10,24 +10,30 @@ from .prompt import PROMPT_VERSION, SYSTEM_PROMPT, selection_prompt
 from .selector import (
     CALL_ID,
     DEFAULT_RETRY,
+    ENTRY_TEXT_MAX,
     EXCERPT_CHARS_PER_PACKET,
+    RULE_HINTS,
     Invoker,
     SelectionResult,
     Selector,
     checked,
+    retry_note,
     selection_issues,
 )
 
 __all__ = [
     "CALL_ID",
     "DEFAULT_RETRY",
+    "ENTRY_TEXT_MAX",
     "EXCERPT_CHARS_PER_PACKET",
     "PROMPT_VERSION",
+    "RULE_HINTS",
     "SYSTEM_PROMPT",
     "Invoker",
     "SelectionResult",
     "Selector",
     "checked",
+    "retry_note",
     "selection_issues",
     "selection_prompt",
 ]

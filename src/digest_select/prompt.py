@@ -38,6 +38,7 @@ source_reliability（情報源の信頼性）、reader_impact（読者への影�
 - why_read: 読む理由。Agent 開発や運用の判断材料がどう増えるかを、編集上の判断として1〜2文で書く。事実と混ぜない。
 - evidence: 根拠。コード、設定、数値、比較条件、失敗例などを短く示す。evidence_ids には code / config / number / comparison / failure / procedure の根拠を1件以上入れる。
 - caveat: 本文に制約や未確認事項があるときだけ書く。無ければ省く。情報不足を一般論で埋めない。
+- 長さ: what_happened と evidence は300字以内、why_read と caveat は200字以内。
 - evidence_ids には、その記事の evidence にある ID だけを使う。他の記事の ID や、存在しない ID を作らない。
 - 主体を明記する（誰がそう述べたか、誰が何をしたか）。「〜と言われている」「注目されている」「話題になっている」は使わない。
 - 次の語と記号は使わない: 画期的、革新的、圧倒的、驚異的、素晴らしい、目覚ましい、まさに、極めて重要、必見、見逃せない、衝撃、

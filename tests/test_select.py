@@ -188,3 +188,47 @@ def test_the_ordinary_input_is_packets_and_partial_packets_add_their_paragraphs(
     assert "[numbers_no_conditions#main/p2#1] The new agent resolves 85 percent" in prompt
     assert "[harness_retry#main/p1#1]" not in prompt
     assert model.requests[0].schema == SelectorOutput.model_json_schema()
+
+
+@pytest.mark.parametrize(
+    ("field", "limit"),
+    [("what_happened", 300), ("why_read", 200), ("evidence", 300), ("caveat", 200)],
+)
+def test_entry_text_over_its_length_cap_is_rejected(field: str, limit: int) -> None:
+    data = decision()
+    target = data["must_read"][0]["entry"]
+    if field == "caveat":
+        target["caveat"] = {"text": "x", "evidence_ids": []}
+    long_text = "あ" * (limit + 1)
+    if field == "why_read":
+        target["why_read"] = long_text
+    else:
+        target[field]["text"] = long_text
+    assert "entry_too_long" in issue_types(data)
+    if field == "why_read":
+        target["why_read"] = "あ" * limit
+    else:
+        target[field]["text"] = "あ" * limit
+    assert "entry_too_long" not in issue_types(data)
+
+
+def test_a_retry_tells_the_model_which_rules_the_last_decision_broke() -> None:
+    broken = decision()
+    broken["excluded"].pop()
+    broken["must_read"][0]["entry"]["why_read"] = "画期的である。"
+    model = ScriptedModel(broken, decision())
+    selector(model).select(PACKETS)
+
+    first, second = (request.prompt for request in model.requests)
+    assert "前回の出力" not in first
+    assert second.startswith(first)
+    retry_note = second[len(first):]
+    assert "missing_article" in retry_note and "forbidden_abstract_praise" in retry_note
+    # Only locations and rule names go back, never the rejected text.
+    assert "画期的" not in retry_note
+
+
+def test_a_partial_packet_without_its_source_says_so_instead_of_inventing_it() -> None:
+    model = ScriptedModel(decision())
+    Selector(invoke=model, pricing=PRICING, model="claude-sonnet-5").select(PACKETS)
+    assert "(原文が見つからない)" in model.requests[0].prompt
