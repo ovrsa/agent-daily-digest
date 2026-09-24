@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:wfw="http://wellformedweb.org/CommentAPI/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:sy="http://purl.org/rss/1.0/modules/syndication/" xmlns:slash="http://purl.org/rss/1.0/modules/slash/" version="2.0">
+  <channel>
+    <title>逆瀬川ちゃんのほーむぺーじ</title>
+    <link>https://nyosegawa.com/</link>
+    <atom:link href="https://nyosegawa.com/feed.xml" rel="self" type="application/rss+xml"/>
+    <description>逆瀬川のポートフォリオ・ブログ</description>
+    <lastBuildDate>Fri, 11 Sep 2026 11:10:28 GMT</lastBuildDate>
+    <language>en</language>
+    <generator>Lume 0deb7b0594d6be12fca9bc001beaf6ab30cfdeca</generator>
+    <item>
+      <title>生成AI以前と以後でエンジニアの文章はどう変わったのか: Qiitaの7万記事を数えてみた話</title>
+      <link>https://nyosegawa.com/posts/qiita-writing-before-after-ai/</link>
+      <guid isPermaLink="false">https://nyosegawa.com/posts/qiita-writing-before-after-ai/</guid>
+      <description>2019年から2026年までの各年8月にQiitaへ投稿された約7万件の記事を集めて、文の長さ、読点、太字や箇条書き、語彙が生成AI以前と以後でどう変わったのかを調べました</description>
+      
+      <pubDate>Fri, 11 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Antigravity Gemini 3.5 FlashとCursor Composer 2.5をHarnessBenchで評価した話</title>
+      <link>https://nyosegawa.com/posts/harness-bench-antigravity-composer-25/</link>
+      <guid isPermaLink="false">https://nyosegawa.com/posts/harness-bench-antigravity-composer-25/</guid>
+      <description>
+        HarnessBenchの27問でAntigravity / Gemini 3.5 Flash (High)、Cursor / Composer 2.5 fast、Cursor / Composer 2.5 normalを追加評価し、既存14条件と合わせて比較します
+      </description>
+      
+      <pubDate>Sun, 24 May 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Evaluating Antigravity Gemini 3.5 Flash and Cursor Composer 2.5 on HarnessBench</title>
+      <link>https://nyosegawa.com/en/posts/harness-bench-antigravity-composer-25/</link>
+      <guid isPermaLink="false">https://nyosegawa.com/en/posts/harness-bench-antigravity-composer-25/</guid>
+      <description>
+        I added Antigravity / Gemini 3.5 Flash (High), Cursor / Composer 2.5 fast, and Cursor / Composer 2.5 normal to HarnessBench and compare them against the existing 14 conditions.
+      </description>
+      
+      <pubDate>Sun, 24 May 2026 00:00:00 GMT</pubDate>
+    </item>
+    
+    
+    
+    
+    
+    
+    
+  </channel>
+</rss>

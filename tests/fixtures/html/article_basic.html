@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Harness retry budget - Example Engineering</title>
+  <link rel="canonical" href="https://example.com/posts/retry-budget?utm_source=feed">
+  <meta name="author" content="Synthetic Author">
+  <meta property="article:published_time" content="2026-09-16T22:15:00+09:00">
+  <style>.hero { color: red; }</style>
+</head>
+<body>
+  <nav><a href="/">Home</a><a href="/archive">Archive</a></nav>
+  <header class="site-header">Example Engineering Blog</header>
+  <article>
+    <h1>Harness retry budget</h1>
+    <p>We capped agent retries at <code>3</code> per stage and measured the change.</p>
+    <h2>What we changed</h2>
+    <ul>
+      <li>Retry budget per stage</li>
+      <li>Backoff without jitter</li>
+    </ul>
+    <pre><code>budget = RetryBudget(max_attempts=3)
+runner.attach(budget)</code></pre>
+    <blockquote>Cutting retries removed 41% of wasted tokens.</blockquote>
+    <table>
+      <tr><th>Stage</th><th>Before</th><th>After</th></tr>
+      <tr><td>select</td><td>9.2s</td><td>6.1s</td></tr>
+    </table>
+    <p>The full configuration lives in the repository.</p>
+  </article>
+  <aside class="related">Related posts you may like</aside>
+  <footer>Copyright Example</footer>
+  <script>window.analytics.track("view");</script>
+</body>
+</html>

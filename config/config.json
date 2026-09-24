@@ -41,5 +41,204 @@
     "openai/codex",
     "princeton-nlp/SWE-agent",
     "block/goose"
-  ]
+  ],
+  "collection": {
+    "window_days": 7,
+    "max_items_per_source": 12,
+    "http": {
+      "timeout_seconds": 20,
+      "user_agent": "agent-daily-digest/0.1 (+https://github.com/ovrsa/agent-daily-digest)",
+      "max_response_bytes": 8388608
+    },
+    "sources": [
+      {
+        "id": "simonw",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://simonwillison.net/atom/everything/"
+      },
+      {
+        "id": "boristane",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://boristane.com/rss.xml"
+      },
+      {
+        "id": "nyosegawa",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://nyosegawa.com/feed.xml"
+      },
+      {
+        "id": "addyosmani",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://addyosmani.com/rss.xml"
+      },
+      {
+        "id": "claude_blog",
+        "kind": "fixed_watch",
+        "connector": "sitemap",
+        "enabled": true,
+        "url": "https://claude.com/sitemap.xml",
+        "url_prefix": "https://claude.com/blog/",
+        "max_items": 40,
+        "max_metadata_probes": 40
+      },
+      {
+        "id": "anthropic_engineering",
+        "kind": "fixed_watch",
+        "connector": "sitemap",
+        "enabled": true,
+        "url": "https://www.anthropic.com/sitemap.xml",
+        "url_prefix": "https://www.anthropic.com/engineering/",
+        "max_metadata_probes": 10
+      },
+      {
+        "id": "ai_news_smol",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://buttondown.com/ainews/rss"
+      },
+      {
+        "id": "latent_space",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://www.latent.space/feed"
+      },
+      {
+        "id": "interconnects",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://www.interconnects.ai/feed"
+      },
+      {
+        "id": "hf_papers",
+        "kind": "fixed_watch",
+        "connector": "hf_papers",
+        "enabled": true,
+        "url": "https://huggingface.co/api/daily_papers"
+      },
+      {
+        "id": "gh_anthropics_claude-code",
+        "kind": "fixed_watch",
+        "connector": "gh_releases",
+        "enabled": true,
+        "repo": "anthropics/claude-code",
+        "max_items": 2
+      },
+      {
+        "id": "gh_aider-ai_aider",
+        "kind": "fixed_watch",
+        "connector": "gh_releases",
+        "enabled": true,
+        "repo": "Aider-AI/aider",
+        "max_items": 2
+      },
+      {
+        "id": "gh_cline_cline",
+        "kind": "fixed_watch",
+        "connector": "gh_releases",
+        "enabled": true,
+        "repo": "cline/cline",
+        "max_items": 2
+      },
+      {
+        "id": "gh_continuedev_continue",
+        "kind": "fixed_watch",
+        "connector": "gh_releases",
+        "enabled": true,
+        "repo": "continuedev/continue",
+        "max_items": 2
+      },
+      {
+        "id": "gh_openai_codex",
+        "kind": "fixed_watch",
+        "connector": "gh_releases",
+        "enabled": true,
+        "repo": "openai/codex",
+        "max_items": 2
+      },
+      {
+        "id": "gh_princeton-nlp_swe-agent",
+        "kind": "fixed_watch",
+        "connector": "gh_releases",
+        "enabled": true,
+        "repo": "princeton-nlp/SWE-agent",
+        "max_items": 2
+      },
+      {
+        "id": "gh_block_goose",
+        "kind": "fixed_watch",
+        "connector": "gh_releases",
+        "enabled": true,
+        "repo": "block/goose",
+        "max_items": 2
+      },
+      {
+        "id": "hackernews",
+        "kind": "discovery",
+        "connector": "hackernews",
+        "enabled": true,
+        "url": "https://hn.algolia.com/api/v1/search",
+        "keywords": [
+          "llm",
+          "claude",
+          "coding agent",
+          "agent",
+          "rag",
+          "anthropic",
+          "openai",
+          "gpt",
+          "cursor",
+          "cline",
+          "aider",
+          "swe-bench",
+          "mcp"
+        ],
+        "min_points": 30,
+        "window_hours": 24,
+        "hits_per_keyword": 20
+      },
+      {
+        "id": "reddit_localllama",
+        "kind": "discovery",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://www.reddit.com/r/LocalLLaMA/top.rss?t=day&limit=3",
+        "max_items": 3
+      },
+      {
+        "id": "reddit_claudeai",
+        "kind": "discovery",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://www.reddit.com/r/ClaudeAI/top.rss?t=day&limit=3",
+        "max_items": 3
+      },
+      {
+        "id": "reddit_cursor",
+        "kind": "discovery",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://www.reddit.com/r/cursor/top.rss?t=day&limit=3",
+        "max_items": 3
+      },
+      {
+        "id": "reddit_machinelearning",
+        "kind": "discovery",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://www.reddit.com/r/MachineLearning/top.rss?t=day&limit=3",
+        "max_items": 3
+      }
+    ]
+  }
 }

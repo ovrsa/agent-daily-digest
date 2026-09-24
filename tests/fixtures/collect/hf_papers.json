@@ -1,0 +1,29 @@
+[
+  {
+    "title": "LimiX-2: A Contextual Mechanism Network Towards General Structured-Data Intelligence",
+    "publishedAt": "2026-09-14T20:00:00.000Z",
+    "paper": {
+      "id": "2609.17488",
+      "summary": "We introduce LimiX-2, a new model in the LimiX family, developed through model and data scaling guided by our previously established scaling laws. LimiX-2 adopts the Contextual Mechanism Networks (CMNs) paradigm and is pretrained with Context-Conditional Masked Modeling (CCMM). CMNs shifts the organ",
+      "upvotes": 104
+    }
+  },
+  {
+    "title": "ScienceIDE: Turning World's Scientific Codebase into Agent Learnable Environments",
+    "publishedAt": "2026-09-15T20:00:00.000Z",
+    "paper": {
+      "id": "2609.19134",
+      "summary": "Scientific code repositories encode decades of human knowledge in executable models, methods, and tools. Yet fragmented toolchains, implicit domain conventions, and specialized correctness criteria make this knowledge difficult to convert into reliable learning experience-a challenge we call the sci",
+      "upvotes": 70
+    }
+  },
+  {
+    "title": "Rethinking Critic Learning in PPO: Understanding and Mitigating Value Flattening",
+    "publishedAt": "2026-09-15T20:00:00.000Z",
+    "paper": {
+      "id": "2609.18708",
+      "summary": "In reinforcement learning for large language models, Proximal Policy Optimization (PPO) commonly uses a critic to estimate state values and reduce the variance of policy updates. However, we uncover a systematic failure mode in PPO critics, which we call Value Flattening: state values, estimated fro",
+      "upvotes": 60
+    }
+  }
+]
