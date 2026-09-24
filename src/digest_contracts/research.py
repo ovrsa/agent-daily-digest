@@ -119,7 +119,7 @@ class Evidence(ContractModel):
     evidence_id: EvidenceId
     kind: EvidenceKind
     quote: Annotated[NonBlankStr, StringConstraints(max_length=EVIDENCE_QUOTE_MAX_CHARS)]
-    """Verbatim from the paragraph the ID names. Research checks it before accepting."""
+    """Verbatim from the paragraph the ID names, as the source wrote it. Research checks it before accepting."""
 
 
 class ConceptArea(str, Enum):

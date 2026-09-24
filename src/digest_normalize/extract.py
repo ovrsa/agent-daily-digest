@@ -16,6 +16,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from html.parser import HTMLParser
+from typing import TypeVar
 
 from ._text import collapse_text, is_blank, normalize_block
 
@@ -345,7 +346,10 @@ def extract_document(html: str) -> ExtractedDocument:
     )
 
 
-def _content_root(items: list, like: list[_Block] | None = None) -> list:
+_Placed = TypeVar("_Placed", _Block, _Link)
+
+
+def _content_root(items: list[_Placed], like: list[_Block] | None = None) -> list[_Placed]:
     """The items inside the part of the page that holds the entry.
 
     The part is chosen from the text blocks (`like`, or `items` themselves), so
