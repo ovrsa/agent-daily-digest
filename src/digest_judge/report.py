@@ -24,6 +24,9 @@ ANSWERS = ("妥当", "一部妥当", "不当", "判断不能")
 TEXT_MAX_CHARS = 400
 """Per problem and per fix. `source_evidence` is already capped at 300 by the contract."""
 
+COMMENT_FINDINGS_MAX = 20
+"""Findings shown in one comment, most severe first. The rest are counted, and `finding_metrics` keeps all."""
+
 _SEVERITY_ORDER = {Severity.HIGH: 0, Severity.MEDIUM: 1, Severity.LOW: 2}
 _KIND_LABELS = {
     AuditTargetKind.MUST_READ: "Must Read",
@@ -48,10 +51,13 @@ def render_report(result: JudgeResult, packets: Sequence[EvidencePacket]) -> str
         lines += [f"- 結果: 失敗（{kind}）。ダイジェストは公開済みで、この回の指摘は無い", ""]
         return "\n".join(lines)
     findings = sorted(result.report.findings, key=lambda f: _SEVERITY_ORDER[f.assessment.severity])
+    shown, omitted = findings[:COMMENT_FINDINGS_MAX], findings[COMMENT_FINDINGS_MAX:]
     lines.append(f"- 指摘: {_findings_line(findings)}")
-    for finding in findings:
+    for finding in shown:
         lines += _finding_lines(finding, by_id)
-    if findings:
+    if omitted:
+        lines += ["", f"ほかに {_findings_line(omitted)} の指摘は、コメントの大きさを抑えるため載せていない。分類は実行メトリクスに残る。"]
+    if shown:
         lines += [
             "",
             "### 回答の書き方",
@@ -59,7 +65,7 @@ def render_report(result: JudgeResult, packets: Sequence[EvidencePacket]) -> str
             f"このコミットへ、指摘ごとに1行ずつ `ID: 回答` の形で書く。回答は {' / '.join(ANSWERS)} のどれか。理由は回答の後に続けてよい。",
             "",
             "```text",
-            *(f"{finding.finding_id}: " for finding in findings),
+            *(f"{finding.finding_id}: " for finding in shown),
             "```",
         ]
     lines.append("")

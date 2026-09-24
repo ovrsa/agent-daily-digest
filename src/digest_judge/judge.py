@@ -11,9 +11,11 @@ so no conversation is shared.
 
 A failed model call, or a report that stays invalid after the retry, is a
 `JudgeResult` with `error` set rather than an exception, so the caller keeps
-the digest published (Design Doc, Failure policy). Only a bug propagates, after
-the measurement boundary has recorded it as unexpected. A report that names an
-article outside the audit targets is rejected and retried.
+the digest published (Design Doc, Failure policy). Any `SelectorOutput` the
+contract accepts can be audited, including one no Selector checked: an Evidence
+ID the source library cannot resolve is shown as not found. Only a bug raises,
+and the caller's Judge stage has to contain it. A report that names an article
+outside the audit targets is rejected and retried.
 """
 
 from __future__ import annotations
@@ -210,7 +212,8 @@ def _placement(output: SelectorOutput, article_id: str) -> tuple[str, IncludedAr
 
 
 def _statement(statement: FactStatement | CaveatStatement) -> str:
-    return f"{escape_untrusted(statement.text)} [evidence: {', '.join(statement.evidence_ids) or '-'}]"
+    ids = ", ".join(statement.evidence_ids) or "-"
+    return f"{escape_untrusted(statement.text)} [evidence: {escape_untrusted(ids)}]"
 
 
 def _cited(output: SelectorOutput, article_id: str) -> list[str]:

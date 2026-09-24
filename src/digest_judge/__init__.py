@@ -4,7 +4,7 @@ Import from this package, not from its submodules. `select_targets` picks the
 articles to audit by fixed rules, `Judge.audit` makes one structured call
 through `digest_observe.measured_call` and returns a `JudgeResult`, and
 `render_report` turns it into the commit comment a person answers weekly. A
-model failure is a `JudgeResult` with `error` set, so it never stops publishing.
+model failure is a `JudgeResult` with `error` set rather than an exception.
 """
 
 from .judge import (
@@ -19,12 +19,13 @@ from .judge import (
     retry_note,
 )
 from .prompt import PROMPT_VERSION, SYSTEM_PROMPT, audit_prompt
-from .report import ANSWERS, TEXT_MAX_CHARS, finding_metrics, render_report
+from .report import ANSWERS, COMMENT_FINDINGS_MAX, TEXT_MAX_CHARS, finding_metrics, render_report
 from .targets import AuditTarget, boundary_score, select_targets
 
 __all__ = [
     "ANSWERS",
     "CALL_ID",
+    "COMMENT_FINDINGS_MAX",
     "DEFAULT_RETRY",
     "EXCERPT_CHARS_PER_TARGET",
     "PROMPT_VERSION",
