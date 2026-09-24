@@ -260,5 +260,13 @@
         "cache_read": 0.1
       }
     }
+  },
+  "research": {
+    "max_rounds": 2,
+    "max_extra_pages": 3,
+    "max_link_depth": 1,
+    "max_open_questions": 3,
+    "max_seconds": 240.0,
+    "max_source_chars": 40000
   }
 }

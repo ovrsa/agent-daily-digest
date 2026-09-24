@@ -113,12 +113,29 @@ class ExtractedDocument:
     canonical_url_raw: str | None = None
     heading_count: int = 0
     code_block_count: int = 0
+    links: tuple[str, ...] = ()
+    """`href` values of the links inside the kept body, raw and in page order.
+
+    Research (#12) follows these, and only these, to reach the primary sources
+    an article cites. A link in site chrome or a hidden element is not the
+    article citing anything, so it is dropped by the same rules as the text.
+    Resolving and canonicalizing the values is the caller's job; this parser
+    does not know the page URL.
+    """
 
 
 @dataclass
 class _Block:
     kind: str
     text: str
+    article_id: int | None
+    in_main: bool
+    in_role_main: bool
+
+
+@dataclass
+class _Link:
+    href: str
     article_id: int | None
     in_main: bool
     in_role_main: bool
@@ -138,6 +155,7 @@ class _Extractor(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
         self.blocks: list[_Block] = []
+        self.links: list[_Link] = []
         self.author: str | None = None
         self.published_at_raw: str | None = None
         self.canonical_url_raw: str | None = None
@@ -181,6 +199,15 @@ class _Extractor(HTMLParser):
 
         if skipped:
             return
+        if tag == "a" and not is_blank(values.get("href")):
+            self.links.append(
+                _Link(
+                    href=values["href"].strip(),
+                    article_id=self._enclosing_article,
+                    in_main=any(frame.is_main for frame in self._stack),
+                    in_role_main=any(frame.is_role_main for frame in self._stack),
+                )
+            )
         if tag in _BLOCK_TAGS:
             self._kind = _kind_of(tag)
             self._heading_level = _HEADINGS.get(tag, 0)
@@ -308,6 +335,7 @@ def extract_document(html: str) -> ExtractedDocument:
 
     blocks = _content_root(parser.blocks)
     return ExtractedDocument(
+        links=tuple(dict.fromkeys(link.href for link in _content_root(parser.links, like=parser.blocks))),
         body_text=_join(blocks),
         author=parser.author,
         published_at_raw=parser.published_at_raw,
@@ -317,17 +345,19 @@ def extract_document(html: str) -> ExtractedDocument:
     )
 
 
-def _content_root(blocks: list[_Block]) -> list[_Block]:
+def _content_root(items: list, like: list[_Block] | None = None) -> list:
+    """The items inside the part of the page that holds the entry.
+
+    The part is chosen from the text blocks (`like`, or `items` themselves), so
+    links are kept from exactly where the body came from.
+    """
+    reference = items if like is None else like
     # A permalink page usually has one <article>; an index page has several, and
     # the first one is the entry the feed pointed at.
-    first_article = [block for block in blocks if block.article_id == 1]
-    if first_article:
-        return first_article
-    for selector in (lambda b: b.in_main, lambda b: b.in_role_main):
-        selected = [block for block in blocks if selector(block)]
-        if selected:
-            return selected
-    return blocks
+    for selector in (lambda b: b.article_id == 1, lambda b: b.in_main, lambda b: b.in_role_main):
+        if any(selector(block) for block in reference):
+            return [item for item in items if selector(item)]
+    return items
 
 
 def _join(blocks: list[_Block]) -> str:
