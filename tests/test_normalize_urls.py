@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import ipaddress
+from urllib.parse import urlsplit
+
 import pytest
 from pydantic import TypeAdapter
 
@@ -119,3 +122,68 @@ class TestCanonicalForm:
     def test_is_idempotent(self, raw: str) -> None:
         once = canonicalize_url(raw)
         assert canonicalize_url(once) == once
+
+
+class TestIpv6Literal:
+    """An IPv6 host must survive canonicalization as a usable URL.
+
+    The canonical URL is the article's identity in the Git-tracked state and the
+    link the digest publishes, so a host that loses its brackets is written to
+    both as a string no client can resolve.
+    """
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            ("https://[2001:db8::1]/x", "https://[2001:db8::1]/x"),
+            ("https://[2001:db8::1]:443/x", "https://[2001:db8::1]/x"),
+            ("https://[2001:db8::1]:8443/x", "https://[2001:db8::1]:8443/x"),
+            ("http://[2001:db8::1]:80/x", "http://[2001:db8::1]/x"),
+            ("http://[::1]:8080/admin", "http://[::1]:8080/admin"),
+            ("https://[2606:2800:220:1:248:1893:25c8:1946]/a", "https://[2606:2800:220:1:248:1893:25c8:1946]/a"),
+            # One address, one identity: the shortened form is the canonical one.
+            ("https://[2001:0db8:0000:0000:0000:0000:0000:0001]/x", "https://[2001:db8::1]/x"),
+            ("https://[2001:DB8::1]/x", "https://[2001:db8::1]/x"),
+            # One spelling per address, so the dotted mapped form folds into the hex one.
+            ("https://[::ffff:8.8.8.8]/x", "https://[::ffff:808:808]/x"),
+        ],
+    )
+    def test_the_brackets_are_kept(self, value: str, expected: str) -> None:
+        assert canonicalize_url(value) == expected
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "https://[2001:db8::1]/x",
+            "http://[::1]:8080/admin",
+            "https://[2001:0db8:0000:0000:0000:0000:0000:0001]/x",
+        ],
+    )
+    def test_the_result_still_names_the_same_host(self, value: str) -> None:
+        canonical = urlsplit(canonicalize_url(value))
+        assert canonical.hostname is not None
+        assert ipaddress.ip_address(canonical.hostname) == ipaddress.ip_address(
+            urlsplit(value).hostname or ""
+        )
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "https://[2001:db8::1::2]/x",  # two elisions
+            "https://[2001:db8:zzzz::1]/x",  # not hexadecimal
+            "https://[not-an-address]/x",
+            "https://[fe80::1%25en0]/x",  # a scope identifier is not a public host
+            "https://[8.8.8.8]/x",  # brackets are for an IPv6 literal alone
+            "https://[]/x",
+        ],
+    )
+    def test_a_host_that_is_not_an_address_is_invalid(self, value: str) -> None:
+        assert reason(value) is UrlProblem.INVALID
+
+    def test_the_canonical_form_satisfies_the_contract(self) -> None:
+        _URL.validate_python(canonicalize_url("https://[2001:db8::1]:8443/x"))
+
+    def test_two_spellings_of_one_address_are_one_identity(self) -> None:
+        one = canonicalize_url("https://[2001:0DB8::0:1]:443/a")
+        other = canonicalize_url("https://[2001:db8::1]/a")
+        assert one == other

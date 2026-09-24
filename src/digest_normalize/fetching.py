@@ -77,6 +77,80 @@ class BlockedTarget(Exception):
     """A URL that does not resolve to a publicly routable address."""
 
 
+BLOCKED_IPV4_NETWORKS = tuple(
+    ipaddress.IPv4Network(cidr)
+    for cidr in (
+        "0.0.0.0/8",  # this host on this network
+        "10.0.0.0/8",  # private use
+        "100.64.0.0/10",  # shared address space, carrier NAT
+        "127.0.0.0/8",  # loopback
+        "169.254.0.0/16",  # link local, and the cloud metadata address
+        "172.16.0.0/12",  # private use
+        "192.0.0.0/24",  # IETF protocol assignments
+        "192.0.2.0/24",  # documentation, TEST-NET-1
+        "192.88.99.0/24",  # 6to4 relay anycast, deprecated by RFC 7526
+        "192.168.0.0/16",  # private use
+        "198.18.0.0/15",  # benchmarking
+        "198.51.100.0/24",  # documentation, TEST-NET-2
+        "203.0.113.0/24",  # documentation, TEST-NET-3
+        "224.0.0.0/4",  # multicast
+        "240.0.0.0/4",  # reserved, and 255.255.255.255 limited broadcast
+    )
+)
+"""IPv4 ranges this layer refuses, from the IANA special-purpose registry."""
+
+BLOCKED_IPV6_NETWORKS = tuple(
+    ipaddress.IPv6Network(cidr)
+    for cidr in (
+        "::/96",  # unspecified, loopback, and the deprecated IPv4-compatible form
+        "64:ff9b:1::/48",  # local-use IPv4/IPv6 translation
+        "100::/64",  # discard only
+        "2001::/23",  # IETF protocol assignments: Teredo, benchmarking, ORCHIDv2
+        "2001:db8::/32",  # documentation
+        "2002::/16",  # 6to4, deprecated by RFC 7526
+        "3fff::/20",  # documentation, RFC 9637
+        "5f00::/16",  # segment routing SIDs
+        "fc00::/7",  # unique local
+        "fe80::/10",  # link local
+        "ff00::/8",  # multicast
+    )
+)
+"""IPv6 ranges this layer refuses, from the IANA special-purpose registry."""
+
+TRANSLATED_IPV6_NETWORKS = tuple(
+    ipaddress.IPv6Network(cidr)
+    for cidr in (
+        "::ffff:0:0/96",  # IPv4-mapped
+        "64:ff9b::/96",  # the well-known NAT64 prefix, RFC 6052
+    )
+)
+"""Ranges that carry an IPv4 address in their last 32 bits.
+
+These are judged by the address they wrap rather than refused outright, so a
+NAT64 network can still reach a public site while `64:ff9b::7f00:1` - which is
+127.0.0.1 - is refused. `64:ff9b:1::/48` is not here because RFC 6052 allows the
+IPv4 address at several offsets inside it; it is refused as a whole instead.
+"""
+
+
+def _is_blocked_address(address: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
+    """True when `address` falls in a range this layer refuses to open.
+
+    The ranges come from the tables above rather than from `ipaddress.is_global`,
+    because that property's contents changed between 3.10 and 3.11 and
+    `requires-python` allows both. Delegating would make the same feed item
+    fetched on one interpreter and refused on another - the dependence that
+    `dates.py` writes its own month table and ISO parser to avoid.
+    """
+    if address.version == 4:
+        return any(address in network for network in BLOCKED_IPV4_NETWORKS)
+    for network in TRANSLATED_IPV6_NETWORKS:
+        if address in network:
+            wrapped = ipaddress.IPv4Address(int(address) & 0xFFFFFFFF)
+            return _is_blocked_address(wrapped)
+    return any(address in network for network in BLOCKED_IPV6_NETWORKS)
+
+
 def is_public_address(host: str, *, resolve: Resolver = socket.getaddrinfo) -> bool:
     """True when every address `host` resolves to is publicly routable.
 
@@ -84,6 +158,9 @@ def is_public_address(host: str, *, resolve: Resolver = socket.getaddrinfo) -> b
     loopback, private, link-local, multicast or otherwise reserved is refused.
     One non-public address is enough to refuse the host, so a name that answers
     with both a public and a private address does not get through.
+
+    What counts as reserved is the tables above, so the same host is accepted or
+    refused the same way on every supported interpreter.
     """
     try:
         infos = resolve(host, None)
@@ -98,7 +175,7 @@ def is_public_address(host: str, *, resolve: Resolver = socket.getaddrinfo) -> b
             address = ipaddress.ip_address(raw.split("%", 1)[0])
         except ValueError:
             return False
-        if not address.is_global or address.is_multicast:
+        if _is_blocked_address(address):
             return False
     return True
 
@@ -108,17 +185,21 @@ class _GuardedRedirectHandler(urllib.request.HTTPRedirectHandler):
 
     max_redirections = MAX_REDIRECTS
 
+    def __init__(self, *, resolve: Resolver = socket.getaddrinfo) -> None:
+        super().__init__()
+        self._resolve = resolve
+
     def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001, ANN201
-        _check_target(newurl)
+        _check_target(newurl, resolve=self._resolve)
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-def _check_target(url: str) -> None:
+def _check_target(url: str, *, resolve: Resolver = socket.getaddrinfo) -> None:
     parts = urllib.parse.urlsplit(url)
     if parts.scheme.lower() not in DEFAULT_SCHEMES:
         raise BlockedTarget(f"scheme {parts.scheme!r}")
     host = parts.hostname
-    if not host or not is_public_address(host):
+    if not host or not is_public_address(host, resolve=resolve):
         raise BlockedTarget("host does not resolve to a public address")
 
 
@@ -146,12 +227,20 @@ def fetch_page(
     *,
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
     max_bytes: int = MAX_BODY_BYTES,
+    handlers: tuple[urllib.request.BaseHandler, ...] = (),
+    resolve: Resolver = socket.getaddrinfo,
 ) -> FetchOutcome:
-    """Read one page over http(s). Every failure is returned, never raised."""
+    """Read one page over http(s). Every failure is returned, never raised.
+
+    `handlers` and `resolve` are seams, so the checks that run once a response
+    arrives can be exercised without a connection. Neither is a way past the
+    address checks: the guarded redirect handler is always installed, and the
+    target is checked before the opener is asked for anything.
+    """
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html"})
-    opener = urllib.request.build_opener(_GuardedRedirectHandler)
+    opener = urllib.request.build_opener(_GuardedRedirectHandler(resolve=resolve), *handlers)
     try:
-        _check_target(url)
+        _check_target(url, resolve=resolve)
         with opener.open(request, timeout=timeout) as response:
             content_type = response.headers.get("Content-Type")
             if not is_html_content_type(content_type):

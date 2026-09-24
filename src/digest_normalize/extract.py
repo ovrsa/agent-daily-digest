@@ -40,6 +40,13 @@ _SKIP_TAGS = frozenset(
     }
 )
 
+_METADATA_CONTAINERS = frozenset({"head", "title"})
+"""Skipped as text, yet still where a page is allowed to declare its metadata.
+
+Every other skipped element is a channel the reader never sees, so a `<meta>`,
+`<link rel=canonical>` or `<time>` planted inside one is not read either.
+"""
+
 _HEADINGS = {f"h{level}": level for level in range(1, 7)}
 
 _BLOCK_TAGS = frozenset(
@@ -51,7 +58,34 @@ _BLOCK_TAGS = frozenset(
 )
 
 _HIDDEN_CLASSES = ("sr-only", "visually-hidden", "visuallyhidden", "screen-reader", "skip-link")
-_HIDDEN_STYLE = re.compile(r"(display\s*:\s*none|visibility\s*:\s*hidden)", re.IGNORECASE)
+
+# A zero length, written any of the ways CSS allows, up to the next declaration.
+_ZERO = r"(?:0+(?:\.0+)?|\.0+)(?:px|pt|em|rem|ex|ch|vw|vh|vmin|vmax|cm|mm|in|pc|%)?\s*(?:;|!|$)"
+
+_HIDDEN_STYLES = tuple(
+    re.compile(pattern, re.IGNORECASE)
+    for pattern in (
+        r"display\s*:\s*none",
+        r"visibility\s*:\s*hidden",
+        rf"opacity\s*:\s*{_ZERO}",
+        rf"font-size\s*:\s*{_ZERO}",
+        # Moved far enough out of the viewport to be off-screen rather than nudged.
+        r"text-indent\s*:\s*-\s*\d{3,}",
+        r"(?<![-\w])(?:left|right|top|bottom)\s*:\s*-\s*\d{3,}",
+        r"clip-path\s*:\s*inset\(\s*(?:50|100)%",
+        r"clip\s*:\s*rect\(\s*0",
+    )
+)
+"""Declarations that put text outside what a reader sees.
+
+Text hidden this way is a channel for instructions and it counts toward the
+primary-information floor, so it is dropped the same way `display:none` is.
+Text hidden by painting it the colour of its background is not detected: that
+needs the cascade and a colour model, neither of which this parser has.
+"""
+
+_ZERO_BOX = re.compile(rf"(?<![-\w])(?:max-)?(?:width|height)\s*:\s*{_ZERO}", re.IGNORECASE)
+_CLIPPED_OVERFLOW = re.compile(r"overflow(?:-[xy])?\s*:\s*hidden", re.IGNORECASE)
 
 _PARAGRAPH = "paragraph"
 _LIST_ITEM = "list_item"
@@ -94,6 +128,7 @@ class _Block:
 class _Open:
     tag: str
     skipped: bool = False
+    hides_metadata: bool = False
     article_id: int | None = None
     is_main: bool = False
     is_role_main: bool = False
@@ -116,19 +151,26 @@ class _Extractor(HTMLParser):
     # -- structure ------------------------------------------------------
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = {name.lower(): (value or "") for name, value in attrs}
-        self._read_metadata(tag, values)
+        hidden = _is_hidden(values)
+        if not self._hiding_metadata and not hidden:
+            self._read_metadata(tag, values)
 
         if tag in _VOID_TAGS:
             if tag == "br" and not self._skipping:
                 self._buffer.append(" ")
             return
 
-        skipped = self._skipping or tag in _SKIP_TAGS or _is_hidden(values)
+        skipped = self._skipping or tag in _SKIP_TAGS or hidden
+        # `<head>` is skipped as text but is where metadata belongs, so the two
+        # reasons to stop reading are tracked apart.
+        hides_metadata = (
+            self._hiding_metadata or hidden or (tag in _SKIP_TAGS and tag not in _METADATA_CONTAINERS)
+        )
         # Whatever is buffered belongs to the element that is still open.
         if skipped or tag in _BLOCK_TAGS:
             self._flush()
 
-        open_tag = _Open(tag, skipped=skipped)
+        open_tag = _Open(tag, skipped=skipped, hides_metadata=hides_metadata)
         if not skipped:
             if tag == "article":
                 self._articles += 1
@@ -194,6 +236,10 @@ class _Extractor(HTMLParser):
     @property
     def _skipping(self) -> bool:
         return bool(self._stack) and self._stack[-1].skipped
+
+    @property
+    def _hiding_metadata(self) -> bool:
+        return bool(self._stack) and self._stack[-1].hides_metadata
 
     def _flush(self) -> None:
         raw = "".join(self._buffer)
@@ -326,10 +372,17 @@ def _is_hidden(values: dict[str, str]) -> bool:
         return True
     if values.get("aria-hidden", "").strip().lower() == "true":
         return True
-    if _HIDDEN_STYLE.search(values.get("style", "")):
+    if _is_hidden_style(values.get("style", "")):
         return True
     classes = values.get("class", "").lower().split()
     return any(name in classes for name in _HIDDEN_CLASSES)
+
+
+def _is_hidden_style(style: str) -> bool:
+    if any(pattern.search(style) for pattern in _HIDDEN_STYLES):
+        return True
+    # A zero-sized box hides what it holds only when the overflow is clipped.
+    return bool(_ZERO_BOX.search(style) and _CLIPPED_OVERFLOW.search(style))
 
 
 def _author_or_none(content: str) -> str | None:
