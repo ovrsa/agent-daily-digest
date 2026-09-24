@@ -1,93 +1,32 @@
 #!/usr/bin/env bash
-# Local manual entrypoint for agent-daily-digest.
-# Fetches all sources via src/fetch.py, then invokes `claude -p` with the
-# editorial system prompt to produce the digest Markdown under digests/.
+# Run the daily digest from this checkout: `python -m digest_pipeline`, logged under logs/.
 #
-# Run manually:
-#   ./scripts/run-local.sh
+#   ./scripts/run-local.sh                              # real run: commit and push to main, comment on the commit
+#   ./scripts/run-local.sh --dry-run                    # publish nothing; the result is in logs/dry-run/<run_id>/
+#   ./scripts/run-local.sh --dry-run --max-articles 5   # the same, researching at most 5 articles
 #
-# For scheduled CLOUD execution, this script is NOT used — see
-# routine/prompt.md and the claude.ai remote routine instead.
+# launchd runs this script (see launchd/install.sh). Every argument goes to the pipeline.
+# The exit code is the pipeline's: 0 when the digest run finished (a failed Judge or
+# comment still counts, the digest is out), 1 when it did not.
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CONFIG="$REPO_ROOT/config/config.json"
-SYSTEM_PROMPT="$REPO_ROOT/prompts/system-prompt.md"
-FETCH="$REPO_ROOT/src/fetch.py"
+PYTHON="${DIGEST_PYTHON:-$REPO_ROOT/.venv/bin/python}"
 LOG_DIR="$REPO_ROOT/logs"
-TMP_DIR="${TMPDIR:-/tmp}"
+LOG_FILE="$LOG_DIR/run-$(date +%Y-%m-%d).log"
+LOG_RETENTION_DAYS=35 # as long as logs/metrics/, so a weekly review always has both
 
 mkdir -p "$LOG_DIR"
+find "$LOG_DIR" -maxdepth 1 -name 'run-*.log' -mtime "+$LOG_RETENTION_DAYS" -delete
 
-DATE="$(date +%Y-%m-%d)"
-RAW_FILE="$TMP_DIR/llm-digest-raw-$DATE.json"
-LOG_FILE="$LOG_DIR/run-$DATE.log"
-
-# Resolve config values via python (stdlib only)
-DIGEST_DIR_REL="$(python3 -c "import json; c=json.load(open('$CONFIG')); print(c.get('digest_dir','digests'))")"
-MODEL="$(python3 -c "import json; c=json.load(open('$CONFIG')); print(c.get('summary_model','claude-sonnet-4-6'))")"
-
-# digest_dir is relative to repo root unless absolute
-case "$DIGEST_DIR_REL" in
-  /*) OUTPUT_DIR="$DIGEST_DIR_REL" ;;
-  *)  OUTPUT_DIR="$REPO_ROOT/$DIGEST_DIR_REL" ;;
-esac
-
-mkdir -p "$OUTPUT_DIR"
-OUT_FILE="$OUTPUT_DIR/$DATE.md"
-
-{
-  echo "==== agent-daily-digest run: $(date -Iseconds) ===="
-  echo "[run] config:        $CONFIG"
-  echo "[run] output:        $OUT_FILE"
-  echo "[run] raw:           $RAW_FILE"
-  echo "[run] model:         $MODEL"
-} | tee -a "$LOG_FILE"
-
-# Step 1: fetch
-echo "[run] fetching sources..." | tee -a "$LOG_FILE"
-python3 "$FETCH" --config "$CONFIG" --out "$RAW_FILE" 2>>"$LOG_FILE"
-
-if [[ ! -s "$RAW_FILE" ]]; then
-  echo "[run] ERROR: fetch produced empty output" | tee -a "$LOG_FILE" >&2
+if [[ ! -x "$PYTHON" ]]; then
+  echo "[run] $PYTHON not found. Set it up with: python3 -m venv .venv && .venv/bin/pip install -e ." | tee -a "$LOG_FILE" >&2
   exit 2
 fi
 
-# Step 2: summarize via claude -p (uses logged-in Claude Code session auth)
-echo "[run] invoking claude -p..." | tee -a "$LOG_FILE"
-
-PROMPT="今日の LLM/Coding Agent ダイジェストを生成してください。
-
-入力 (RAW_FILE): $RAW_FILE
-出力 (OUT_FILE): $OUT_FILE
-
-system-prompt に従い、Read で入力を読み、Write で出力ファイルを生成して終了してください。"
-
-# --permission-mode acceptEdits: auto-accept Read/Write within --allowedTools
-# --allowedTools: minimum surface for this job
-# --append-system-prompt-file: prepends editorial role definition
-# --add-dir: grant access to input JSON dir and output dir
-# (no --bare: bare requires ANTHROPIC_API_KEY; we rely on the logged-in
-#  Claude Code session auth via keychain/OAuth)
-claude -p \
-  --model "$MODEL" \
-  --permission-mode acceptEdits \
-  --allowedTools "Read,Write" \
-  --append-system-prompt-file "$SYSTEM_PROMPT" \
-  --add-dir "$TMP_DIR" \
-  --add-dir "$OUTPUT_DIR" \
-  --no-session-persistence \
-  --output-format text \
-  "$PROMPT" \
-  2>>"$LOG_FILE" | tee -a "$LOG_FILE" >/dev/null
-
-if [[ ! -s "$OUT_FILE" ]]; then
-  echo "[run] ERROR: claude did not produce $OUT_FILE" | tee -a "$LOG_FILE" >&2
-  exit 3
-fi
-
-echo "[run] SUCCESS: $OUT_FILE ($(wc -l <"$OUT_FILE") lines)" | tee -a "$LOG_FILE"
-
-# Step 3: cleanup raw file (keep logs for debugging)
-rm -f "$RAW_FILE"
+cd "$REPO_ROOT"
+{
+  echo "==== agent-daily-digest $(date '+%Y-%m-%dT%H:%M:%S%z') args: $* ===="
+  "$PYTHON" -m digest_pipeline --repo "$REPO_ROOT" "$@"
+} 2>&1 | tee -a "$LOG_FILE"

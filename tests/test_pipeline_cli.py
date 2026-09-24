@@ -71,11 +71,35 @@ def test_a_real_run_works_in_the_repository_and_publishes_with_git(tmp_path: Pat
     )
     assert plan.pipeline.store.directory == repo / "logs" / "metrics"
     assert plan.pipeline.models.selector == "claude-sonnet-5"
+    assert plan.pipeline.max_articles is None
+    capped = build(repo, dry_run=True, run_id=RUN_ID, invoke=RoutedModel(), fetch=fetcher(), collect=lambda known: report(), max_articles=7)
+    assert capped.pipeline.max_articles == 7
+
+
+def test_the_article_cap_is_passed_through_and_must_be_positive(tmp_path: Path, monkeypatch, capsys) -> None:
+    import pytest
+
+    from digest_pipeline import cli
+
+    seen = {}
+
+    def fake_build(repo, **kw):
+        seen.update(kw)
+        return cli.Plan(_Stub(RunResult(RUN_ID, RunStatus.SUCCEEDED)), RUN_ID, None)
+
+    monkeypatch.setattr(cli, "build", fake_build)
+    assert cli.main(["--repo", str(tmp_path), "--dry-run", "--max-articles", "5"]) == 0
+    assert seen == {"dry_run": True, "max_articles": 5}
+    with pytest.raises(SystemExit):
+        cli.main(["--repo", str(tmp_path), "--max-articles", "0"])
+    assert "must be at least 1" in capsys.readouterr().err
 
 
 def test_the_summary_names_the_run_its_status_and_where_to_look(tmp_path: Path) -> None:
     text = summary(RunResult(RUN_ID, RunStatus.PARTIALLY_FAILED, "abc", tmp_path / "d.md"), tmp_path)
     assert text.splitlines() == [f"run: {RUN_ID}", "status: partially_failed", "commit: abc", f"digest: {tmp_path / 'd.md'}", f"dry-run output: {tmp_path}"]
+    capped = summary(RunResult(RUN_ID, RunStatus.SUCCEEDED, deferred=110), None)
+    assert "deferred: 110 articles past the gates wait for a later run (--max-articles)" in capped.splitlines()
 
 
 def test_the_exit_code_is_zero_only_when_the_digest_run_finished_cleanly(tmp_path: Path, monkeypatch, capsys) -> None:

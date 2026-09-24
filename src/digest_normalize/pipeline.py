@@ -40,8 +40,8 @@ MIN_PRIMARY_INFO_CHARS = 200
 
 The same bar applies to an extracted body and to a feed summary: below it,
 neither tells a reader what the article did, so there is no reason to accept one
-and reject the other. `src/fetch.py` caps a feed summary at 400 characters,
-which puts the bar at half of what a feed can carry.
+and reject the other. `digest_collect` caps a feed summary at 400 characters
+(`SUMMARY_MAX_CHARS`), which puts the bar at half of what a feed can carry.
 """
 
 

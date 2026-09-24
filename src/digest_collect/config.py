@@ -1,10 +1,8 @@
 """The source registry, read from `config/config.json`.
 
-`config/config.json` carries two registries during the transition. The legacy
-`sources` / `reddit_subs` / `gh_repos` keys still drive `src/fetch.py`, which
-the routine runs today. The `collection` block below is what this layer reads.
-#11 removes the legacy keys once the routine moves over; until then
-`tests/test_collect_config.py` checks the two do not drift apart.
+The `collection` block of `config/config.json` is the registry. The keys the
+retired `src/fetch.py` read (`sources` / `reddit_subs` / `gh_repos`) were
+removed with it in #11.
 
 Every source declares its `kind`, which is how 定点観測 (`fixed_watch`) and
 発見経路 (`discovery`) are told apart, and its `connector`, which decides how
@@ -33,7 +31,7 @@ class _Spec(BaseModel):
     max_items: int | None = Field(default=None, ge=1, le=200)
     """Overrides `max_items_per_source` for this source alone.
 
-    One endpoint is one source here, where `src/fetch.py` had one source per
+    One endpoint is one source here, where the retired `src/fetch.py` had one source per
     kind and split a shared budget across its subreddits and repositories.
     The override is how those per-endpoint shares are kept the same.
     """
@@ -141,8 +139,8 @@ def load_collection_config(path: Path | str) -> CollectionConfig:
 
     The caller names the file. A default derived from `__file__` only
     resolved inside the source tree, and pointed outside site-packages once
-    the package shipped as a wheel, so the path comes from the caller: #10
-    passes the one the routine runs with.
+    the package shipped as a wheel, so the path comes from the caller: the
+    pipeline passes the one in the repository it runs in.
     """
     raw = json.loads(Path(path).read_text(encoding="utf-8"))
     if COLLECTION_KEY not in raw:

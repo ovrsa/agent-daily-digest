@@ -116,7 +116,7 @@ class TestRequiredFields:
 
     @pytest.mark.parametrize("value", [None, "", "  ", "\u3000"])
     def test_a_blank_published_at_is_missing_not_invalid(self, value: str | None) -> None:
-        # `src/fetch.py` writes `""` when a feed carries no date.
+        # A feed with no date comes through blank.
         result = normalize_item(collected(published_at=value), fetch=basic_fetch())
         assert only_reason(result) is GateExclusionReason.MISSING_PUBLISHED_AT
 

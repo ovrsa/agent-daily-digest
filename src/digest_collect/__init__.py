@@ -4,9 +4,6 @@
 `collection` block and returns a `CollectionReport`: one
 `digest_contracts.SourceFetchResult` per source, plus the probe counts this
 layer owns. Article bodies are not fetched here; that is #5.
-
-`src/fetch.py` is the collector the routine runs today and is untouched. #11
-retires it.
 """
 
 from .collector import CollectionReport, SourceProbeStats, collect_all, collect_source
