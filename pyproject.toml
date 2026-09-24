@@ -28,6 +28,7 @@ dev = [
 packages = [
     "src/digest_collect",
     "src/digest_contracts",
+    "src/digest_judge",
     "src/digest_llm",
     "src/digest_normalize",
     "src/digest_observe",
