@@ -12,6 +12,7 @@ import datetime as dt
 import importlib.util
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -137,11 +138,20 @@ class TestJsonParity:
         )
         assert identity(new) == identity(old)
 
-    def test_github_releases_produce_the_same_candidates(self, legacy) -> None:
+    def test_github_releases_produce_the_same_candidates(self, legacy, monkeypatch) -> None:
         body = s.read("gh_releases.json")
         legacy._http_json = lambda url: __import__("json").loads(body)
-        # The legacy fetcher windows on the wall clock, so it only agrees with
-        # a run whose window ends now. `s.NOW` is the day the fixture was taken.
+
+        class FixtureDateTime(dt.datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return s.NOW.astimezone(tz) if tz is not None else s.NOW.replace(tzinfo=None)
+
+        # The legacy fetcher uses the wall clock. Pin it to the recording's
+        # date so this comparison still tests parity after the fixture ages.
+        monkeypatch.setattr(
+            legacy, "dt", SimpleNamespace(datetime=FixtureDateTime, timedelta=dt.timedelta)
+        )
         old = legacy.fetch_gh_releases(["anthropics/claude-code"], limit_per_repo=2)
         new = collect_new(
             {
