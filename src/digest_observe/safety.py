@@ -15,7 +15,7 @@ keep bodies out by shape; the free-text fields that remain (`ErrorRecord.detail`
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Iterator
+from collections.abc import Collection, Iterable, Iterator
 from dataclasses import dataclass
 from typing import Any
 
@@ -24,14 +24,20 @@ from digest_contracts import ERROR_DETAIL_MAX_CHARS
 LEAK_WINDOW_CHARS = 64
 """A run of this many characters shared with a sensitive text counts as a copy.
 
-Short enough to catch a quoted sentence, long enough that a product name an
-article also mentions does not trip it. Whitespace is collapsed first. A
+Short enough to catch a quoted sentence, long enough that a product name
+mentioned by an article does not trip it. Whitespace is collapsed first. A
 sensitive text shorter than this is matched whole instead.
+"""
 
-A string that is nothing but a URL is not checked for copies: it is public
-metadata such as an article's canonical URL, and a page that prints another
-article's address would otherwise refuse the whole record. It is still checked
-for secrets, so credentials in a URL are caught.
+URL_FIELDS = frozenset({"canonical_url"})
+"""Fields the contracts type as a URL, whose value is exempt from the copy check.
+
+An article's address is public metadata, and a page that prints another
+article's full address would otherwise refuse the whole record (seen on
+2026-09-25 with claude.com posts). The exemption goes by field, not by shape:
+a free-text field such as `decision_reason` stays checked even when its value
+looks like a URL, since body text turned into a slug would pass any shape test.
+Exempt values are still checked for secrets.
 """
 
 LEAK_MIN_CHARS = 16
@@ -112,10 +118,13 @@ def find_leaks(
     sensitive: Iterable[str] = (),
     *,
     window: int = LEAK_WINDOW_CHARS,
+    url_fields: Collection[str] = URL_FIELDS,
 ) -> tuple[Leak, ...]:
     """Every string in `payload` that holds a secret or a copy of a sensitive text.
 
-    `payload` is JSON-shaped data (what `model_dump(mode="json")` returns).
+    `payload` is JSON-shaped data (what `model_dump(mode="json")` returns). A
+    copy is a verbatim run of text; a paraphrase, or text re-encoded (spaces
+    turned into hyphens, percent-encoding), is not detected.
     """
     strings = list(_strings(payload, "$"))
     leaks: list[Leak] = []
@@ -125,7 +134,7 @@ def find_leaks(
                 leaks.append(Leak(location=location, kind=f"secret:{name}"))
                 break
 
-    copyable = [(location, value) for location, value in strings if not _URL_ONLY.fullmatch(value.strip())]
+    copyable = [(location, value) for location, value in strings if not _is_url_field(location, value, url_fields)]
     windows: dict[str, str] = {}
     for location, value in copyable:
         text = _collapse(value)
@@ -153,6 +162,10 @@ def find_leaks(
             if location is not None:
                 flag(location)
     return tuple(leaks)
+
+
+def _is_url_field(location: str, value: str, url_fields: Collection[str]) -> bool:
+    return location.rsplit(".", 1)[-1] in url_fields and _URL_ONLY.fullmatch(value) is not None
 
 
 def _strings(value: Any, location: str) -> Iterator[tuple[str, str]]:

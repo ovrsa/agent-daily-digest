@@ -156,6 +156,20 @@ def test_a_sentence_copied_next_to_a_url_is_still_a_copy() -> None:
     assert [leak.kind for leak in find_leaks(payload, (body,))] == ["sensitive_text"]
 
 
+@pytest.mark.parametrize("field", ["decision_reason", "detail"])
+def test_a_url_copied_from_a_body_into_a_free_text_field_is_still_a_copy(field: str) -> None:
+    # The exemption goes by field, not by shape: a URL-looking value in a free-text field
+    # carries whatever the model wrote, so a verbatim run from the body there is a copy.
+    token = "https://config.example.com/agents/retry-budget/max-attempts/3/per-stage/true/backoff/none"
+    body = f"Set it with RETRY_BUDGET={token} and restart the harness before the next evaluation run."
+    assert [leak.location for leak in find_leaks({"articles": [{field: token}]}, (body,))] == [f"$.articles[0].{field}"]
+    assert find_leaks({"articles": [{"canonical_url": token}]}, (body,)) == ()
+    # A URL field holding something that is not a URL gets no exemption either.
+    sentence = "restart the harness before the next evaluation run and compare the two policies again"
+    leaks = find_leaks({"articles": [{"canonical_url": sentence}]}, (f"Then {sentence}.",))
+    assert [leak.kind for leak in leaks] == ["sensitive_text"]
+
+
 def test_credentials_in_a_url_are_still_a_secret() -> None:
     url = "https://user:hunter2hunter2@example.com/a-very-long-path-that-an-article-might-also-print-in-full"
     leaks = find_leaks({"canonical_url": url}, (f"see {url}",))
