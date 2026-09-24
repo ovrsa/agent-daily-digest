@@ -53,6 +53,7 @@ def build(
     invoke: Invoker = invoke_structured,
     fetch: BodyFetcher = fetch_page,
     collect: Collector | None = None,
+    max_articles: int | None = None,
 ) -> Plan:
     """Wire a run from the config in `repo`. The seams after `dry_run` exist for tests."""
     config_path = repo / config
@@ -89,6 +90,7 @@ def build(
         paths=paths,
         budget=load_research_budget(config_path),
         store=store,
+        max_articles=max_articles,
     )
     return Plan(pipeline=pipeline, run_id=run_id, out_dir=out_dir)
 
@@ -107,14 +109,27 @@ def summary(result: RunResult, out_dir: Path | None) -> str:
     return "\n".join(lines)
 
 
+def _positive(value: str) -> int:
+    number = int(value)
+    if number < 1:
+        raise argparse.ArgumentTypeError("must be at least 1")
+    return number
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m digest_pipeline", description=__doc__.splitlines()[0])
     parser.add_argument("--dry-run", action="store_true", help="publish nothing; write the result under logs/dry-run/<run_id>/")
     parser.add_argument("--date", type=date.fromisoformat, default=None, help="digest date (YYYY-MM-DD); today by default")
     parser.add_argument("--repo", type=Path, default=Path.cwd(), help="repository root; the current directory by default")
+    parser.add_argument(
+        "--max-articles",
+        type=_positive,
+        default=None,
+        help="research at most N articles past the gates (定点観測 first, then newest); the rest wait for a later run",
+    )
     args = parser.parse_args(argv)
 
-    plan = build(args.repo.resolve(), dry_run=args.dry_run)
+    plan = build(args.repo.resolve(), dry_run=args.dry_run, max_articles=args.max_articles)
     result = plan.pipeline.run(args.date or date.today(), run_id=plan.run_id)
     print(summary(result, plan.out_dir))
     # An error after a finished run is the metrics record failing to be written: report it.

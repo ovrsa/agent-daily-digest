@@ -431,8 +431,8 @@ def collect_hf_papers(
     spec: HuggingFacePapersSource, ctx: CollectContext
 ) -> tuple[CollectedItem, ...]:
     # `?date=<today>` answers 400 until the day's list is published, so the
-    # previous day is the working request for most of the morning. Kept as a
-    # fallback chain to match what `src/fetch.py` does today.
+    # previous day is the working request for most of the morning. The fallback
+    # chain is kept from the retired `src/fetch.py`.
     today = ctx.now.astimezone(_UTC).date()
     last: Exception | None = None
     payload: Any = None

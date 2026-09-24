@@ -35,6 +35,7 @@ from digest_contracts import (
     ResearchBudget,
     RunStatus,
     SelectorOutput,
+    SourceKind,
     StageName,
 )
 from digest_judge import PROMPT_VERSION as JUDGE_PROMPT_VERSION
@@ -112,6 +113,13 @@ class Pipeline:
     budget: ResearchBudget = field(default_factory=ResearchBudget)
     store: MetricsStore | None = None
     clock: Clock = utc_now
+    max_articles: int | None = None
+    """At most this many articles past the gates are researched in one run.
+
+    定点観測 goes first, then the newest. The rest are neither researched nor
+    recorded in the processing state, so a later run takes them up. `None`
+    researches every article, which on a first run is the whole window.
+    """
 
     def run(self, digest_date: date, *, run_id: str | None = None) -> RunResult:
         """Run once. A failure is a `RunResult` with its status; only an interrupt raises."""
@@ -160,9 +168,9 @@ class _Run:
             index = ProcessedIndex.from_state(state)
             results = normalize_items(items, fetch=p.fetch, index=index)
         with recorder.stage(StageName.GATE):
-            passed = [result for result in results if result.passed]
+            passed = _within(p.max_articles, [result for result in results if result.passed])
             self._record_articles(items, results)
-            recorder.mark_sensitive(*(r.article.body_text for r in passed if r.article is not None))
+            recorder.mark_sensitive(*(r.article.body_text for r in results if r.article is not None))
         if not passed:
             return
 
@@ -295,6 +303,18 @@ def _error_of(exc: BaseException) -> ErrorRecord:
 def comment_body(run_id: str, digest_date: date, report: str) -> str:
     """The Judge report with the run it belongs to, for the digest commit."""
     return f"run: `{run_id}` / digest: {digest_date.isoformat()}\n\n{report}"
+
+
+def _within(cap: int | None, passed: list[NormalizationResult]) -> list[NormalizationResult]:
+    """The articles a run takes up under `cap`: 定点観測 first, then the newest, in collection order otherwise."""
+    if cap is None or len(passed) <= cap:
+        return passed
+    ranked = sorted(
+        passed,
+        key=lambda r: (r.article.source_kind is not SourceKind.FIXED_WATCH, -r.article.published_at.timestamp()),
+    )
+    chosen = {id(r) for r in ranked[:cap]}
+    return [r for r in passed if id(r) in chosen]
 
 
 def _research_input(result: NormalizationResult) -> ResearchInput:

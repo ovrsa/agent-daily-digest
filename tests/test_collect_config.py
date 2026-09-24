@@ -41,34 +41,12 @@ The site re-generates in bulk — 23 of the 34 moved on one day — so a cap
 below this fills up with old posts whose `lastmod` happens to be recent and
 pushes the day's new ones out."""
 
-LEGACY_TO_NEW = {
-    "simonw": ("simonw",),
-    "ai_news_smol": ("ai_news_smol",),
-    "latent_space": ("latent_space",),
-    "interconnects": ("interconnects",),
-    "hf_papers": ("hf_papers",),
-    "hackernews": ("hackernews",),
-    "reddit": (
-        "reddit_localllama",
-        "reddit_claudeai",
-        "reddit_cursor",
-        "reddit_machinelearning",
-    ),
-    "gh_releases": (
-        "gh_anthropics_claude-code",
-        "gh_aider-ai_aider",
-        "gh_cline_cline",
-        "gh_continuedev_continue",
-        "gh_openai_codex",
-        "gh_princeton-nlp_swe-agent",
-        "gh_block_goose",
-    ),
-}
-
-
-@pytest.fixture(scope="module")
-def raw() -> dict:
-    return json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+REDDIT_SOURCES = (
+    "reddit_localllama",
+    "reddit_claudeai",
+    "reddit_cursor",
+    "reddit_machinelearning",
+)
 
 
 @pytest.fixture(scope="module")
@@ -102,7 +80,7 @@ class TestShippedRegistry:
         self, loaded: CollectionConfig
     ) -> None:
         discovery = {s.id for s in loaded.sources if s.kind is SourceKind.DISCOVERY}
-        assert discovery == {"hackernews", *LEGACY_TO_NEW["reddit"]}
+        assert discovery == {"hackernews", *REDDIT_SOURCES}
 
     def test_the_two_blogs_without_a_feed_use_the_sitemap_connector(
         self, loaded: CollectionConfig
@@ -137,54 +115,14 @@ class TestShippedRegistry:
                 assert 0 < spec.max_metadata_probes <= 50
 
 
-class TestLegacyRegistryHasNotDrifted:
-    """`src/fetch.py` still reads the old keys until #11 retires it."""
+class TestPerSourceCaps:
+    """The item caps the collection block sets, kept from the collector it replaced."""
 
-    def test_every_legacy_toggle_maps_to_new_sources(self, raw: dict) -> None:
-        assert set(raw["sources"]) == set(LEGACY_TO_NEW)
+    def test_each_subreddit_gets_three_items(self, loaded: CollectionConfig) -> None:
+        for source_id in REDDIT_SOURCES:
+            assert loaded.items_for(loaded.source(source_id)) == 3
 
-    def test_an_enabled_legacy_toggle_has_every_mapped_source_enabled(
-        self, raw: dict, loaded: CollectionConfig
-    ) -> None:
-        for legacy_id, new_ids in LEGACY_TO_NEW.items():
-            for new_id in new_ids:
-                assert loaded.source(new_id).enabled is bool(raw["sources"][legacy_id])
-
-    def test_the_reddit_subs_still_match(self, raw: dict, loaded: CollectionConfig) -> None:
-        assert {f"reddit_{sub.lower()}" for sub in raw["reddit_subs"]} == set(
-            LEGACY_TO_NEW["reddit"]
-        )
-        for sub in raw["reddit_subs"]:
-            assert f"/r/{sub}/" in loaded.source(f"reddit_{sub.lower()}").url
-
-    def test_every_legacy_repo_has_a_release_source(
-        self, raw: dict, loaded: CollectionConfig
-    ) -> None:
-        repos = {
-            spec.repo for spec in loaded.sources if spec.connector == "gh_releases"
-        }
-        assert repos == set(raw["gh_repos"])
-
-    def test_the_hacker_news_keywords_still_match(
-        self, raw: dict, loaded: CollectionConfig
-    ) -> None:
-        assert list(loaded.source("hackernews").keywords) == raw["hackernews_keywords"]
-
-    def test_the_item_cap_still_matches(self, raw: dict, loaded: CollectionConfig) -> None:
-        assert loaded.max_items_per_source == raw["max_items_per_source"]
-
-    def test_each_subreddit_keeps_the_share_the_legacy_fetcher_gave_it(
-        self, raw: dict, loaded: CollectionConfig
-    ) -> None:
-        # src/fetch.py: per_sub = max(3, limit // len(subs))
-        share = max(3, raw["max_items_per_source"] // len(raw["reddit_subs"]))
-        for source_id in LEGACY_TO_NEW["reddit"]:
-            assert loaded.items_for(loaded.source(source_id)) == share
-
-    def test_each_repository_keeps_the_two_releases_the_legacy_fetcher_took(
-        self, loaded: CollectionConfig
-    ) -> None:
-        # src/fetch.py: fetch_gh_releases(..., limit_per_repo=2)
+    def test_each_repository_gets_its_two_latest_releases(self, loaded: CollectionConfig) -> None:
         for spec in loaded.sources:
             if spec.connector == "gh_releases":
                 assert loaded.items_for(spec) == 2

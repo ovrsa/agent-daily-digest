@@ -78,7 +78,7 @@ class PublishedAtProblem(Enum):
     """Why a publication date is unusable, in the two shapes the gate records."""
 
     MISSING = "missing"
-    """Blank: the source carried no date. `src/fetch.py` writes `""` for that."""
+    """Blank: the source carried no date, sent as `""`, as whitespace or not at all."""
     UNPARSEABLE = "unparseable"
     """Present but no accepted format reads it."""
 

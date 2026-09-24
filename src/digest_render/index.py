@@ -16,7 +16,7 @@ from .errors import IndexMarkerError
 INDEX_BEGIN = "<!-- INDEX:START -->"
 INDEX_END = "<!-- INDEX:END -->"
 INDEX_MAX_ENTRIES = 30
-INDEX_EMPTY_TEXT = "_（まだダイジェストはありません。最初の routine 実行で生成されます。）_"
+INDEX_EMPTY_TEXT = "_（まだダイジェストはありません。最初の実行で生成されます。）_"
 README_FILENAME = "README.md"
 
 _DIGEST_FILENAME = re.compile(r"^(\d{4}-\d{2}-\d{2})\.md$")

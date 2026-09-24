@@ -1,6 +1,6 @@
 """Accepted publication-date formats and the blank / unparseable split.
 
-`src/fetch.py` returns `""` when a feed carries no date, so blank means the
+A feed with no date comes through blank (`""`, whitespace or `None`), so blank means the
 date is absent (`missing_published_at`), and a non-blank value that no accepted
 format parses means it is malformed (`invalid_published_at`).
 """

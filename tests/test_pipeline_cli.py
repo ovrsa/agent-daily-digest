@@ -71,6 +71,26 @@ def test_a_real_run_works_in_the_repository_and_publishes_with_git(tmp_path: Pat
     )
     assert plan.pipeline.store.directory == repo / "logs" / "metrics"
     assert plan.pipeline.models.selector == "claude-sonnet-5"
+    assert plan.pipeline.max_articles is None
+
+
+def test_the_article_cap_is_passed_through_and_must_be_positive(tmp_path: Path, monkeypatch, capsys) -> None:
+    import pytest
+
+    from digest_pipeline import cli
+
+    seen = {}
+
+    def fake_build(repo, **kw):
+        seen.update(kw)
+        return cli.Plan(_Stub(RunResult(RUN_ID, RunStatus.SUCCEEDED)), RUN_ID, None)
+
+    monkeypatch.setattr(cli, "build", fake_build)
+    assert cli.main(["--repo", str(tmp_path), "--dry-run", "--max-articles", "5"]) == 0
+    assert seen == {"dry_run": True, "max_articles": 5}
+    with pytest.raises(SystemExit):
+        cli.main(["--repo", str(tmp_path), "--max-articles", "0"])
+    assert "must be at least 1" in capsys.readouterr().err
 
 
 def test_the_summary_names_the_run_its_status_and_where_to_look(tmp_path: Path) -> None:
