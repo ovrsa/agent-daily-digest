@@ -31,6 +31,7 @@ packages = [
     "src/digest_judge",
     "src/digest_llm",
     "src/digest_normalize",
+    "src/digest_pipeline",
     "src/digest_observe",
     "src/digest_render",
     "src/digest_research",

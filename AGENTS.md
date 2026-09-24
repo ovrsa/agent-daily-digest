@@ -10,6 +10,8 @@
 
 | 関心 | ファイル |
 |---|---|
+| 日次実行の流れ（収集から公開、Judge のコメントまで。`python -m digest_pipeline [--dry-run]`） | [`src/digest_pipeline/`](./src/digest_pipeline/) |
+| 段と段の間の契約（Pydantic） | [`src/digest_contracts/`](./src/digest_contracts/) |
 | スケジュール実行の本体プロンプト | [`routine/prompt.md`](./routine/prompt.md) |
 | 編集者ルール（要約・フォーマット・信頼度ティア） | [`prompts/system-prompt.md`](./prompts/system-prompt.md) |
 | ソース収集ロジック（stdlib のみ） | [`src/fetch.py`](./src/fetch.py) |
