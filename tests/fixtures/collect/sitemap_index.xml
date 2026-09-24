@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Not a recording. This is the <sitemapindex> form of the sitemaps.org
+     protocol, which a site switches to once one sitemap stops holding every
+     URL. claude.com and www.anthropic.com both still serve a flat <urlset>
+     (244 and 25 <loc> entries on 2026-09-18), so this shape has to be written
+     out to be tested. The entries point at the two hosts the registry uses so
+     the document reads like the one they would serve. -->
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://claude.com/sitemap-blog-1.xml</loc>
+    <lastmod>2026-09-17T09:12:44.000Z</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://claude.com/sitemap-blog-2.xml</loc>
+    <lastmod>2026-09-16T18:03:01.000Z</lastmod>
+  </sitemap>
+</sitemapindex>
