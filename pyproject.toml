@@ -26,6 +26,7 @@ packages = [
     "src/digest_collect",
     "src/digest_contracts",
     "src/digest_normalize",
+    "src/digest_render",
 ]
 
 [tool.pytest.ini_options]
