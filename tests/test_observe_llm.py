@@ -209,3 +209,13 @@ def test_an_unpriced_model_leaves_the_cost_unknown_rather_than_partial() -> None
     assert attempt.cost is None
     assert attempt.usage is not None
     assert outcome.metrics.total_cost_usd is None
+
+
+@pytest.mark.parametrize("exc", [SystemExit(3), GeneratorExit(), asyncio.CancelledError()])
+def test_any_base_exception_in_the_first_attempt_is_still_recorded(exc) -> None:
+    recorded: list[LLMCallMetrics] = []
+    with pytest.raises(type(exc)):
+        run(scripted(exc), record=recorded.append)
+
+    (call,) = recorded
+    assert call.attempts[-1].error.kind is ErrorKind.CANCELLED

@@ -57,7 +57,6 @@ class ModelUsage:
     cache_creation_input_tokens: int = 0
     cache_read_input_tokens: int = 0
     canonical_model: str | None = None
-    reported_cost_usd: float | None = None
 
     @property
     def total_input_tokens(self) -> int:

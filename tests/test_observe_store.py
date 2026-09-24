@@ -149,3 +149,13 @@ def test_a_run_recorded_end_to_end_carries_no_body_or_prompt(tmp_path: Path) -> 
     (path,) = store.paths()
     text = path.read_text(encoding="utf-8")
     assert BODY[:64] not in text and "記事の内容" not in text
+
+
+@pytest.mark.parametrize("length", [1, 47, 63])
+def test_a_sensitive_text_shorter_than_the_window_is_caught_when_copied_whole(length: int) -> None:
+    short = BODY[:length]
+    assert find_leaks({"decision_reason": f"see: {short}"}, (short,))[0].kind == "sensitive_text"
+
+
+def test_a_password_containing_at_signs_is_redacted_whole() -> None:
+    assert redact_secrets("clone https://user:p@ss@example.com/path failed") == "clone <redacted>example.com/path failed"

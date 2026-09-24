@@ -26,6 +26,7 @@ LEAK_WINDOW_CHARS = 64
 
 Short enough to catch a quoted sentence, long enough that a product name or a
 URL an article also mentions does not trip it. Whitespace is collapsed first.
+A sensitive text shorter than this is matched whole instead.
 """
 
 SECRET_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
@@ -34,7 +35,8 @@ SECRET_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("github_pat", re.compile(r"\bgithub_pat_[A-Za-z0-9_]{20,}")),
     ("bearer_token", re.compile(r"(?i)\bbearer\s+[A-Za-z0-9._~+/=-]{16,}")),
     ("oauth_env", re.compile(r"CLAUDE_CODE_OAUTH_TOKEN\s*=\s*\S+")),
-    ("url_credentials", re.compile(r"https?://[^/\s:@]+:[^/\s@]+@")),
+    # Up to the last `@` of the authority, since a password may itself contain `@`.
+    ("url_credentials", re.compile(r"https?://[^/\s?#@:]+:[^/\s?#]*@")),
 )
 """Credentials this project can hold: model auth, `gh` auth, and URLs with userinfo."""
 
@@ -113,15 +115,27 @@ def find_leaks(
         text = _collapse(value)
         for start in range(0, max(0, len(text) - window + 1)):
             windows.setdefault(text[start : start + window], location)
-    if windows:
-        flagged: set[str] = set()
-        for source in sensitive:
-            text = _collapse(source)
-            for start in range(0, max(0, len(text) - window + 1)):
-                location = windows.get(text[start : start + window])
-                if location is not None and location not in flagged:
-                    flagged.add(location)
-                    leaks.append(Leak(location=location, kind="sensitive_text"))
+    flagged: set[str] = set()
+
+    def flag(location: str) -> None:
+        if location not in flagged:
+            flagged.add(location)
+            leaks.append(Leak(location=location, kind="sensitive_text"))
+
+    for source in sensitive:
+        text = _collapse(source)
+        if not text:
+            continue
+        if len(text) < window:
+            # Too short to slide a window over, so it must not appear at all.
+            for location, value in strings:
+                if text in _collapse(value):
+                    flag(location)
+            continue
+        for start in range(0, len(text) - window + 1):
+            location = windows.get(text[start : start + window])
+            if location is not None:
+                flag(location)
     return tuple(leaks)
 
 

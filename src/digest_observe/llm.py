@@ -162,8 +162,9 @@ def measured_call(
 
     A failure the policy does not retry ends the call with a failed outcome,
     which is how a caller tells a Judge failure from a Judge report. An
-    interruption (`KeyboardInterrupt`, task cancellation) is recorded as a
-    failed attempt of kind `cancelled` and then re-raised.
+    interruption (any `BaseException` that is not an `Exception`, such as
+    `KeyboardInterrupt` or task cancellation) is recorded as a failed attempt
+    of kind `cancelled` and then re-raised.
     """
     attempts: list[LLMAttempt] = []
     outcome: CallOutcome[T] | None = None
@@ -196,18 +197,6 @@ def measured_call(
                     retryable=True,
                     transient=True,
                 )
-            except (KeyboardInterrupt, asyncio.CancelledError):
-                attempts.append(
-                    _attempt(
-                        number,
-                        started,
-                        clock(),
-                        usage,
-                        pricing,
-                        ErrorRecord(kind=ErrorKind.CANCELLED, detail="interrupted"),
-                    )
-                )
-                raise
             except Exception as exc:
                 # A bug in the invoker or the parser. It is recorded, then raised,
                 # because swallowing it would turn a defect into a quiet failure.
@@ -219,6 +208,20 @@ def measured_call(
                         usage,
                         pricing,
                         ErrorRecord(kind=ErrorKind.UNEXPECTED, detail=describe_exception(exc)),
+                    )
+                )
+                raise
+            except BaseException as exc:
+                # KeyboardInterrupt, task cancellation, SystemExit, GeneratorExit: the
+                # call was interrupted, not wrong. Recorded, then left to propagate.
+                attempts.append(
+                    _attempt(
+                        number,
+                        started,
+                        clock(),
+                        usage,
+                        pricing,
+                        ErrorRecord(kind=ErrorKind.CANCELLED, detail=describe_exception(exc)),
                     )
                 )
                 raise

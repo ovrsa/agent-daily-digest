@@ -157,7 +157,6 @@ def model_usages(model_usage: Mapping[str, Mapping[str, Any]] | None, usage: Map
                 cache_creation_input_tokens=_int(entry.get("cacheCreationInputTokens")),
                 cache_read_input_tokens=_int(entry.get("cacheReadInputTokens")),
                 canonical_model=entry.get("canonicalModel"),
-                reported_cost_usd=entry.get("costUSD"),
             )
             for model, entry in sorted(model_usage.items())
         )
