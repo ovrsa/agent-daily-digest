@@ -21,6 +21,7 @@ nothing else is relied on.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Annotated
@@ -155,10 +156,11 @@ def accept(output: ExtractionOutput, documents: Mapping[str, SourceDocument], *,
         except KeyError:
             issues.append(ValidationIssue(loc=f"{at}.paragraph", type="unknown_paragraph"))
             continue
-        quote = _collapse(draft.quote)
-        if quote not in _collapse(paragraph.text):
+        verbatim = _verbatim(draft.quote, paragraph.text)
+        if verbatim is None:
             issues.append(ValidationIssue(loc=f"{at}.quote", type="quote_not_in_paragraph"))
             continue
+        quote = _collapse(verbatim)
         kind = _checked_kind(draft.kind, draft.quote, paragraph.text)
         address = f"{draft.doc}/{draft.paragraph}"
         existing = by_quote.get((address, quote))
@@ -167,7 +169,7 @@ def accept(output: ExtractionOutput, documents: Mapping[str, SourceDocument], *,
             existing = make_evidence_id(article_id, draft.doc, draft.paragraph, ordinals[address])
             by_quote[(address, quote)] = existing
             known_ids.add(existing)
-            evidence.append(Evidence(evidence_id=existing, kind=kind, quote=draft.quote.strip()))
+            evidence.append(Evidence(evidence_id=existing, kind=kind, quote=verbatim))
         local[draft.id] = existing
 
     def resolve(refs: tuple[str, ...], at: str) -> tuple[str, ...]:
@@ -223,12 +225,35 @@ _NUMERIC_KINDS = frozenset({EvidenceKind.NUMBER, EvidenceKind.COMPARISON})
 _CODE_KINDS = frozenset({EvidenceKind.CODE, EvidenceKind.CONFIG})
 
 
+_INLINE_CODE = re.compile(r"`[^`]+`")
+
+
 def _checked_kind(kind: EvidenceKind, quote: str, paragraph: str) -> EvidenceKind:
     if kind in _NUMERIC_KINDS and not any(ch.isdigit() for ch in quote):
         return EvidenceKind.STATEMENT
-    if kind in _CODE_KINDS and not (paragraph.startswith("```") or "`" in quote):
+    # Code is a code block, or a quote that is one inline code span on its own;
+    # a sentence that merely contains `3` is prose about a value.
+    if kind in _CODE_KINDS and not (paragraph.startswith("```") or _INLINE_CODE.fullmatch(quote.strip())):
         return EvidenceKind.STATEMENT
     return kind
+
+
+def _verbatim(quote: str, paragraph: str) -> str | None:
+    """The span of `paragraph` that `quote` names, with the paragraph's own whitespace.
+
+    A model often re-flows whitespace when it copies a code block, so the match
+    ignores whitespace differences; what is stored is the source's own text.
+    A span longer than a quote may be (indentation can add a lot) keeps the
+    model's spacing instead, which is still the same words in the same order.
+    """
+    words = quote.split()
+    if not words:
+        return None
+    match = re.search(r"\s+".join(re.escape(word) for word in words), paragraph)
+    if match is None:
+        return None
+    span = match.group()
+    return span if len(span) <= EVIDENCE_QUOTE_MAX_CHARS else " ".join(words)
 
 
 def _address(evidence_id: str) -> str:

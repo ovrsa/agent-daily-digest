@@ -148,11 +148,18 @@ class Researcher:
             assessment = assess(article, state.map)
             if assessment.status is ResearchStatus.COMPLETE:
                 return state.packet(assessment, ResearchStopReason.SUFFICIENT, self._elapsed(started))
-            questions = state.map.questions[: self.budget.max_open_questions]
-            if not questions:
+            if not state.map.questions:
                 return state.packet(assessment, ResearchStopReason.NO_OPEN_QUESTIONS, self._elapsed(started))
-            if state.rounds >= self.budget.max_rounds or self._elapsed(started) >= self.budget.max_seconds * 1000:
+            # The question cap counts across rounds, like the round and page caps.
+            remaining = self.budget.max_open_questions - state.questions_considered
+            if (
+                remaining <= 0
+                or state.rounds >= self.budget.max_rounds
+                or self._elapsed(started) >= self.budget.max_seconds * 1000
+            ):
                 return state.packet(assessment, ResearchStopReason.BUDGET_EXHAUSTED, self._elapsed(started))
+            questions = state.map.questions[:remaining]
+            state.questions_considered += len(questions)
 
             asked, blocks, capped = self._gather(state, questions, library, seen, started)
             if not blocks:
@@ -283,6 +290,9 @@ class _State:
     rounds: int = 0
     references: list[FetchedReference] = field(default_factory=list)
     paragraph_requests: int = 0
+    questions_considered: int = 0
+    """Questions acted on or refused so far. A refused one counts, so proposing
+    URLs the article does not cite cannot buy extra rounds of questions."""
     unresolved: list[str] = field(default_factory=list)
 
     def packet(self, assessment: Assessment, stop: ResearchStopReason, elapsed_ms: int) -> EvidencePacket:

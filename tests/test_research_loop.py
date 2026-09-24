@@ -205,6 +205,17 @@ def test_questions_beyond_the_budget_are_not_acted_on() -> None:
     assert web.requested == urls[:3]
 
 
+def test_the_question_cap_counts_across_rounds() -> None:
+    def asking(*paragraphs: str) -> dict:
+        return statement_only_map(open_questions=[{"question": f"q {p}", "doc": "main", "paragraphs": [p]} for p in paragraphs])
+
+    model = ScriptedModel(asking("p1", "p3"), asking("p1", "p3"), asking("p1"))
+    (packet,) = researcher(model, budget=ResearchBudget(max_rounds=4, max_open_questions=3)).run([LINKS_INPUT]).packets
+    # Two questions in round two, one in round three, then the cap: no fourth round.
+    assert packet.trace.paragraph_requests == 3 and packet.trace.rounds == 3
+    assert packet.stop_reason is ResearchStopReason.BUDGET_EXHAUSTED
+
+
 def test_the_time_budget_stops_research_before_another_round() -> None:
     ticks = iter([0.0, 0.0, 500.0, 500.0, 500.0, 500.0])
     model = ScriptedModel(ask_for_results())

@@ -88,9 +88,16 @@ def test_the_schema_uses_only_keywords_structured_output_enforces() -> None:
         ("code", "p8", "The full configuration lives in the repository.", "statement"),
         ("code", "p5", "runner.attach(budget)", "code"),
         ("config", "p2", "`3`", "config"),
+        ("code", "p2", "We capped agent retries at `3` per stage", "statement"),
     ],
 )
 def test_a_kind_label_the_quote_cannot_support_is_lowered_to_statement(kind, paragraph, quote, expected) -> None:
     data = {"evidence": [{"id": "e1", "doc": "main", "paragraph": paragraph, "kind": kind, "quote": quote}]}
     (evidence,) = accept(ExtractionOutput.model_validate(data), documents()).evidence
     assert evidence.kind.value == expected
+
+
+def test_a_quote_matched_across_whitespace_is_stored_as_the_source_wrote_it() -> None:
+    data = {"evidence": [{"id": "e1", "doc": "main", "paragraph": "p5", "kind": "code", "quote": "budget = RetryBudget(max_attempts=3)   runner.attach(budget)"}]}
+    (evidence,) = accept(ExtractionOutput.model_validate(data), documents()).evidence
+    assert evidence.quote == "budget = RetryBudget(max_attempts=3)\nrunner.attach(budget)"
