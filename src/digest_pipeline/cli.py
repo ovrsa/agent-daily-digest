@@ -104,6 +104,8 @@ def summary(result: RunResult, out_dir: Path | None) -> str:
         lines.append(f"commit: {result.commit}")
     if result.digest_path is not None:
         lines.append(f"digest: {result.digest_path}")
+    if result.deferred:
+        lines.append(f"deferred: {result.deferred} articles past the gates wait for a later run (--max-articles)")
     if out_dir is not None:
         lines.append(f"dry-run output: {out_dir}")
     return "\n".join(lines)
@@ -125,7 +127,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--max-articles",
         type=_positive,
         default=None,
-        help="research at most N articles past the gates (定点観測 first, then newest); the rest wait for a later run",
+        help="research at most N articles past the gates, oldest first; the rest wait for a later run",
     )
     args = parser.parse_args(argv)
 

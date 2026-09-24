@@ -17,16 +17,32 @@ TARGET="$HOME/Library/LaunchAgents/$LABEL.plist"
 JOB_PATH="${DIGEST_PATH:-/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin}"
 DOMAIN="gui/$(id -u)"
 
+# Each value is set with plutil, which writes it as plist text: a path holding `&`, `<`
+# or `|` comes through as it is, where a sed substitution would corrupt it.
 render() {
-  sed -e "s|@REPO@|$REPO_ROOT|g" -e "s|@HOME@|$HOME|g" -e "s|@USER@|$(id -un)|g" -e "s|@PATH@|$JOB_PATH|g" "$TEMPLATE"
+  local out="$1"
+  cp "$TEMPLATE" "$out"
+  # An array index given to -replace inserts rather than replaces, so the array is rebuilt.
+  plutil -replace ProgramArguments -array "$out"
+  plutil -insert ProgramArguments -string /bin/bash -append "$out"
+  plutil -insert ProgramArguments -string "$REPO_ROOT/scripts/run-local.sh" -append "$out"
+  plutil -replace WorkingDirectory -string "$REPO_ROOT" "$out"
+  plutil -replace EnvironmentVariables.PATH -string "$JOB_PATH" "$out"
+  plutil -replace EnvironmentVariables.HOME -string "$HOME" "$out"
+  plutil -replace EnvironmentVariables.USER -string "$(id -un)" "$out"
+  plutil -replace StandardErrorPath -string "$REPO_ROOT/logs/launchd.log" "$out"
+  if grep -q '@[A-Z]*@' "$out"; then
+    echo "a placeholder in $TEMPLATE was left unfilled" >&2
+    return 1
+  fi
+  plutil -lint "$out" >&2
 }
 
 case "${1:-}" in
   --print)
     rendered="$(mktemp)"
     trap 'rm -f "$rendered"' EXIT
-    render >"$rendered"
-    plutil -lint "$rendered" >&2
+    render "$rendered"
     cat "$rendered"
     ;;
   --uninstall)
@@ -36,8 +52,7 @@ case "${1:-}" in
     ;;
   "")
     mkdir -p "$(dirname "$TARGET")" "$REPO_ROOT/logs"
-    render >"$TARGET"
-    plutil -lint "$TARGET"
+    render "$TARGET"
     launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
     launchctl bootstrap "$DOMAIN" "$TARGET"
     echo "loaded $LABEL from $TARGET"

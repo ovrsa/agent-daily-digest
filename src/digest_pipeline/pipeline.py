@@ -35,7 +35,6 @@ from digest_contracts import (
     ResearchBudget,
     RunStatus,
     SelectorOutput,
-    SourceKind,
     StageName,
 )
 from digest_judge import PROMPT_VERSION as JUDGE_PROMPT_VERSION
@@ -90,6 +89,11 @@ class RunResult:
     """The commit that carries the digest, or the processing state alone when nothing was adopted."""
     digest_path: Path | None = None
     """Set when a digest was published."""
+    deferred: int = 0
+    """Articles past the gates left for a later run by `Pipeline.max_articles`.
+
+    Their metrics show a passed gate and no decision, the same as an article the
+    Selector did not decide; this count is what tells the two apart."""
     error: ErrorRecord | None = None
     """Why the run stopped, when an exception ended it, or why its metrics could not be written."""
     metrics_error: ErrorRecord | None = None
@@ -116,9 +120,13 @@ class Pipeline:
     max_articles: int | None = None
     """At most this many articles past the gates are researched in one run.
 
-    定点観測 goes first, then the newest. The rest are neither researched nor
-    recorded in the processing state, so a later run takes them up. `None`
-    researches every article, which on a first run is the whole window.
+    The oldest go first, the ones closest to leaving the collection window. The
+    rest are neither researched nor recorded in the processing state, so a later
+    run takes them up while they are still inside the window: a backlog drains
+    as long as the cap is above the daily inflow. The cap applies before
+    research clusters duplicates, so the members of one story can be researched
+    on different days. `None` researches every article, which on a first run is
+    the whole window.
     """
 
     def run(self, digest_date: date, *, run_id: str | None = None) -> RunResult:
@@ -136,8 +144,10 @@ class Pipeline:
                 run.execute()
         except Exception as exc:
             status = recorder.result.status if recorder.result is not None else RunStatus.FAILED
-            return RunResult(recorder.run_id, status, run.commit, run.digest_path, _error_of(exc), _sink_error(recorder))
-        return RunResult(recorder.run_id, recorder.result.status, run.commit, run.digest_path)
+            return RunResult(
+                recorder.run_id, status, run.commit, run.digest_path, run.deferred, _error_of(exc), _sink_error(recorder)
+            )
+        return RunResult(recorder.run_id, recorder.result.status, run.commit, run.digest_path, run.deferred)
 
 
 @dataclass
@@ -149,6 +159,7 @@ class _Run:
     digest_date: date
     commit: str | None = None
     digest_path: Path | None = None
+    deferred: int = 0
 
     def execute(self) -> None:
         p, recorder = self.pipeline, self.recorder
@@ -168,7 +179,9 @@ class _Run:
             index = ProcessedIndex.from_state(state)
             results = normalize_items(items, fetch=p.fetch, index=index)
         with recorder.stage(StageName.GATE):
-            passed = _within(p.max_articles, [result for result in results if result.passed])
+            gated = [result for result in results if result.passed]
+            passed = _within(p.max_articles, gated)
+            self.deferred = len(gated) - len(passed)
             self._record_articles(items, results)
             recorder.mark_sensitive(*(r.article.body_text for r in results if r.article is not None))
         if not passed:
@@ -306,13 +319,10 @@ def comment_body(run_id: str, digest_date: date, report: str) -> str:
 
 
 def _within(cap: int | None, passed: list[NormalizationResult]) -> list[NormalizationResult]:
-    """The articles a run takes up under `cap`: 定点観測 first, then the newest, in collection order otherwise."""
+    """The articles a run takes up under `cap`, oldest first; the chosen keep their collection order."""
     if cap is None or len(passed) <= cap:
         return passed
-    ranked = sorted(
-        passed,
-        key=lambda r: (r.article.source_kind is not SourceKind.FIXED_WATCH, -r.article.published_at.timestamp()),
-    )
+    ranked = sorted(passed, key=lambda r: r.article.published_at.timestamp())
     chosen = {id(r) for r in ranked[:cap]}
     return [r for r in passed if id(r) in chosen]
 

@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  Template for the daily run. launchd/install.sh fills in the @...@ values and
-  installs the result in ~/Library/LaunchAgents; do not load this file directly.
+  Template for the daily run. launchd/install.sh sets every @NAME@ value with
+  plutil and installs the result in ~/Library/LaunchAgents; do not load this
+  file directly.
 -->
 <plist version="1.0">
 <dict>
@@ -42,9 +43,11 @@
         <string>@USER@</string>
     </dict>
 
-    <!-- The script keeps its own dated log; this catches what happens before it starts. -->
+    <!-- The script writes its own dated log and prints the same lines, so standard
+         output is dropped. Standard error keeps a failure that happens before the
+         script can open its log, such as a missing checkout. -->
     <key>StandardOutPath</key>
-    <string>@REPO@/logs/launchd.log</string>
+    <string>/dev/null</string>
     <key>StandardErrorPath</key>
     <string>@REPO@/logs/launchd.log</string>
 </dict>

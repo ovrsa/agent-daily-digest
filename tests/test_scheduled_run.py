@@ -90,6 +90,33 @@ def test_the_launchd_agent_runs_the_script_daily_with_an_explicit_environment(tm
         "HOME": str(tmp_path / "home"),
         "USER": subprocess.run(["id", "-un"], capture_output=True, text=True, check=True).stdout.strip(),
     }
-    assert plist["StandardOutPath"] == plist["StandardErrorPath"] == f"{repo}/logs/launchd.log"
+    # The script logs for itself; launchd keeps only what fails before it can.
+    assert plist["StandardOutPath"] == "/dev/null"
+    assert plist["StandardErrorPath"] == f"{repo}/logs/launchd.log"
     # --print installs nothing.
     assert not (tmp_path / "home" / "Library").exists()
+
+
+@pytest.mark.skipif(shutil.which("plutil") is None, reason="plutil is macOS only")
+def test_paths_with_characters_special_to_sed_or_xml_are_written_as_they_are(tmp_path: Path) -> None:
+    repo = checkout(tmp_path / "a b&c|d<e")
+    home = tmp_path / "home & <away>|\\x"
+    env = {**os.environ, "HOME": str(home)}
+    done = subprocess.run(["/bin/bash", str(repo / "launchd" / "install.sh"), "--print"], env=env, capture_output=True, check=True)
+    plist = plistlib.loads(done.stdout)
+    assert plist["ProgramArguments"][1] == f"{repo}/scripts/run-local.sh"
+    assert plist["WorkingDirectory"] == str(repo)
+    assert plist["EnvironmentVariables"]["HOME"] == str(home)
+    assert plist["StandardErrorPath"] == f"{repo}/logs/launchd.log"
+
+
+@pytest.mark.skipif(shutil.which("plutil") is None, reason="plutil is macOS only")
+def test_a_placeholder_the_installer_does_not_fill_stops_it(tmp_path: Path) -> None:
+    repo = checkout(tmp_path)
+    template = repo / "launchd" / "com.ovrsa.agent-daily-digest.plist.template"
+    template.write_text(
+        template.read_text(encoding="utf-8").replace("<key>RunAtLoad</key>", "<key>Extra</key>\n    <string>@NEW@</string>\n    <key>RunAtLoad</key>"),
+        encoding="utf-8",
+    )
+    done = subprocess.run(["/bin/bash", str(repo / "launchd" / "install.sh"), "--print"], capture_output=True, text=True)
+    assert done.returncode != 0 and "left unfilled" in done.stderr and done.stdout == ""

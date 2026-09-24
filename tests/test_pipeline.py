@@ -146,7 +146,7 @@ def test_a_cap_researches_only_that_many_and_leaves_the_rest_for_a_later_run(tmp
     p.max_articles = 1
     result = p.run(DIGEST_DATE, run_id=RUN_ID)
 
-    assert result.published
+    assert result.published and result.deferred == 1
     assert ["article_id: a001" in r.prompt for r in model.requests["research"]] == [True]
     # a002 passed the gates but was not taken up: not decided, not recorded, so tomorrow sees it again.
     assert [r.canonical_url for r in state_of(tmp_path).records] == ["https://example.com/posts/retry-budget"]
@@ -155,7 +155,7 @@ def test_a_cap_researches_only_that_many_and_leaves_the_rest_for_a_later_run(tmp
     assert a002.gate.passed and a002.decision is None
 
 
-def test_the_cap_takes_fixed_watch_first_then_the_newest() -> None:
+def test_the_cap_takes_the_oldest_first_and_keeps_collection_order() -> None:
     from types import SimpleNamespace
 
     from digest_contracts import SourceKind
@@ -172,11 +172,29 @@ def test_the_cap_takes_fixed_watch_first_then_the_newest() -> None:
         result("hn_old", SourceKind.DISCOVERY, 20),
     ]
     ids = lambda rs: [r.article.article_id for r in rs]  # noqa: E731
-    # The chosen keep their collection order.
-    assert ids(_within(1, passed)) == ["blog_new"]
-    assert ids(_within(2, passed)) == ["blog_old", "blog_new"]
-    assert ids(_within(3, passed)) == ["hn_new", "blog_old", "blog_new"]
+    # Closest to leaving the collection window first, whatever the kind of source.
+    assert ids(_within(1, passed)) == ["blog_old"]
+    assert ids(_within(2, passed)) == ["blog_old", "hn_old"]
+    assert ids(_within(3, passed)) == ["blog_old", "blog_new", "hn_old"]
     assert _within(None, passed) == passed and _within(9, passed) == passed
+
+
+def test_a_capped_backlog_drains_over_later_runs(tmp_path) -> None:
+    def only(article_id):
+        data = decision()
+        data["must_read"] = [a for a in data["must_read"] if a["article_id"] == article_id]
+        data["excluded"] = [a for a in data["excluded"] if a["article_id"] == article_id]
+        return data
+
+    first = pipeline(tmp_path, happy_model(selector=[only("a001")]), FakePublisher())
+    first.max_articles = 1
+    day1 = first.run(DIGEST_DATE, run_id=RUN_ID)
+    second = pipeline(tmp_path, RoutedModel(selector=[only("a002")]), FakePublisher())
+    second.max_articles = 1
+    day2 = second.run(DIGEST_DATE, run_id="run-20260926T070000Z-abcdef")
+
+    assert (day1.deferred, day2.deferred) == (1, 0)
+    assert {record.canonical_url.rsplit("/", 1)[1] for record in state_of(tmp_path).records} == {"retry-budget", "eval-method"}
 
 
 # -- nothing to publish ------------------------------------------------------------------
