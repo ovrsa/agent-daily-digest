@@ -33,6 +33,7 @@ packages = [
     "src/digest_observe",
     "src/digest_render",
     "src/digest_research",
+    "src/digest_select",
 ]
 
 [tool.pytest.ini_options]
