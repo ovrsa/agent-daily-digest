@@ -120,7 +120,10 @@ def test_article_bodies_are_kept_out_of_the_metrics(tmp_path) -> None:
     leaky = decision()
     leaky["must_read"][0]["decision_reason"] = f"本文: {copied}"
     result = pipeline(tmp_path, happy_model(selector=[leaky]), FakePublisher()).run(DIGEST_DATE, run_id=RUN_ID)
-    assert result.published and result.error is not None and result.error.kind is ErrorKind.UNEXPECTED
+    assert result.published and result.error is not None and result.error.kind is ErrorKind.VALIDATION
+    # The result says where the copy was, so it can be found without the text.
+    assert result.error.detail == "metrics refused: $.articles[0].decision_reason (sensitive_text)"
+    assert copied not in result.error.detail
     assert MetricsStore(tmp_path / "metrics").load() == ()
 
 
@@ -130,7 +133,8 @@ def test_a_metrics_failure_on_top_of_a_run_failure_is_reported_too(tmp_path) -> 
     leaky["must_read"][0]["decision_reason"] = f"本文: {max(body.split(chr(10) * 2), key=len)[:120]}"
     result = pipeline(tmp_path, happy_model(selector=[leaky]), FakePublisher(fail_on="publish")).run(DIGEST_DATE, run_id=RUN_ID)
     assert result.status is RunStatus.FAILED and result.error.kind is ErrorKind.NETWORK
-    assert result.metrics_error is not None and result.metrics_error.kind is ErrorKind.UNEXPECTED
+    assert result.metrics_error is not None and result.metrics_error.kind is ErrorKind.VALIDATION
+    assert result.metrics_error.detail.startswith("metrics refused: $.articles[0].decision_reason")
 
 
 # -- nothing to publish ------------------------------------------------------------------

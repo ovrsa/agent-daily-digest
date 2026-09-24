@@ -137,6 +137,31 @@ def test_a_short_shared_phrase_is_not_a_leak() -> None:
     assert find_leaks(payload, ("An article about Claude Code hooks to gate tool calls in CI.",)) == ()
 
 
+LONG_URL = "https://claude.com/blog/how-coderabbit-power-digital-and-thoughtspot-scale-with-snowflake-and-vercel"
+
+
+def test_a_long_url_that_an_article_also_prints_is_not_a_copy() -> None:
+    # Seen on 2026-09-25: a claude.com post listed related posts by their full address,
+    # and the canonical URLs of those posts refused the whole record.
+    body = f"Related reading: {LONG_URL} and more on building agents with Claude in production."
+    payload = {"articles": [{"canonical_url": LONG_URL}]}
+    assert find_leaks(payload, (body,)) == ()
+    # A sensitive text too short for the window is matched whole; a URL is exempt from that too.
+    assert find_leaks(payload, ("thoughtspot-scale-with-snowflake",)) == ()
+
+
+def test_a_sentence_copied_next_to_a_url_is_still_a_copy() -> None:
+    body = "We capped agent retries at three per stage and replayed last month's 240 tasks to compare the policies."
+    payload = {"decision_reason": f"{LONG_URL} says: {body}"}
+    assert [leak.kind for leak in find_leaks(payload, (body,))] == ["sensitive_text"]
+
+
+def test_credentials_in_a_url_are_still_a_secret() -> None:
+    url = "https://user:hunter2hunter2@example.com/a-very-long-path-that-an-article-might-also-print-in-full"
+    leaks = find_leaks({"canonical_url": url}, (f"see {url}",))
+    assert [leak.kind for leak in leaks] == ["secret:url_credentials"]
+
+
 def test_a_run_recorded_end_to_end_carries_no_body_or_prompt(tmp_path: Path) -> None:
     """The recorder and the store together: bodies are marked sensitive and nothing leaks."""
     store = MetricsStore(tmp_path, clock=FakeClock())

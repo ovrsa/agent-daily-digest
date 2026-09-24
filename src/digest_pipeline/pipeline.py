@@ -52,12 +52,14 @@ from digest_normalize import (
 from digest_observe import (
     Clock,
     LLMResponse,
+    MetricsLeakError,
     MetricsStore,
     PricingTable,
     RunRecorder,
     StageFailed,
     article_metrics,
     classify_exception,
+    safe_detail,
     utc_now,
 )
 from digest_render import README_FILENAME, digest_filename, render_digest, write_digest
@@ -126,7 +128,7 @@ class Pipeline:
                 run.execute()
         except Exception as exc:
             status = recorder.result.status if recorder.result is not None else RunStatus.FAILED
-            return RunResult(recorder.run_id, status, run.commit, run.digest_path, classify_exception(exc), _sink_error(recorder))
+            return RunResult(recorder.run_id, status, run.commit, run.digest_path, _error_of(exc), _sink_error(recorder))
         return RunResult(recorder.run_id, recorder.result.status, run.commit, run.digest_path)
 
 
@@ -279,7 +281,15 @@ class _Run:
 
 
 def _sink_error(recorder: RunRecorder) -> ErrorRecord | None:
-    return classify_exception(recorder.sink_error) if recorder.sink_error is not None else None
+    return _error_of(recorder.sink_error) if recorder.sink_error is not None else None
+
+
+def _error_of(exc: BaseException) -> ErrorRecord:
+    """Classify `exc`. A refused metrics record names where the copy or secret was, never the text."""
+    if isinstance(exc, MetricsLeakError):
+        places = ", ".join(f"{leak.location} ({leak.kind})" for leak in exc.leaks)
+        return ErrorRecord(kind=ErrorKind.VALIDATION, detail=safe_detail(f"metrics refused: {places}"))
+    return classify_exception(exc)
 
 
 def comment_body(run_id: str, digest_date: date, report: str) -> str:

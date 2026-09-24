@@ -24,9 +24,14 @@ from digest_contracts import ERROR_DETAIL_MAX_CHARS
 LEAK_WINDOW_CHARS = 64
 """A run of this many characters shared with a sensitive text counts as a copy.
 
-Short enough to catch a quoted sentence, long enough that a product name or a
-URL an article also mentions does not trip it. Whitespace is collapsed first.
-A sensitive text shorter than this is matched whole instead.
+Short enough to catch a quoted sentence, long enough that a product name an
+article also mentions does not trip it. Whitespace is collapsed first. A
+sensitive text shorter than this is matched whole instead.
+
+A string that is nothing but a URL is not checked for copies: it is public
+metadata such as an article's canonical URL, and a page that prints another
+article's address would otherwise refuse the whole record. It is still checked
+for secrets, so credentials in a URL are caught.
 """
 
 LEAK_MIN_CHARS = 16
@@ -49,6 +54,8 @@ SECRET_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
 """Credentials this project can hold: model auth, `gh` auth, and URLs with userinfo."""
 
 _REDACTED = "<redacted>"
+
+_URL_ONLY = re.compile(r"https?://\S+")
 
 
 def redact_secrets(text: str) -> str:
@@ -118,8 +125,9 @@ def find_leaks(
                 leaks.append(Leak(location=location, kind=f"secret:{name}"))
                 break
 
+    copyable = [(location, value) for location, value in strings if not _URL_ONLY.fullmatch(value.strip())]
     windows: dict[str, str] = {}
-    for location, value in strings:
+    for location, value in copyable:
         text = _collapse(value)
         for start in range(0, max(0, len(text) - window + 1)):
             windows.setdefault(text[start : start + window], location)
@@ -136,7 +144,7 @@ def find_leaks(
             continue
         if len(text) < window:
             # Too short to slide a window over, so it must not appear at all.
-            for location, value in strings:
+            for location, value in copyable:
                 if text in _collapse(value):
                     flag(location)
             continue
