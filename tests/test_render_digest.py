@@ -88,6 +88,25 @@ def test_the_article_numbers_run_on_across_the_tiers() -> None:
     assert worth_knowing.lstrip().startswith("### 4. ")
 
 
+def test_a_full_digest_indents_each_headline_by_the_width_of_its_number() -> None:
+    """Both tiers full make 13 articles, so the last four numbers take two digits."""
+    must_read = [f.included_payload(f"m{i:03d}", headline=f"要点 m{i}") for i in range(MUST_READ_MAX)]
+    worth_knowing = [f.included_payload(f"w{i:03d}", headline=f"要点 w{i}") for i in range(WORTH_KNOWING_MAX)]
+    payload = f.selector_payload() | {"must_read": must_read, "worth_knowing": worth_knowing, "duplicate_groups": []}
+    articles = {
+        a["article_id"]: f.normalized_article(
+            article_id=a["article_id"], canonical_url=f"https://example.com/{a['article_id']}"
+        )
+        for a in must_read + worth_knowing
+    }
+    rendered = f.render(SelectorOutput.model_validate(payload), articles=articles)
+    assert rendered is not None
+    assert "\n9. **Worth Knowing** " in rendered and "\n   要点 w3\n" in rendered
+    assert "\n10. **Worth Knowing** " in rendered and "\n    要点 w4\n" in rendered
+    assert "\n13. **Worth Knowing** " in rendered and "\n    要点 w7\n" in rendered
+    assert "\n### 13. [" in rendered
+
+
 def test_a_newline_in_a_headline_stays_on_its_line() -> None:
     payload = f.selector_payload()
     payload["must_read"] = [

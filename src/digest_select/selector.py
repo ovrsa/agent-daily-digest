@@ -57,7 +57,9 @@ DEFAULT_RETRY = RetryPolicy(max_attempts=3)
 ENTRY_TEXT_MAX: Mapping[str, int] = {"what_happened": 200, "why_read": 200, "evidence": 200, "caveat": 200, "headline": 40}
 """Characters per entry field. The contract has no cap; the published digest needs one.
 
-The headline has to fit one line of the overview at the top of the digest."""
+The headline has to fit one line of the overview at the top of the digest. What
+happened and the evidence went from 300 to 200 in #31, when the operator found
+the entries hard to read and each part moved under its own bold label."""
 
 RULE_HINTS: Mapping[str, str] = {
     "missing_article": "入力の記事が must_read / worth_knowing / excluded のどこにも入っていない",
