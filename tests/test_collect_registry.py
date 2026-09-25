@@ -49,7 +49,10 @@ RECORDED_FEEDS = (
     "steipete",
     "arxiv_surveys",
 )
-"""Sources added in #31, each replayed from its own recording."""
+"""Sources added in #31, each replayed from its own recording.
+
+The fetcher finds each recording by the URL the shipped config gives the
+source; `test_collect_config.py` pins those URLs, so a drifted URL fails there."""
 
 EVERY_ENTRY = 3650
 """A window in days wide enough to keep every recorded entry."""

@@ -41,25 +41,25 @@ The site re-generates in bulk — 23 of the 34 moved on one day — so a cap
 below this fills up with old posts whose `lastmod` happens to be recent and
 pushes the day's new ones out."""
 
-NOTABLE_BLOGS = (
-    "goedecke",
-    "syu-m-5151",
-    "mizchi",
-    "ronacher",
-    "breunig",
-    "harper",
-    "hamel",
-    "pragmatic_engineer",
-    "karpathy",
-    "mitchellh",
-    "ghuntley",
-    "yegge",
-    "lilianweng",
-    "eugeneyan",
-    "litt",
-    "huyenchip",
-    "steipete",
-)
+NOTABLE_BLOG_FEEDS = {
+    "goedecke": "https://www.seangoedecke.com/rss.xml",
+    "syu-m-5151": "https://syu-m-5151.hatenablog.com/feed",
+    "mizchi": "https://zenn.dev/mizchi/feed",
+    "ronacher": "https://lucumr.pocoo.org/feed.atom",
+    "breunig": "https://www.dbreunig.com/feed.xml",
+    "harper": "https://harper.blog/index.xml",
+    "hamel": "https://hamel.dev/index.xml",
+    "pragmatic_engineer": "https://newsletter.pragmaticengineer.com/feed",
+    "karpathy": "https://karpathy.bearblog.dev/feed/",
+    "mitchellh": "https://mitchellh.com/feed.xml",
+    "ghuntley": "https://ghuntley.com/rss/",
+    "yegge": "https://steve-yegge.medium.com/feed",
+    "lilianweng": "https://lilianweng.github.io/index.xml",
+    "eugeneyan": "https://eugeneyan.com/rss/",
+    "litt": "https://www.geoffreylitt.com/feed.xml",
+    "huyenchip": "https://huyenchip.com/feed.xml",
+    "steipete": "https://steipete.me/rss.xml",
+}
 """Blogs by well-known developers and researchers who write about using coding agents (#31).
 
 The first eight posted about coding agents in the 60 days to 2026-09-25. The
@@ -107,14 +107,15 @@ class TestShippedRegistry:
         assert {spec.connector for spec in loaded.sources} <= {"feed", "sitemap", "hackernews"}
         assert not any("reddit.com" in getattr(spec, "url", "") for spec in loaded.sources)
 
-    @pytest.mark.parametrize("source_id", NOTABLE_BLOGS)
+    @pytest.mark.parametrize(("source_id", "url"), sorted(NOTABLE_BLOG_FEEDS.items()))
     def test_every_notable_blog_is_an_enabled_fixed_watch_feed(
-        self, loaded: CollectionConfig, source_id: str
+        self, loaded: CollectionConfig, source_id: str, url: str
     ) -> None:
         spec = loaded.source(source_id)
         assert spec.enabled
         assert spec.kind is SourceKind.FIXED_WATCH
         assert spec.connector == "feed"
+        assert spec.url == url
 
     def test_the_arxiv_source_asks_for_the_newest_software_engineering_surveys_on_agents(
         self, loaded: CollectionConfig
