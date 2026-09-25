@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from digest_collect import (
+from agent_daily_digest.collect import (
     CollectContext,
     PageMetadata,
     ProbeRecorder,
@@ -15,8 +15,8 @@ from digest_collect import (
     make_article_id,
     read_head_metadata,
 )
-from digest_collect.config import SOURCE_SPEC_ADAPTER
-from digest_collect.connectors import CONNECTORS, parse_w3c_datetime
+from agent_daily_digest.collect.config import SOURCE_SPEC_ADAPTER
+from agent_daily_digest.collect.connectors import CONNECTORS, parse_w3c_datetime
 
 import collect_support as s
 
@@ -567,7 +567,7 @@ class TestHackerNewsConnector:
                 self.requested.append(url)
                 if "llm" in url:
                     raise s.http_error(503)
-                from digest_collect import HttpResponse
+                from agent_daily_digest.collect import HttpResponse
 
                 return HttpResponse(url=url, status=200, body=good)
 

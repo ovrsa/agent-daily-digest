@@ -5,9 +5,9 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from digest_contracts import BodySource, ErrorKind, NormalizedArticle, SourceKind, compute_content_hash
-from digest_normalize import FetchedPage, FetchFailure, extract_document
-from digest_observe import LLMResponse, ModelUsage
+from agent_daily_digest.contracts import BodySource, ErrorKind, NormalizedArticle, SourceKind, compute_content_hash
+from agent_daily_digest.normalize import FetchedPage, FetchFailure, extract_document
+from agent_daily_digest.observe import LLMResponse, ModelUsage
 from normalize_helpers import read_html
 
 PUBLISHED = datetime(2026, 9, 24, 6, 0, tzinfo=timezone.utc)

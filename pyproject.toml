@@ -25,18 +25,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = [
-    "src/digest_collect",
-    "src/digest_contracts",
-    "src/digest_judge",
-    "src/digest_llm",
-    "src/digest_normalize",
-    "src/digest_pipeline",
-    "src/digest_observe",
-    "src/digest_render",
-    "src/digest_research",
-    "src/digest_select",
-]
+packages = ["src/agent_daily_digest"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

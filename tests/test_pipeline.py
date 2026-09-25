@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from digest_contracts import Decision, ErrorKind, RunStatus, StageName, StageStatus
-from digest_observe import LLMInvocationError, MetricsStore
-from digest_normalize import extract_document
+from agent_daily_digest.contracts import Decision, ErrorKind, RunStatus, StageName, StageStatus
+from agent_daily_digest.observe import LLMInvocationError, MetricsStore
+from agent_daily_digest.normalize import extract_document
 from normalize_helpers import read_html
 from pipeline_support import (
     DIGEST_DATE,
@@ -159,8 +159,8 @@ def test_a_cap_researches_only_that_many_and_leaves_the_rest_for_a_later_run(tmp
 def test_the_cap_takes_fixed_watch_first_then_the_newest_and_keeps_collection_order() -> None:
     from types import SimpleNamespace
 
-    from digest_contracts import SourceKind
-    from digest_pipeline.pipeline import _within
+    from agent_daily_digest.contracts import SourceKind
+    from agent_daily_digest.pipeline import _within
     from research_support import PUBLISHED, article
 
     def result(article_id, kind, hours):
@@ -184,8 +184,8 @@ def test_the_cap_takes_fixed_watch_first_then_the_newest_and_keeps_collection_or
 
 
 def test_under_a_cap_a_fixed_watch_article_is_researched_before_a_newer_discovery_one(tmp_path) -> None:
-    from digest_collect import CollectionReport
-    from digest_contracts import SourceFetchResult
+    from agent_daily_digest.collect import CollectionReport
+    from agent_daily_digest.contracts import SourceFetchResult
 
     def fetched(source_id, kind, entry):
         return SourceFetchResult.model_validate(
@@ -349,8 +349,8 @@ def test_a_selector_whose_model_call_fails_publishes_nothing(tmp_path) -> None:
 def test_a_render_failure_publishes_nothing(tmp_path, monkeypatch) -> None:
     # The Selector already rejects what the renderer bans, so this guard is a second line;
     # force it to prove the stage stops the run on its own.
-    from digest_pipeline import pipeline as module
-    from digest_render import ForbiddenArtifactError
+    from agent_daily_digest import pipeline as module
+    from agent_daily_digest.render import ForbiddenArtifactError
 
     def refuse(*args, **kwargs):
         raise ForbiddenArtifactError(())

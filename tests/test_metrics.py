@@ -8,7 +8,7 @@ import pytest
 from pydantic import BaseModel, RootModel, ValidationError
 
 import factories as f
-from digest_contracts import (
+from agent_daily_digest.contracts import (
     ALLOWED_RUN_TRANSITIONS,
     ALLOWED_STAGE_TRANSITIONS,
     MUST_READ_MAX,

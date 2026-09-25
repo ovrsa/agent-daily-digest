@@ -8,8 +8,8 @@ from typing import Any
 import pytest
 from pydantic import BaseModel, ConfigDict
 
-from digest_contracts import AttemptStatus, ErrorKind, LLMCallMetrics, LLMRole, ValidationIssue
-from digest_observe import (
+from agent_daily_digest.contracts import AttemptStatus, ErrorKind, LLMCallMetrics, LLMRole, ValidationIssue
+from agent_daily_digest.observe import (
     CallSpec,
     LLMInvocationError,
     LLMResponse,

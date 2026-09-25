@@ -10,18 +10,18 @@ import pytest
 from jsonschema import Draft202012Validator
 from pydantic import BaseModel
 
-import digest_contracts
-from digest_contracts import SOURCE_EVIDENCE_MAX_CHARS, JudgeReport
+import agent_daily_digest.contracts
+from agent_daily_digest.contracts import SOURCE_EVIDENCE_MAX_CHARS, JudgeReport
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
 PUBLIC_MODELS = sorted(
     (
         obj
-        for name in digest_contracts.__all__
-        if isinstance(obj := getattr(digest_contracts, name), type)
+        for name in agent_daily_digest.contracts.__all__
+        if isinstance(obj := getattr(agent_daily_digest.contracts, name), type)
         and issubclass(obj, BaseModel)
-        and obj is not digest_contracts.ContractModel
+        and obj is not agent_daily_digest.contracts.ContractModel
     ),
     key=lambda model: model.__name__,
 )

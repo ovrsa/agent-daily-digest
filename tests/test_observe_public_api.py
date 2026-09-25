@@ -1,4 +1,4 @@
-"""The package surfaces of `digest_observe` and `digest_llm`, and the SDK boundary between them."""
+"""The package surfaces of `agent_daily_digest.observe` and `agent_daily_digest.llm`, and the SDK boundary between them."""
 
 from __future__ import annotations
 
@@ -8,11 +8,11 @@ from pathlib import Path
 
 import pytest
 
-import digest_llm
-import digest_observe
+import agent_daily_digest.llm
+import agent_daily_digest.observe
 
 
-@pytest.mark.parametrize("package", [digest_observe, digest_llm])
+@pytest.mark.parametrize("package", [agent_daily_digest.observe, agent_daily_digest.llm])
 def test_all_names_resolve_and_are_unique(package) -> None:
     names = package.__all__
     assert len(names) == len(set(names))
@@ -27,10 +27,10 @@ def loaded_modules(package: str) -> set[str]:
 
 
 def test_observe_never_imports_the_sdk() -> None:
-    assert "claude_agent_sdk" not in loaded_modules("digest_observe")
-    source = "".join(p.read_text(encoding="utf-8") for p in Path(digest_observe.__file__).parent.glob("*.py"))
+    assert "claude_agent_sdk" not in loaded_modules("agent_daily_digest.observe")
+    source = "".join(p.read_text(encoding="utf-8") for p in Path(agent_daily_digest.observe.__file__).parent.glob("*.py"))
     assert "claude_agent_sdk" not in source
 
 
 def test_importing_the_adapter_does_not_load_the_sdk() -> None:
-    assert "claude_agent_sdk" not in loaded_modules("digest_llm")
+    assert "claude_agent_sdk" not in loaded_modules("agent_daily_digest.llm")

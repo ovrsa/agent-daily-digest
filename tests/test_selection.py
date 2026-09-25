@@ -10,7 +10,7 @@ from jsonschema import Draft202012Validator
 from pydantic import ValidationError
 
 import factories as f
-from digest_contracts import (
+from agent_daily_digest.contracts import (
     MUST_READ_MAX,
     WORTH_KNOWING_MAX,
     AxisScores,

@@ -18,10 +18,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tests"))
 
-from digest_contracts import LLMCallMetrics  # noqa: E402
-from digest_llm import invoke_structured  # noqa: E402
-from digest_observe import load_pricing  # noqa: E402
-from digest_research import Researcher, ResearchInput, render_packet  # noqa: E402
+from agent_daily_digest.contracts import LLMCallMetrics  # noqa: E402
+from agent_daily_digest.llm import invoke_structured  # noqa: E402
+from agent_daily_digest.observe import load_pricing  # noqa: E402
+from agent_daily_digest.research import Researcher, ResearchInput, render_packet  # noqa: E402
 from research_support import RESULTS_PAGE, RESULTS_URL, ScriptedWeb, article  # noqa: E402
 
 CASES = (
@@ -38,7 +38,7 @@ CASES = (
 
 
 def main() -> None:
-    config = ROOT / "config" / "config.json"
+    config = ROOT / "config.json"
     calls: list[LLMCallMetrics] = []
     researcher = Researcher(
         invoke=invoke_structured,

@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import os
+from importlib import import_module
 from pathlib import Path
 
 import pytest
 
-from digest_contracts import (
+from agent_daily_digest.contracts import (
     ErrorKind,
     LLMCallMetrics,
     LLMRole,
@@ -18,9 +19,9 @@ from digest_contracts import (
     ResearchStopReason,
     SourceKind,
 )
-from digest_normalize import ProcessedIndex, extract_document
-from digest_observe import LLMResponse
-from digest_research import Researcher, ResearchInput, render_packet
+from agent_daily_digest.normalize import ProcessedIndex, extract_document
+from agent_daily_digest.observe import LLMResponse
+from agent_daily_digest.research import Researcher, ResearchInput, render_packet
 from observe_support import PRICING
 from research_support import (
     PUBLISHED,
@@ -302,7 +303,7 @@ def test_research_writes_nothing_to_disk(tmp_path: Path, monkeypatch: pytest.Mon
     web = ScriptedWeb({RESULTS_URL: RESULTS_PAGE})
     researcher(ScriptedModel(ask_for_results(), results_round()), web).run([LINKS_INPUT])
     assert list(tmp_path.iterdir()) == []
-    package = Path(__import__("digest_research").__file__).parent
+    package = Path(import_module("agent_daily_digest.research").__file__).parent
     source = "".join(p.read_text(encoding="utf-8") for p in package.glob("*.py"))
     for writer in ("write_text", "write_bytes", " open(", "mkdir", "os.replace", "tempfile"):
         assert writer not in source, writer

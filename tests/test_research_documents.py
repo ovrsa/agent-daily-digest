@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from digest_normalize import UNTRUSTED_CLOSE, UNTRUSTED_OPEN
-from digest_research import SourceLibrary, render_article, source_document, split_paragraphs
+from agent_daily_digest.normalize import UNTRUSTED_CLOSE, UNTRUSTED_OPEN
+from agent_daily_digest.research import SourceLibrary, render_article, source_document, split_paragraphs
 from research_support import article
 
 

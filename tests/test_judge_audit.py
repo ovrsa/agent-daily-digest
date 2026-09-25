@@ -7,8 +7,8 @@ import dataclasses
 import inspect
 from typing import Any
 
-from digest_contracts import AuditTargetKind, ErrorKind, JudgeReport, LLMRole, SelectorOutput
-from digest_judge import (
+from agent_daily_digest.contracts import AuditTargetKind, ErrorKind, JudgeReport, LLMRole, SelectorOutput
+from agent_daily_digest.judge import (
     COMMENT_FINDINGS_MAX,
     PROMPT_VERSION,
     SYSTEM_PROMPT,
@@ -18,10 +18,10 @@ from digest_judge import (
     render_report,
     select_targets,
 )
-from digest_llm import StructuredRequest, build_options
-from digest_observe import LLMInvocationError, RetryPolicy
-from digest_select import SYSTEM_PROMPT as SELECTOR_SYSTEM_PROMPT
-from digest_select import Selector, selection_issues
+from agent_daily_digest.llm import StructuredRequest, build_options
+from agent_daily_digest.observe import LLMInvocationError, RetryPolicy
+from agent_daily_digest.select import SYSTEM_PROMPT as SELECTOR_SYSTEM_PROMPT
+from agent_daily_digest.select import Selector, selection_issues
 from judge_support import DECISION, OUTPUT, PACKETS, library
 from observe_support import PRICING
 from research_support import ScriptedModel

@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 import factories as f
-from digest_contracts import (
+from agent_daily_digest.contracts import (
     CollectedItem,
     ErrorKind,
     ErrorRecord,
@@ -23,7 +23,7 @@ from digest_contracts import (
     StageName,
     StageStatus,
 )
-from digest_observe import RunAborted, RunRecorder, StageFailed, article_metrics, derive_status, new_run_id
+from agent_daily_digest.observe import RunAborted, RunRecorder, StageFailed, article_metrics, derive_status, new_run_id
 from observe_support import START, FakeClock
 
 SELECTOR_FIXTURE = Path(__file__).parent / "fixtures" / "selector_output.valid.json"

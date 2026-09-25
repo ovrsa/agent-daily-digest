@@ -11,8 +11,8 @@ from email.message import Message
 
 import pytest
 
-from digest_contracts import ErrorKind
-from digest_normalize import (
+from agent_daily_digest.contracts import ErrorKind
+from agent_daily_digest.normalize import (
     MAX_BODY_BYTES,
     MAX_REDIRECTS,
     BlockedTarget,
@@ -23,7 +23,7 @@ from digest_normalize import (
     is_html_content_type,
     is_public_address,
 )
-from digest_normalize.fetching import (
+from agent_daily_digest.normalize.fetching import (
     BLOCKED_IPV4_NETWORKS,
     BLOCKED_IPV6_NETWORKS,
     TRANSLATED_IPV6_NETWORKS,

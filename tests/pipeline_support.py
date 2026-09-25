@@ -16,14 +16,14 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from digest_collect import CollectionReport
-from digest_contracts import ErrorKind, ProcessedState, SourceFetchResult
-from digest_judge import SYSTEM_PROMPT as JUDGE_SYSTEM_PROMPT
-from digest_normalize import FetchedPage, load_state
-from digest_observe import LLMResponse, MetricsStore, StageFailed
-from digest_pipeline import Models, Paths, Pipeline
-from digest_research import SYSTEM_PROMPT as RESEARCH_SYSTEM_PROMPT
-from digest_select import SYSTEM_PROMPT as SELECTOR_SYSTEM_PROMPT
+from agent_daily_digest.collect import CollectionReport
+from agent_daily_digest.contracts import ErrorKind, ProcessedState, SourceFetchResult
+from agent_daily_digest.judge import SYSTEM_PROMPT as JUDGE_SYSTEM_PROMPT
+from agent_daily_digest.normalize import FetchedPage, load_state
+from agent_daily_digest.observe import LLMResponse, MetricsStore, StageFailed
+from agent_daily_digest import Models, Paths, Pipeline
+from agent_daily_digest.research import SYSTEM_PROMPT as RESEARCH_SYSTEM_PROMPT
+from agent_daily_digest.select import SYSTEM_PROMPT as SELECTOR_SYSTEM_PROMPT
 from normalize_helpers import StubFetcher, page
 from observe_support import PRICING
 from research_support import USAGE, complete_map

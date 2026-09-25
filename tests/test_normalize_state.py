@@ -8,14 +8,14 @@ from pathlib import Path
 
 import pytest
 
-from digest_contracts import (
+from agent_daily_digest.contracts import (
     BodySource,
     Decision,
     NormalizedArticle,
     ProcessedState,
     compute_content_hash,
 )
-from digest_normalize import ProcessedIndex, dump_state_json, load_state, record_article, save_state
+from agent_daily_digest.normalize import ProcessedIndex, dump_state_json, load_state, record_article, save_state
 from normalize_helpers import processed_record
 
 UTC = dt.timezone.utc

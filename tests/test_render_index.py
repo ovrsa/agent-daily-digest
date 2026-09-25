@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 
 import render_factories as f
-from digest_contracts import SelectorOutput
-from digest_render import (
+from agent_daily_digest.contracts import SelectorOutput
+from agent_daily_digest.render import (
     INDEX_BEGIN,
     INDEX_EMPTY_TEXT,
     INDEX_END,

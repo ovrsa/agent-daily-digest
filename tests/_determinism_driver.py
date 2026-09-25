@@ -13,8 +13,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from digest_contracts import CollectedItem, ProcessedState  # noqa: E402
-from digest_normalize import (  # noqa: E402
+from agent_daily_digest.contracts import CollectedItem, ProcessedState  # noqa: E402
+from agent_daily_digest.normalize import (  # noqa: E402
     ProcessedIndex,
     dump_state_json,
     normalize_items,

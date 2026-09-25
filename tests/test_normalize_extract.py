@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from digest_normalize import extract_document
+from agent_daily_digest.normalize import extract_document
 from normalize_helpers import read_html
 
 BASIC_BODY = (

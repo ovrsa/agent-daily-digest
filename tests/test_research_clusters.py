@@ -8,9 +8,9 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-import digest_research
-from digest_contracts import SourceKind
-from digest_research import cluster_articles, load_research_budget, resolve_links
+import agent_daily_digest.research
+from agent_daily_digest.contracts import SourceKind
+from agent_daily_digest.research import cluster_articles, load_research_budget, resolve_links
 from research_support import PUBLISHED, article
 
 
@@ -54,7 +54,7 @@ def test_links_are_resolved_against_the_article_and_filtered_to_http() -> None:
 
 
 def test_the_budget_is_read_from_the_config(tmp_path) -> None:
-    assert load_research_budget("config/config.json").max_rounds == 2
+    assert load_research_budget("config.json").max_rounds == 2
     path = tmp_path / "c.json"
     path.write_text('{"research": {"max_rounds": 9}}', encoding="utf-8")
     with pytest.raises(ValueError):
@@ -62,8 +62,8 @@ def test_the_budget_is_read_from_the_config(tmp_path) -> None:
 
 
 def test_the_public_names_resolve_and_importing_does_not_load_the_sdk() -> None:
-    names = digest_research.__all__
-    assert len(names) == len(set(names)) and all(getattr(digest_research, n) is not None for n in names)
-    code = "import sys, digest_research; print('\\n'.join(sys.modules))"
+    names = agent_daily_digest.research.__all__
+    assert len(names) == len(set(names)) and all(getattr(agent_daily_digest.research, n) is not None for n in names)
+    code = "import sys, agent_daily_digest.research; print('\\n'.join(sys.modules))"
     loaded = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True).stdout.split()
     assert "claude_agent_sdk" not in loaded
