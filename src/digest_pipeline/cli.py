@@ -110,7 +110,7 @@ def summary(result: RunResult, out_dir: Path | None) -> str:
     if result.digest_path is not None:
         lines.append(f"digest: {result.digest_path}")
     if result.deferred:
-        lines.append(f"deferred: {result.deferred} older articles past the gates were not researched (the article cap)")
+        lines.append(f"deferred: {result.deferred} articles past the gates were not researched (the article cap)")
     if out_dir is not None:
         lines.append(f"dry-run output: {out_dir}")
     return "\n".join(lines)
@@ -132,7 +132,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--max-articles",
         type=_positive,
         default=None,
-        help="research at most N articles past the gates, newest first; config run.max_articles by default",
+        help="research at most N articles past the gates, fixed-watch sources first; config run.max_articles by default",
     )
     args = parser.parse_args(argv)
 

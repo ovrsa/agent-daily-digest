@@ -35,6 +35,7 @@ from digest_contracts import (
     ResearchBudget,
     RunStatus,
     SelectorOutput,
+    SourceKind,
     StageName,
 )
 from digest_judge import PROMPT_VERSION as JUDGE_PROMPT_VERSION
@@ -122,14 +123,17 @@ class Pipeline:
 
     The Selector decides every researched article in one call, and that call has
     a cost and a time limit; `config.DEFAULT_MAX_ARTICLES` says why the command
-    line never runs without a cap. The newest go first. The rest are neither
-    researched nor recorded in the processing state: they compete again in the
-    next run while they are inside the collection window, and leave it
-    unresearched when newer articles keep filling the cap. That is how a first
-    run, with the whole window new, researches the newest and lets the older
-    backlog go. The cap applies before research clusters duplicates, so the
-    members of one story can be researched on different days. `None` researches
-    every article.
+    line never runs without a cap. Fixed-watch sources fill it first and
+    discovery (Hacker News, Reddit) takes what is left, the newest first within
+    each: discovery is found by keyword and brings articles off the topic, which
+    would otherwise take the places of the official blogs and releases. The
+    rest are neither researched nor recorded in the processing state: they
+    compete again in the next run while they are inside the collection window,
+    and leave it unresearched when other articles keep filling the cap. That is
+    how a first run, with the whole window new, leaves the rest of the window
+    unresearched, discovery included however new. The cap applies before
+    research clusters duplicates, so the members of one story can be researched
+    on different days. `None` researches every article.
     """
 
     def run(self, digest_date: date, *, run_id: str | None = None) -> RunResult:
@@ -322,10 +326,13 @@ def comment_body(run_id: str, digest_date: date, report: str) -> str:
 
 
 def _within(cap: int | None, passed: list[NormalizationResult]) -> list[NormalizationResult]:
-    """The articles a run takes up under `cap`, newest first; the chosen keep their collection order."""
+    """The articles a run takes up under `cap`: fixed-watch first, then the newest; the chosen keep their collection order."""
     if cap is None or len(passed) <= cap:
         return passed
-    ranked = sorted(passed, key=lambda r: r.article.published_at.timestamp(), reverse=True)
+    ranked = sorted(
+        passed,
+        key=lambda r: (r.article.source_kind is not SourceKind.FIXED_WATCH, -r.article.published_at.timestamp()),
+    )
     chosen = {id(r) for r in ranked[:cap]}
     return [r for r in passed if id(r) in chosen]
 

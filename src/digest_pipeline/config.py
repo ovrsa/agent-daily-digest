@@ -23,7 +23,7 @@ The Selector decides every researched article in one call, bounded by
 failed selection publishes nothing and leaves the processing state as it was:
 the next run would research the same articles again and fail the same way.
 The same day, 58 articles of the seven-day window passed the gates, 23 of them
-from the last 24 hours; on a day above the cap the older ones wait a day.
+from the last 24 hours; on a day above the cap the rest wait a day.
 """
 
 
