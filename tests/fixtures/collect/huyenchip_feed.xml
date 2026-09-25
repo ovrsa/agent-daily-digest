@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Chip Huyen</title>
+    <description>I work to bring AI into production. I write about AI system design.
+</description>
+    <link>https://huyenchip.com</link>
+    <atom:link href="https://huyenchip.com/feed.xml" rel="self" type="application/rss+xml" />
+    
+      <item>
+        <title>Common pitfalls when building generative AI applications</title>
+        <description>&lt;p&gt;As we’re still in the early days of building applications with foundation models, it’s normal to make mistakes. This is a quick note with examples of some of the most common pitfalls that I’ve seen, both from public case studies and from my personal experience.&lt;/p&gt;
+
+&lt;p&gt;Because these pitfalls are common, if you’ve worked on any AI product, you’ve probably seen them before.&lt;/p&gt;
+
+&lt;h2 id=&quot;1_use_generative_ai_when_you_don_t_need_generative_ai&quot;&gt;1. Use generative AI when you don&apos;t need generative AI&lt;/h2&gt;
+
+&lt;p&gt;Every time there’s a new technolo</description>
+        <pubDate>Thu, 16 Jan 2025 00:00:00 +0000</pubDate>
+        <link>https://huyenchip.com//2025/01/16/ai-engineering-pitfalls.html</link>
+        <guid isPermaLink="true">https://huyenchip.com/2025/01/16/ai-engineering-pitfalls.html</guid>
+      </item>
+    
+      <item>
+        <title>Agents</title>
+        <description>&lt;p&gt;Intelligent agents are considered by many to be the ultimate goal of AI. The classic book by Stuart Russell and Peter Norvig, &lt;em&gt;Artificial Intelligence: A Modern Approach&lt;/em&gt; (Prentice Hall, 1995), defines the field of AI research as “&lt;em&gt;the study and design of rational agents.&lt;/em&gt;”&lt;/p&gt;
+
+&lt;p&gt;The unprecedented capabilities of foundation models have opened the door to agentic applications that were previously unimaginable. These new capabilities make it finally possible to develop autonomous, intelligent agents to act as our assistants, coworkers,</description>
+        <pubDate>Tue, 07 Jan 2025 00:00:00 +0000</pubDate>
+        <link>https://huyenchip.com//2025/01/07/agents.html</link>
+        <guid isPermaLink="true">https://huyenchip.com/2025/01/07/agents.html</guid>
+      </item>
+    
+      </channel>
+</rss>

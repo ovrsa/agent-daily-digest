@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Eugene Yan</title>
+    <description>Eugene Yan works at the intersection of consumer data &amp; tech to build machine learning products, and writes about effective data science, learning &amp; career.</description>
+    <link>https://eugeneyan.com</link>
+    <atom:link href="https://eugeneyan.com/feed.xml" rel="self" type="application/rss+xml" />
+    
+    
+      
+        <item>
+          <title>Patterns for Building Cybersecurity Evals</title>
+          <description>A sandboxed target, inputs that influence task difficulty, tools, and a grader.</description>
+          <pubDate>Sun, 21 Jun 2026 00:00:00 +0000</pubDate>
+          <link>https://eugeneyan.com//writing/cybersecurity-evals/</link>
+          <guid isPermaLink="true">https://eugeneyan.com//writing/cybersecurity-evals/</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Using LLMs to Secure Source Code</title>
+          <description>Build a threat model, discover vulnerabilities, verify, triage, and patch.</description>
+          <pubDate>Wed, 27 May 2026 00:00:00 +0000</pubDate>
+          <link>https://eugeneyan.com//writing/secure-source-code/</link>
+          <guid isPermaLink="true">https://eugeneyan.com//writing/secure-source-code/</guid>
+        </item>
+      
+    
+      
+        </channel>
+</rss>

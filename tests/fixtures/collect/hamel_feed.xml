@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss  xmlns:atom="http://www.w3.org/2005/Atom" 
+      xmlns:media="http://search.yahoo.com/mrss/" 
+      xmlns:content="http://purl.org/rss/1.0/modules/content/" 
+      xmlns:dc="http://purl.org/dc/elements/1.1/" 
+      version="2.0">
+<channel>
+<title>Hamel&#39;s Blog</title>
+<link>https://hamel.dev/</link>
+<atom:link href="https://hamel.dev/index.xml" rel="self" type="application/rss+xml"/>
+<description>Notes on applied AI engineering, machine learning, and data science.</description>
+<image>
+<url>https://hamel.dev/quarto.png</url>
+<title>Hamel&#39;s Blog</title>
+<link>https://hamel.dev/</link>
+<height>81</height>
+<width>144</width>
+</image>
+<generator>quarto-1.9.38</generator>
+<lastBuildDate>Fri, 18 Sep 2026 07:00:00 GMT</lastBuildDate>
+<item>
+  <title>AI Evals: Everything You Need to Know</title>
+  <dc:creator>Hamel Husain</dc:creator>
+  <dc:creator>Shreya Shankar</dc:creator>
+  <link>https://hamel.dev/blog/posts/evals-faq/</link>
+  <description><![CDATA[ 
+
+<!-- Content inserted at the beginning of body tag -->
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKGWQMKL" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+<script async="" data-uid="df8af2b6ed" src="https://hamel.kit.com/df8af2b6ed/index.js"></script>
+
+
+
+
+<p>This document curates the most common questions Shreya and I received while <a href="https://maven.com/parlance-labs/evals?promoCode=evals-info-book" target="_blank" rel="noopener">teaching</a]]></description>
+  <category>LLMs</category>
+  <category>evals</category>
+  <guid>https://hamel.dev/blog/posts/evals-faq/</guid>
+  <pubDate>Fri, 18 Sep 2026 07:00:00 GMT</pubDate>
+  <media:content url="https://hamel.dev/blog/posts/evals-faq/images/eval_faq-social.jpg" medium="image" type="image/jpeg"/>
+</item>
+<item>
+  <title>AI Product Engineering Notes</title>
+  <link>https://hamel.dev/</link>
+  <description>Notes from 13 sessions on evals, context, and systems. 9.5 hours of talks distilled into about 20 minutes of reading.
+</description>
+  <category>LLMs</category>
+  <category>Evals</category>
+  <guid>https://hamel.dev/</guid>
+  <pubDate>Wed, 12 Aug 2026 07:00:00 GMT</pubDate>
+</item>
+</channel>
+</rss>

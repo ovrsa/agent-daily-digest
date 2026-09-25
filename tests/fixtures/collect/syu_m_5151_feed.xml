@@ -1,0 +1,59 @@
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="ja">
+  <title>じゃあ、おうちで学べる </title>
+  
+  <subtitle>本能を呼び覚ますこのコードに、君は抗えるか</subtitle>
+  
+  <link href="https://syu-m-5151.hatenablog.com/"/>
+  <updated>2026-09-25T10:29:41+09:00</updated>
+  <author>
+    <name>syu-m-5151</name>
+  </author>
+  <generator uri="https://blog.hatena.ne.jp/" version="4dd741a907213e900600e22f5c7647">Hatena::Blog</generator>
+  <id>hatenablog://blog/8454420450094081900</id>
+
+  
+    
+    
+    <entry>
+        <title> Codexを使うなら、定期タスクを押さえておきたい</title>
+        <link href="https://syu-m-5151.hatenablog.com/entry/2026/09/25/102941"/>
+        <id>hatenablog://entry/14945776032082117147</id>
+        <published>2026-09-25T10:29:41+09:00</published>
+        <updated>2026-09-25T10:29:41+09:00</updated>        <summary type="html">はじめに 毎朝、前日に変わったコードを確認したい。レビュー待ちのPRも見に行きたい。繰り返す仕事には、手順が分かっていても、始めるのを忘れる問題があります。Codexの定期タスクは、その開始を予定へ移す機能です。 毎朝同じ文章を送っても、前回の会話や対象ファイルがなければ、同じ仕事にはなりません。予定どおり始まっても、必要な情報を読めずに終わることがあります。実行する時刻と一緒に、何を渡して始めるかを決めます。 ここでは、ローカルプロジェクトの変更を朝に確認するタスクを作ります。ChatGPTデスクトップアプリ内のCodexから利用し、管理画面の Scheduled で予定と実行結果を確認しま…</summary>
+        <content type="html">はじめに 毎朝、前日に変わったコードを確認したい。レビュー待ちのPRも見に行きたい。繰り返す仕事には、手順が分かっていても、始めるのを忘れる問題があります。Codexの定期タスクは、その開始を予定へ移す機能です。 毎朝同じ文章を送っても、前回の会話や対象ファイルがなければ、同じ仕事にはなりません。予定どおり始まっても、必要な情報を読めずに終わることがあります。実行する時刻と一緒に、何を渡して始めるかを決めます。 ここでは、ローカルプロジェクトの変更を朝に確認するタスクを作ります。ChatGPTデスクトップアプリ内のCodexから利用し、管理画面の Scheduled で予定と実行結果を確認しま…</content>        
+        <category term="生成AI" label="生成AI" />
+        
+        <category term="Codex" label="Codex" />
+        
+        <link rel="enclosure" href="https://ogimage.blog.st-hatena.com/8454420450094081900/14945776032082117147/1790299781" type="image/png" length="0" />
+
+        <author>
+            <name>syu-m-5151</name>
+        </author>
+    </entry>
+    
+  
+    
+    
+    <entry>
+        <title>Codexを使うなら、Worktreesと会話の分岐を押さえておきたい</title>
+        <link href="https://syu-m-5151.hatenablog.com/entry/2026/09/24/123105"/>
+        <id>hatenablog://entry/14945776032081754862</id>
+        <published>2026-09-24T12:31:05+09:00</published>
+        <updated>2026-09-24T12:56:45+09:00</updated>        <summary type="html">はじめに 会話を分岐しただけでは、ファイルは分かれません。修正案を2通り試していても、同じディレクトリを書き換えているなら、片方の変更はもう片方からも見えます。会話の中では別案でも、ディスク上では同じ実装を直している状態です。 Codexでは、会話の分岐にWorktreeを組み合わせ、作業場所も分けられます。共通の調査から別案を試し、それぞれの差分を比較できます。取り込む変更が決まったら、不要になった作業場所も片付けます。 Claude CodeのAgent viewの記事では、並行する仕事の編集場所をWorktreeで分け、最後に変更を統合する話を書きました。今回の主題は、Codexから会話…</summary>
+        <content type="html">はじめに 会話を分岐しただけでは、ファイルは分かれません。修正案を2通り試していても、同じディレクトリを書き換えているなら、片方の変更はもう片方からも見えます。会話の中では別案でも、ディスク上では同じ実装を直している状態です。 Codexでは、会話の分岐にWorktreeを組み合わせ、作業場所も分けられます。共通の調査から別案を試し、それぞれの差分を比較できます。取り込む変更が決まったら、不要になった作業場所も片付けます。 Claude CodeのAgent viewの記事では、並行する仕事の編集場所をWorktreeで分け、最後に変更を統合する話を書きました。今回の主題は、Codexから会話…</content>        
+        <category term="生成AI" label="生成AI" />
+        
+        <category term="Codex" label="Codex" />
+        
+        <link rel="enclosure" href="https://ogimage.blog.st-hatena.com/8454420450094081900/14945776032081754862/1790222203" type="image/png" length="0" />
+
+        <author>
+            <name>syu-m-5151</name>
+        </author>
+    </entry>
+    
+  
+    
+    
+    </feed>

@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/UYChSIagT/QKoRu/vHNV+4I0bes</id>
+  <title>arXiv Query: search_query=cat:cs.SE AND ti:survey AND abs:agent&amp;id_list=&amp;start=0&amp;max_results=20</title>
+  <updated>2026-09-25T07:07:05Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=cat:cs.SE+AND+(ti:survey+AND+abs:agent)&amp;start=0&amp;max_results=20&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>20</opensearch:itemsPerPage>
+  <opensearch:totalResults>31</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2609.12012v1</id>
+    <title>Test-Driven Approaches to Software Engineering with Large Language Models: A Survey of Phases, Tasks, and Agent Skills</title>
+    <updated>2026-09-10T06:20:22Z</updated>
+    <link href="https://arxiv.org/abs/2609.12012v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.12012v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Tests increasingly participate in the decisions made by large language models and software engineering agents. They specify intended behavior, guide program construction and repair, select candidates, constrain transformations, and provide execution evidence for software analysis. These uses draw on test-driven development, yet differ substantially in test order, oracle availability, editable artifacts, and the role of execution. We present a structured scoping survey organized around the question of what decision a test changes. The review integrates 87 research and supporting records, with m</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-10T06:20:22Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Yunhao Liang</name>
+    </author>
+    <author>
+      <name>Chengguang Gan</name>
+    </author>
+    <author>
+      <name>Ruixuan Ying</name>
+    </author>
+    <author>
+      <name>Hanjun Wei</name>
+    </author>
+    <author>
+      <name>Zhe Cui</name>
+    </author>
+    <author>
+      <name>Shiwen Ni</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.21107v1</id>
+    <title>Large Language Models at the Intersection of Software Engineering and Software Security:An Evidence-Centered Structured Survey and Research Agenda</title>
+    <updated>2026-08-21T13:54:38Z</updated>
+    <link href="https://arxiv.org/abs/2608.21107v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.21107v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) are moving from code completion toward repository-scale agents that retrieve context, edit files, execute tools, and participate in security-sensitive workflows. The evidence for these systems, however, remains divided between software engineering evaluations centered on functional task completion and software security evaluations centered on vulnerability detection, secure generation, or exploit-oriented validation. This evidence-centered structured survey synthesizes representative work available through May 31, 2026 across software engineering tasks, software se</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-21T13:54:38Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Wei Lin</name>
+    </author>
+    <author>
+      <name>Tao Zhou</name>
+    </author>
+    <author>
+      <name>Zhaofei Xie</name>
+    </author>
+    <author>
+      <name>Changgui Hong</name>
+    </author>
+  </entry>
+  </feed>

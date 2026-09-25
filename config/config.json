@@ -77,67 +77,123 @@
         "url": "https://www.interconnects.ai/feed"
       },
       {
-        "id": "hf_papers",
+        "id": "goedecke",
         "kind": "fixed_watch",
-        "connector": "hf_papers",
+        "connector": "feed",
         "enabled": true,
-        "url": "https://huggingface.co/api/daily_papers"
+        "url": "https://www.seangoedecke.com/rss.xml"
       },
       {
-        "id": "gh_anthropics_claude-code",
+        "id": "syu-m-5151",
         "kind": "fixed_watch",
-        "connector": "gh_releases",
+        "connector": "feed",
         "enabled": true,
-        "repo": "anthropics/claude-code",
-        "max_items": 2
+        "url": "https://syu-m-5151.hatenablog.com/feed"
       },
       {
-        "id": "gh_aider-ai_aider",
+        "id": "mizchi",
         "kind": "fixed_watch",
-        "connector": "gh_releases",
+        "connector": "feed",
         "enabled": true,
-        "repo": "Aider-AI/aider",
-        "max_items": 2
+        "url": "https://zenn.dev/mizchi/feed"
       },
       {
-        "id": "gh_cline_cline",
+        "id": "ronacher",
         "kind": "fixed_watch",
-        "connector": "gh_releases",
+        "connector": "feed",
         "enabled": true,
-        "repo": "cline/cline",
-        "max_items": 2
+        "url": "https://lucumr.pocoo.org/feed.atom"
       },
       {
-        "id": "gh_continuedev_continue",
+        "id": "breunig",
         "kind": "fixed_watch",
-        "connector": "gh_releases",
+        "connector": "feed",
         "enabled": true,
-        "repo": "continuedev/continue",
-        "max_items": 2
+        "url": "https://www.dbreunig.com/feed.xml"
       },
       {
-        "id": "gh_openai_codex",
+        "id": "harper",
         "kind": "fixed_watch",
-        "connector": "gh_releases",
+        "connector": "feed",
         "enabled": true,
-        "repo": "openai/codex",
-        "max_items": 2
+        "url": "https://harper.blog/index.xml"
       },
       {
-        "id": "gh_princeton-nlp_swe-agent",
+        "id": "hamel",
         "kind": "fixed_watch",
-        "connector": "gh_releases",
+        "connector": "feed",
         "enabled": true,
-        "repo": "princeton-nlp/SWE-agent",
-        "max_items": 2
+        "url": "https://hamel.dev/index.xml"
       },
       {
-        "id": "gh_block_goose",
+        "id": "pragmatic_engineer",
         "kind": "fixed_watch",
-        "connector": "gh_releases",
+        "connector": "feed",
         "enabled": true,
-        "repo": "block/goose",
-        "max_items": 2
+        "url": "https://newsletter.pragmaticengineer.com/feed"
+      },
+      {
+        "id": "karpathy",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://karpathy.bearblog.dev/feed/"
+      },
+      {
+        "id": "mitchellh",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://mitchellh.com/feed.xml"
+      },
+      {
+        "id": "ghuntley",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://ghuntley.com/rss/"
+      },
+      {
+        "id": "yegge",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://steve-yegge.medium.com/feed"
+      },
+      {
+        "id": "lilianweng",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://lilianweng.github.io/index.xml"
+      },
+      {
+        "id": "eugeneyan",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://eugeneyan.com/rss/"
+      },
+      {
+        "id": "litt",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://www.geoffreylitt.com/feed.xml"
+      },
+      {
+        "id": "huyenchip",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://huyenchip.com/feed.xml"
+      },
+      {
+        "id": "steipete",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://steipete.me/rss.xml"
       },
       {
         "id": "hackernews",
@@ -165,36 +221,11 @@
         "hits_per_keyword": 20
       },
       {
-        "id": "reddit_localllama",
+        "id": "arxiv_surveys",
         "kind": "discovery",
         "connector": "feed",
         "enabled": true,
-        "url": "https://www.reddit.com/r/LocalLLaMA/top.rss?t=day&limit=3",
-        "max_items": 3
-      },
-      {
-        "id": "reddit_claudeai",
-        "kind": "discovery",
-        "connector": "feed",
-        "enabled": true,
-        "url": "https://www.reddit.com/r/ClaudeAI/top.rss?t=day&limit=3",
-        "max_items": 3
-      },
-      {
-        "id": "reddit_cursor",
-        "kind": "discovery",
-        "connector": "feed",
-        "enabled": true,
-        "url": "https://www.reddit.com/r/cursor/top.rss?t=day&limit=3",
-        "max_items": 3
-      },
-      {
-        "id": "reddit_machinelearning",
-        "kind": "discovery",
-        "connector": "feed",
-        "enabled": true,
-        "url": "https://www.reddit.com/r/MachineLearning/top.rss?t=day&limit=3",
-        "max_items": 3
+        "url": "https://export.arxiv.org/api/query?search_query=cat:cs.SE+AND+ti:survey+AND+abs:agent&sortBy=submittedDate&sortOrder=descending&max_results=20"
       }
     ]
   },
