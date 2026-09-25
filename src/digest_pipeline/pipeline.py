@@ -131,9 +131,9 @@ class Pipeline:
     compete again in the next run while they are inside the collection window,
     and leave it unresearched when other articles keep filling the cap. That is
     how a first run, with the whole window new, leaves the rest of the window
-    unresearched, discovery included however new. The cap applies before research clusters duplicates, so the
-    members of one story can be researched on different days. `None` researches
-    every article.
+    unresearched, discovery included however new. The cap applies before
+    research clusters duplicates, so the members of one story can be researched
+    on different days. `None` researches every article.
     """
 
     def run(self, digest_date: date, *, run_id: str | None = None) -> RunResult:
