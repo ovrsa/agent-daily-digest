@@ -54,8 +54,10 @@ Invoker = Callable[[StructuredRequest], LLMResponse]
 DEFAULT_RETRY = RetryPolicy(max_attempts=3)
 """Up to two retries, each told which rules the previous decision broke."""
 
-ENTRY_TEXT_MAX: Mapping[str, int] = {"what_happened": 300, "why_read": 200, "evidence": 300, "caveat": 200}
-"""Characters per entry field. The contract has no cap; the published digest needs one."""
+ENTRY_TEXT_MAX: Mapping[str, int] = {"what_happened": 200, "why_read": 200, "evidence": 200, "caveat": 200, "headline": 40}
+"""Characters per entry field. The contract has no cap; the published digest needs one.
+
+The headline has to fit one line of the overview at the top of the digest."""
 
 RULE_HINTS: Mapping[str, str] = {
     "missing_article": "入力の記事が must_read / worth_knowing / excluded のどこにも入っていない",
@@ -64,7 +66,7 @@ RULE_HINTS: Mapping[str, str] = {
     "evidence_not_concrete": "根拠の evidence_ids に code / config / number / comparison / failure / procedure の根拠が無い",
     "insufficient_research_included": "research が insufficient の記事を採用した",
     "supporting_article_included": "represented_by がある記事を採用した",
-    "entry_too_long": "掲載文が長すぎる（what_happened と evidence は300字、why_read と caveat は200字まで）",
+    "entry_too_long": "掲載文が長すぎる（what_happened、why_read、evidence、caveat は200字、headline は40字まで）",
 }
 """What a rule name means, for the retry note. `forbidden_*` rules are explained by their own name."""
 
@@ -210,7 +212,7 @@ def _included_issues(at: str, article: IncludedArticle, packet: EvidencePacket) 
     statements = [("what_happened", entry.what_happened), ("evidence", entry.evidence)]
     if entry.caveat is not None:
         statements.append(("caveat", entry.caveat))
-    texts = {name: statement.text for name, statement in statements} | {"why_read": entry.why_read}
+    texts = {name: statement.text for name, statement in statements} | {"why_read": entry.why_read, "headline": entry.headline}
     for name, text in texts.items():
         if len(text) > ENTRY_TEXT_MAX[name]:
             issues.append(ValidationIssue(loc=f"{at}.entry.{name}", type="entry_too_long"))

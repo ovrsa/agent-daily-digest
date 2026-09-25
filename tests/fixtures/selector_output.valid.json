@@ -12,6 +12,7 @@
       },
       "decision_reason": "Shows a reproducible change to a coding agent loop with measured results.",
       "entry": {
+        "headline": "Planning and execution split into separate sessions",
         "what_happened": {
           "text": "The team split planning and execution into separate agent sessions and compared failure rates.",
           "evidence_ids": ["a001-e1"]
@@ -41,6 +42,7 @@
       },
       "decision_reason": "Adds a permission boundary option that changes tool configuration.",
       "entry": {
+        "headline": "Per-tool permission scopes added",
         "what_happened": {
           "text": "A release added per-tool permission scopes.",
           "evidence_ids": ["a002-e1"]

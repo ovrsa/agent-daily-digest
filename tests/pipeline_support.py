@@ -94,6 +94,7 @@ def included_entry(**changes: Any) -> dict[str, Any]:
         "what_happened": {"text": "著者はステージごとの再試行を3回に制限した。", "evidence_ids": [A001_IDS[0], A001_IDS[1]]},
         "why_read": "再試行の上限をどう置くかを決める材料になる。",
         "evidence": {"text": "RetryBudget(max_attempts=3) の設定と、select の所要時間が9.2秒から6.1秒に減った比較。", "evidence_ids": [A001_IDS[1], A001_IDS[2]]},
+        "headline": "ステージごとの再試行の上限と所要時間",
     }
     entry.update(changes)
     return entry

@@ -45,8 +45,68 @@ def test_the_running_order_is_the_order_selector_returned() -> None:
     rendered = f.render(SelectorOutput.model_validate(payload))
     assert rendered is not None
     headings = [line for line in rendered.splitlines() if line.startswith("### ")]
-    assert headings[0].startswith("### [Measuring retry cost")
-    assert headings[2].startswith("### [Splitting plan and act")
+    assert headings[0].startswith("### 1. [Measuring retry cost")
+    assert headings[2].startswith("### 3. [Splitting plan and act")
+    listed = [line for line in _overview(rendered).splitlines() if line[:1].isdigit()]
+    assert listed[0].startswith("1. **Must Read** [Measuring retry cost")
+    assert listed[2].startswith("3. **Must Read** [Splitting plan and act")
+
+
+def test_the_overview_lists_every_adopted_article_with_its_tier_and_headline() -> None:
+    rendered = f.render()
+    assert rendered is not None
+    overview = _overview(rendered)
+    assert overview.startswith("## 今日の一覧\n")
+    assert rendered.index("## 今日の一覧") < rendered.index("## Must Read")
+    for number, (tier, article_id) in enumerate(
+        [("Must Read", a) for a in ("a001", "a002", "a003")] + [("Worth Knowing", a) for a in ("a004", "a005")],
+        start=1,
+    ):
+        article = f.articles()[article_id]
+        headline = next(
+            a.entry.headline for a in f.selector_output().included if a.article_id == article_id
+        )
+        assert f"{number}. **{tier}** " in overview
+        assert f"\n{' ' * len(f'{number}. ')}{headline}\n" in overview
+        assert article.canonical_url in overview
+
+
+def test_the_overview_breaks_the_line_between_the_title_and_the_headline() -> None:
+    """Two trailing spaces are a hard break; a plain newline would join the two lines."""
+    rendered = f.render()
+    assert rendered is not None
+    titled = [line for line in _overview(rendered).splitlines() if line[:1].isdigit()]
+    assert titled and all(line.endswith(")  ") for line in titled)
+
+
+def test_the_article_numbers_run_on_across_the_tiers() -> None:
+    rendered = f.render()
+    assert rendered is not None
+    headings = [line.split(" ", 2)[1] for line in rendered.splitlines() if line.startswith("### ")]
+    assert headings == ["1.", "2.", "3.", "4.", "5."]
+    worth_knowing = rendered.split("## Worth Knowing", 1)[1]
+    assert worth_knowing.lstrip().startswith("### 4. ")
+
+
+def test_a_newline_in_a_headline_stays_on_its_line() -> None:
+    payload = f.selector_payload()
+    payload["must_read"] = [
+        f.included_payload(headline="一行目\n## injected"),
+        *payload["must_read"][1:],
+    ]
+    rendered = f.render(SelectorOutput.model_validate(payload))
+    assert rendered is not None
+    assert "\n   一行目 ## injected\n" in rendered
+    assert "\n## injected" not in rendered
+
+
+def test_each_part_of_an_entry_is_a_bold_label_over_its_own_paragraph() -> None:
+    rendered = f.render()
+    assert rendered is not None
+    a001 = _section(rendered, "Splitting plan and act")
+    for label in ("何をしたか／何が分かったか", "読む理由", "根拠", "留保"):
+        assert f"\n**{label}**\n\n" in a001
+    assert "\n- " not in a001
 
 
 def test_a_run_that_adopted_nothing_renders_nothing() -> None:
@@ -107,8 +167,8 @@ def test_an_entry_without_a_caveat_omits_the_caveat_line() -> None:
     rendered = f.render()
     assert rendered is not None
     a002 = _section(rendered, "Per-tool permission scopes")
-    assert "- 留保:" not in a002
-    assert a002.count("- ") == 3
+    assert "**留保**" not in a002
+    assert a002.count("\n**") == 3
 
 
 def test_a_caveat_without_evidence_ids_is_rendered_like_any_other() -> None:
@@ -118,7 +178,7 @@ def test_a_caveat_without_evidence_ids_is_rendered_like_any_other() -> None:
     assert caveat is not None and caveat.evidence_ids == ()
     rendered = f.render()
     assert rendered is not None
-    assert "- 留保: モデル価格は記事公開時点のもので、更新の有無は本文にない。" in rendered
+    assert "**留保**\n\nモデル価格は記事公開時点のもので、更新の有無は本文にない。" in rendered
 
 
 def test_an_author_is_shown_only_when_the_article_has_one() -> None:
@@ -131,7 +191,7 @@ def test_an_author_is_shown_only_when_the_article_has_one() -> None:
 def test_markdown_syntax_in_a_title_is_escaped_and_the_url_is_kept() -> None:
     rendered = f.render()
     assert rendered is not None
-    assert "### [Per-tool permission scopes \\[v0.9\\]]" in rendered
+    assert "### 2. [Per-tool permission scopes \\[v0.9\\]]" in rendered
     assert "(<https://example.com/releases/(2026-09-16)>)" in rendered
 
 
@@ -144,7 +204,7 @@ def test_a_newline_inside_a_field_stays_on_one_line() -> None:
     ]
     rendered = f.render(SelectorOutput.model_validate(payload))
     assert rendered is not None
-    assert "- 読む理由: 一行目 二行目 三行目" in rendered
+    assert "**読む理由**\n\n一行目 二行目 三行目\n" in rendered
 
 
 def test_a_newline_in_a_title_cannot_open_a_new_section() -> None:
@@ -153,7 +213,7 @@ def test_a_newline_in_a_title_cannot_open_a_new_section() -> None:
     articles["a001"] = f.normalized_article(title="Plan and act\n## injected heading")
     rendered = f.render(articles=articles)
     assert rendered is not None
-    assert "### [Plan and act ## injected heading]" in rendered
+    assert "### 1. [Plan and act ## injected heading]" in rendered
     assert "\n## injected heading" not in rendered
 
 
@@ -195,6 +255,11 @@ def test_the_filename_is_the_digest_date() -> None:
     assert digest_filename(date(2026, 9, 18)) == "2026-09-18.md"
 
 
+def _overview(rendered: str) -> str:
+    return rendered[rendered.index("## 今日の一覧") : rendered.index("## Must Read")]
+
+
 def _section(rendered: str, title_fragment: str) -> str:
-    sections = rendered.split("\n### ")
+    # The first chunk is the front matter and the overview, which lists every title too.
+    sections = rendered.split("\n### ")[1:]
     return next(s for s in sections if title_fragment in s)

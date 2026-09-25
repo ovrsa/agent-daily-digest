@@ -104,7 +104,7 @@ class TestDigestEntry:
         with pytest.raises(ValidationError):
             DigestEntry.model_validate(entry(caveat={"text": "caveat", "evidence_ids": evidence_ids}))
 
-    @pytest.mark.parametrize("field", ["what_happened", "why_read", "evidence"])
+    @pytest.mark.parametrize("field", ["what_happened", "why_read", "evidence", "headline"])
     def test_core_fields_are_required(self, field: str) -> None:
         data = entry()
         del data[field]
@@ -116,6 +116,8 @@ class TestDigestEntry:
         [
             {"why_read": ""},
             {"why_read": "   "},
+            {"headline": ""},
+            {"headline": "   "},
             {"what_happened": {"text": " ", "evidence_ids": ["e1"]}},
             {"what_happened": {"text": "fact", "evidence_ids": []}},
             {"evidence": {"text": "fact", "evidence_ids": []}},
@@ -133,6 +135,10 @@ class TestDigestEntry:
     def test_why_read_is_editorial_text_without_evidence(self) -> None:
         with pytest.raises(ValidationError):
             DigestEntry.model_validate(entry(why_read={"text": "x", "evidence_ids": ["e1"]}))
+
+    def test_the_headline_is_editorial_text_without_evidence(self) -> None:
+        with pytest.raises(ValidationError):
+            DigestEntry.model_validate(entry(headline={"text": "x", "evidence_ids": ["e1"]}))
 
 
 class TestSelectorOutput:

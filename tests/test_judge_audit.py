@@ -184,9 +184,18 @@ def test_each_target_shows_the_decision_the_entry_and_the_cited_source() -> None
     assert "editor_decision: included / worth_knowing #2 of 4" in prompt
     assert "editor_decision: excluded" in prompt
     assert "完了タスクがほぼ2倍になった" in prompt  # the entry as published
+    assert "- headline: ステージごとの再試行の上限と完了数の変化" in prompt  # the overview line too
     assert "[harness_retry#main/p3#1] Completed tasks went from 212 to 229 of 240" in prompt  # the source it cites
     assert "重複として除外された dup_hn の根拠の地図" in prompt
     assert "dup_hn" not in prompt.split("\n\n")[0]  # not a target itself
+
+
+def test_the_prompt_audits_for_developers_who_use_coding_agents() -> None:
+    """#31: scope_fit judges against the reader who uses coding agents, and the headline is checked."""
+    assert PROMPT_VERSION == "judge-v2"
+    assert "Coding Agent を日々の開発に使う開発者" in SYSTEM_PROMPT
+    assert "Coding Agent を実装・運用する開発者" not in SYSTEM_PROMPT
+    assert "headline" in SYSTEM_PROMPT
 
 
 def test_editor_text_is_escaped_inside_the_untrusted_block() -> None:
