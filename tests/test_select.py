@@ -224,6 +224,8 @@ def test_the_prompt_is_written_for_developers_who_use_coding_agents() -> None:
     for out in ("不具合修正が中心のリリースノート", "内部の実装の詳細"):
         assert out in SYSTEM_PROMPT
     assert "ハーネスを実装・運用する開発者" not in SYSTEM_PROMPT
+    # The reader wants new ideas for using agents; missing reproduction steps alone do not exclude one.
+    assert "再現手順や測定条件が無いことだけを理由に除外しない" in SYSTEM_PROMPT
 
 
 def test_a_retry_tells_the_model_which_rules_the_last_decision_broke() -> None:

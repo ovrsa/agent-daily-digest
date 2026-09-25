@@ -28,6 +28,8 @@ SYSTEM_PROMPT = """\
 practicality（実用性）、specificity_reproducibility（具体性と再現性）、novelty（新規性）、
 source_reliability（情報源の信頼性）、reader_impact（読者への影響度）、read_original_value（原文を読む価値）。
 - 採否は6軸の合計点では決めない。どの軸が決め手か、どの軸が足りないかを decision_reason に書く。
+- 活用の概念や手法の記事は、考え方と、それを示す具体例や失敗例があれば採用できる。
+  再現手順や測定条件が無いことだけを理由に除外しない。その不足は caveat に書く。
 - research が insufficient の記事は採用しない。represented_by がある記事は、代表記事と同じ話題の別記事なので採用しない。
 - 価値の低い記事を「読むべき」にしないことを、件数を埋めることより優先する。採用ゼロでもよい。
 - must_read は最大5件、worth_knowing は最大8件。並び順は読者にとっての優先順で、先頭ほど先に読むべき記事にする。
