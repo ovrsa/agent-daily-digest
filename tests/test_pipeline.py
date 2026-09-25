@@ -155,7 +155,7 @@ def test_a_cap_researches_only_that_many_and_leaves_the_rest_for_a_later_run(tmp
     assert a002.gate.passed and a002.decision is None
 
 
-def test_the_cap_takes_the_newest_first_and_keeps_collection_order() -> None:
+def test_the_cap_takes_fixed_watch_first_then_the_newest_and_keeps_collection_order() -> None:
     from types import SimpleNamespace
 
     from digest_contracts import SourceKind
@@ -172,14 +172,37 @@ def test_the_cap_takes_the_newest_first_and_keeps_collection_order() -> None:
         result("hn_old", SourceKind.DISCOVERY, 20),
     ]
     ids = lambda rs: [r.article.article_id for r in rs]  # noqa: E731
-    # The freshest first, whatever the kind of source.
-    assert ids(_within(1, passed)) == ["hn_new"]
-    assert ids(_within(2, passed)) == ["hn_new", "blog_new"]
-    assert ids(_within(3, passed)) == ["hn_new", "blog_new", "hn_old"]
+    # Fixed-watch sources fill the cap first, the freshest first; discovery gets what is left.
+    assert ids(_within(1, passed)) == ["blog_new"]
+    assert ids(_within(2, passed)) == ["blog_old", "blog_new"]
+    assert ids(_within(3, passed)) == ["hn_new", "blog_old", "blog_new"]
     assert _within(None, passed) == passed and _within(9, passed) == passed
-    # Equally fresh articles are taken in collection order.
+    # Equally fresh articles of the same kind are taken in collection order.
     tied = [result("first", SourceKind.DISCOVERY, 5), result("second", SourceKind.DISCOVERY, 5)]
     assert ids(_within(1, tied)) == ["first"]
+
+
+def test_under_a_cap_a_fixed_watch_article_is_researched_before_a_newer_discovery_one(tmp_path) -> None:
+    from digest_collect import CollectionReport
+    from digest_contracts import SourceFetchResult
+
+    def fetched(source_id, kind, entry):
+        return SourceFetchResult.model_validate(
+            {"source_id": source_id, "source_kind": kind, "status": "succeeded", "items": [entry], "duration_ms": 5}
+        )
+
+    blog = {**ITEMS[0], "published_at": "2026-09-20T06:00:00+00:00"}
+    hn = {**ITEMS[1], "source_id": "hackernews", "source_kind": "discovery", "published_at": "2026-09-24T06:00:00+00:00"}
+    collected = CollectionReport(results=(fetched("simonw", "fixed_watch", blog), fetched("hackernews", "discovery", hn)))
+    only_a001 = decision()
+    only_a001["excluded"] = []
+    model = happy_model(selector=[only_a001])
+    p = pipeline(tmp_path, model, FakePublisher(), collect=lambda known: collected)
+    p.max_articles = 1
+    result = p.run(DIGEST_DATE, run_id=RUN_ID)
+
+    assert result.published and result.deferred == 1
+    assert ["article_id: a001" in r.prompt for r in model.requests["research"]] == [True]
 
 
 def test_under_a_cap_an_older_article_waits_while_a_newer_one_is_researched(tmp_path) -> None:

@@ -125,7 +125,7 @@ def test_the_summary_names_the_run_its_status_and_where_to_look(tmp_path: Path) 
     text = summary(RunResult(RUN_ID, RunStatus.PARTIALLY_FAILED, "abc", tmp_path / "d.md"), tmp_path)
     assert text.splitlines() == [f"run: {RUN_ID}", "status: partially_failed", "commit: abc", f"digest: {tmp_path / 'd.md'}", f"dry-run output: {tmp_path}"]
     capped = summary(RunResult(RUN_ID, RunStatus.SUCCEEDED, deferred=110), None)
-    assert "deferred: 110 older articles past the gates were not researched (the article cap)" in capped.splitlines()
+    assert "deferred: 110 articles past the gates were not researched (the article cap)" in capped.splitlines()
 
 
 def test_the_exit_code_is_zero_only_when_the_digest_run_finished_cleanly(tmp_path: Path, monkeypatch, capsys) -> None:
