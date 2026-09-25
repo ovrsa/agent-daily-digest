@@ -1,6 +1,6 @@
 # agent-daily-digest
 
-AI Agent を作り、Coding Agent を実装・運用する開発者に向けて、毎朝、根拠付きの日本語ダイジェストを1本作る。価値の低い記事を「読むべき」と推薦しないことを優先し、採用ゼロの日はダイジェストを作らない。
+Claude Code、Codex、Hermes などの Coding Agent を日々の開発に使う開発者に向けて、毎朝、根拠付きの日本語ダイジェストを1本作る。対象は、新しいモデル、Coding Agent の活用の新しい概念や手法、活用事例、使い方が変わる新機能。価値の低い記事を「読むべき」と推薦しないことを優先し、採用ゼロの日はダイジェストを作らない。
 
 設計の決定は親 Issue [#1](https://github.com/ovrsa/agent-daily-digest/issues/1)（Design Doc）にある。
 
@@ -13,7 +13,7 @@ collect      config/config.json の collection にあるソースから候補を
 normalize    本文を取得・抽出し、決定的なゲート（URL・公開日・本文・処理済み・重複）を通す
 research     記事ごとに根拠の地図（Evidence Packet）を作る          … Claude（研究）
 select       6軸で評価し、採否・区分・掲載文を決める                … Claude（Selector）
-render       Markdown を Python で決定的に生成する
+render       Markdown を Python で決定的に生成する（冒頭に採用記事の一覧、続けて区分ごとの掲載文）
 publish      digests/<日付>.md・index・state/processed.json をコミットし main に push する
 judge        別プロンプト・別コンテキストで採否と掲載文を監査する  … Claude（Judge）
 comment      Judge のレポートを digest のコミットにコメントする

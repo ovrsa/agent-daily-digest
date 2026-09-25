@@ -197,6 +197,7 @@ def _decision_lines(output: SelectorOutput, target: AuditTarget) -> list[str]:
         ]
         if entry.caveat is not None:
             lines.append(f"- caveat: {_statement(entry.caveat)}")
+        lines.append(f"- headline: {escape_untrusted(entry.headline)}")
     return lines
 
 

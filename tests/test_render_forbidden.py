@@ -134,15 +134,16 @@ def test_the_renderer_refuses_to_produce_a_digest_with_a_banned_artifact() -> No
 
 
 @pytest.mark.parametrize(
-    "field", ["what_happened", "why_read", "evidence", "caveat"]
+    "field", ["what_happened", "why_read", "evidence", "caveat", "headline"]
 )
 def test_every_selector_authored_field_is_checked(field: str) -> None:
     banned = "画期的な結果が出た。"
-    value = banned if field == "why_read" else {"text": banned, "evidence_ids": ["x1"]}
+    plain = field in ("why_read", "headline")
+    value = banned if plain else {"text": banned, "evidence_ids": ["x1"]}
     payload = f.selector_payload()
     payload["must_read"] = [f.included_payload(**{field: value}), *payload["must_read"][1:]]
     findings = forbidden_artifacts_in(SelectorOutput.model_validate(payload))
-    suffix = "" if field == "why_read" else ".text"
+    suffix = "" if plain else ".text"
     assert findings[0].location == f"must_read[0].entry.{field}{suffix}"
 
 

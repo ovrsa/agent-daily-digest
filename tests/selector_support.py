@@ -3,7 +3,11 @@
 The cases are the ones #6 lists: a clear adopt, a clear exclude, insufficient
 evidence, promotion, numbers without conditions, an essay with conceptual
 value but no implementation, a duplicate pair, and a body carrying an injected
-instruction. The texts are written for these tests; no real article is copied.
+instruction. #31 changed the reader to a developer who uses coding agents and
+added what that reader wants and does not: a new kind of model, a team's case
+of running agents in parallel, a bug-fix release, an agent's internals, and a
+paper unrelated to using agents. The texts are written for these tests; no
+real article is copied.
 
 `EXPECTED` is the editorial answer. `either` marks a case where both decisions
 are defensible, so a difference there goes to the human reviewer rather than
@@ -206,18 +210,95 @@ CASES: tuple[Case, ...] = (
         claims=(("what_happened", "著者は git のブランチ名を変える小さな CLI を公開した。", (0, 1), False, ()),),
         limitations=("Agent 開発との関係は本文に書かれていない。",),
     ),
+    case(
+        "new_model",
+        "Decision models: a model family that only returns typed choices",
+        source_id="latent_space",
+        evidence=(
+            ("statement", "The new model family returns only a typed decision from a fixed set of options, never free text."),
+            ("number", "In our tests a decision call took 40 ms, against 2.1 seconds for a general model on the same prompt."),
+            ("procedure", "We routed the permission checks of a coding agent to the decision model and kept the general model for edits."),
+            ("comparison", "Across 500 tool calls, the decision model and the general model disagreed on 11."),
+        ),
+        claims=(
+            ("what_happened", "著者は、決められた選択肢から型付きの判断だけを返す新しいモデル群を、コーディングエージェントの権限確認に使った。", (0, 2), False, ()),
+            ("finding", "判断1回は40ミリ秒で、同じプロンプトの汎用モデルの2.1秒より短かった。", (1,), True, (2,)),
+            ("finding", "500回のツール呼び出しで、2つのモデルの判断が食い違ったのは11回だった。", (3,), True, (2,)),
+        ),
+    ),
+    case(
+        "usage_case",
+        "Five Codex agents in parallel: a month of worktrees",
+        source_id="pragmatic_engineer",
+        evidence=(
+            ("procedure", "Each agent works in its own git worktree, and a person merges one pull request at a time."),
+            ("config", "codex --worktree feature-login --approval on-request"),
+            ("number", "In four weeks the team merged 31 agent pull requests and reverted 4."),
+            ("failure", "Two agents edited the same database migration and the second pull request had to be redone by hand."),
+        ),
+        claims=(
+            ("what_happened", "チームは5つの Codex エージェントをそれぞれ別の worktree で並行して動かし、4週間運用した。", (0, 1), False, ()),
+            ("finding", "4週間でエージェントの PR を31件マージし、4件を差し戻した。", (2,), True, (0,)),
+            ("finding", "2つのエージェントが同じマイグレーションを編集し、後の PR を手で作り直した。", (3,), False, ()),
+        ),
+    ),
+    case(
+        "release_bugfix",
+        "agent-cli v3.4.2",
+        source_id="gh_example_agent-cli",
+        evidence=(
+            ("statement", "Fixed a crash when resuming a session whose history was empty."),
+            ("statement", "Fixed the status line flickering in some terminals."),
+            ("config", "AGENT_CLI_LEGACY_STATUS=1 restores the previous status line."),
+        ),
+        claims=(("what_happened", "agent-cli v3.4.2 は、空の履歴のセッション再開で落ちる問題と、ステータス行のちらつきを修正した。", (0, 1), False, ()),),
+    ),
+    case(
+        "agent_internals",
+        "Why our agent's prompt cache kept missing",
+        evidence=(
+            ("statement", "The session ID was embedded in the system prompt, so every sub-agent had a different prefix."),
+            ("code", "tools.sort(key=lambda t: t.name)  # was HashMap order"),
+            ("comparison", "After the fix the cache hit rate of sub-agent calls went from 12 percent to 71 percent."),
+            ("procedure", "Measured over 2,000 sub-agent calls before and after the change on the same workload."),
+        ),
+        claims=(
+            ("what_happened", "著者らは、セッションIDの埋め込みとツール名の順序がサブエージェントのプロンプト接頭辞を変えていたと説明し、修正した。", (0, 1), False, ()),
+            ("finding", "修正後、サブエージェント呼び出しのキャッシュヒット率は12%から71%に上がった。", (2,), True, (3,)),
+        ),
+    ),
+    case(
+        "unrelated_paper",
+        "Few-step video diffusion with representation matching",
+        source_id="arxiv_surveys",
+        kind=SourceKind.DISCOVERY,
+        evidence=(
+            ("statement", "We distill a video diffusion model into four sampling steps by matching intermediate representations."),
+            ("comparison", "The four-step model reaches an FVD of 212 against 205 for the 50-step teacher."),
+            ("procedure", "Evaluated on UCF-101 at 256x256 with the teacher's sampler settings."),
+        ),
+        claims=(
+            ("what_happened", "著者らは、中間表現を合わせることで、動画拡散モデルを4ステップのサンプリングに蒸留した。", (0,), False, ()),
+            ("finding", "4ステップのモデルの FVD は212で、50ステップの教師モデルは205だった。", (1,), True, (2,)),
+        ),
+    ),
 )
 
 EXPECTED: dict[str, str] = {
-    "harness_retry": "include",
+    "harness_retry": "either",  # a team's own harness; since #31 the reader uses agents rather than builds them
     "funding_news": "exclude",
     "thin_post": "exclude",
     "vendor_promo": "exclude",
     "numbers_no_conditions": "either",
-    "context_essay": "either",
+    "context_essay": "include",  # since #31, a new idea for using agents is what the reader wants
     "dup_official": "include",
     "dup_hn": "exclude",
     "injected": "exclude",
+    "new_model": "include",
+    "usage_case": "include",
+    "release_bugfix": "exclude",
+    "agent_internals": "exclude",
+    "unrelated_paper": "exclude",
 }
 
 PACKETS: tuple[EvidencePacket, ...] = tuple(c.packet for c in CASES)

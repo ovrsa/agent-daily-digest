@@ -83,6 +83,9 @@ class DigestEntry(ContractModel):
         default=None,
         description="留保。本文の制約か、本文に書かれていない未確認事項。Evidence ID は無くてよい",
     )
+    headline: NonBlankStr = Field(
+        description="ダイジェスト冒頭の一覧に載せる1行の要点。記事が何の話かを書く。編集上の要約で、Evidence ID は持たない",
+    )
 
 
 class IncludedArticle(ContractModel):

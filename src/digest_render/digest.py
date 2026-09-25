@@ -33,6 +33,7 @@ _TIERS: tuple[tuple[Tier, str, int], ...] = (
 )
 
 # Wording fixed by the Design Doc's Output contract.
+_OVERVIEW = "今日の一覧"
 _WHAT_HAPPENED = "何をしたか／何が分かったか"
 _WHY_READ = "読む理由"
 _EVIDENCE = "根拠"
@@ -72,14 +73,19 @@ def render_digest(
         "---",
         "",
         f"# {DIGEST_TITLE} {digest_date.isoformat()}",
+        "",
+        f"## {_OVERVIEW}",
+        "",
     ]
-    for tier, heading, _cap in _TIERS:
-        bucket = _bucket(selector_output, tier)
-        if not bucket:
-            continue
-        lines += ["", f"## {heading}"]
-        for included in bucket:
-            lines += _entry_lines(included, articles[included.article_id])
+    numbered = list(enumerate(_running_order(selector_output), start=1))
+    for number, (heading, included) in numbered:
+        lines += _overview_lines(number, heading, included, articles[included.article_id])
+    current = None
+    for number, (heading, included) in numbered:
+        if heading != current:
+            lines += ["", f"## {heading}"]
+            current = heading
+        lines += _entry_lines(number, included, articles[included.article_id])
     return "\n".join(lines) + "\n"
 
 
@@ -96,20 +102,44 @@ def _bucket(selector_output: SelectorOutput, tier: Tier) -> tuple[IncludedArticl
     return selector_output.must_read if tier is Tier.MUST_READ else selector_output.worth_knowing
 
 
-def _entry_lines(included: IncludedArticle, article: NormalizedArticle) -> list[str]:
+def _running_order(selector_output: SelectorOutput) -> list[tuple[str, IncludedArticle]]:
+    """Every adopted article with its tier heading, numbered once for the overview and the body."""
+    return [
+        (heading, included)
+        for tier, heading, _cap in _TIERS
+        for included in _bucket(selector_output, tier)
+    ]
+
+
+def _overview_lines(
+    number: int, heading: str, included: IncludedArticle, article: NormalizedArticle
+) -> list[str]:
+    # The two trailing spaces are a Markdown hard break, so the headline sits on
+    # its own line under the title. The indent keeps it inside the list item.
+    marker = f"{number}. "
+    return [
+        f"{marker}**{heading}** {link(article.title, article.canonical_url)}  ",
+        f"{' ' * len(marker)}{inline(included.entry.headline)}",
+    ]
+
+
+def _entry_lines(number: int, included: IncludedArticle, article: NormalizedArticle) -> list[str]:
     entry = included.entry
     lines = [
         "",
-        f"### {link(article.title, article.canonical_url)}",
+        f"### {number}. {link(article.title, article.canonical_url)}",
         "",
         _meta_line(article),
-        "",
-        f"- {_WHAT_HAPPENED}: {inline(entry.what_happened.text)}",
-        f"- {_WHY_READ}: {inline(entry.why_read)}",
-        f"- {_EVIDENCE}: {inline(entry.evidence.text)}",
+    ]
+    parts = [
+        (_WHAT_HAPPENED, entry.what_happened.text),
+        (_WHY_READ, entry.why_read),
+        (_EVIDENCE, entry.evidence.text),
     ]
     if entry.caveat is not None:
-        lines.append(f"- {_CAVEAT}: {inline(entry.caveat.text)}")
+        parts.append((_CAVEAT, entry.caveat.text))
+    for label, text in parts:
+        lines += ["", f"**{label}**", "", inline(text)]
     return lines
 
 
@@ -159,4 +189,5 @@ def _checked_spans(selector_output: SelectorOutput) -> Iterator[tuple[str, str]]
             yield f"{at}.evidence.text", entry.evidence.text
             if entry.caveat is not None:
                 yield f"{at}.caveat.text", entry.caveat.text
+            yield f"{at}.headline", entry.headline
 

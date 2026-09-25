@@ -1,7 +1,9 @@
 """The Judge's audit fixture: a Selector result with known problems planted in it.
 
-The packets are the Selector's fixed set (`selector_support`) plus one article
-that repeats `dup_official` under another title, so clustering missed it. The
+The packets are the Selector's fixed set as #6 built it (`selector_support`,
+without the cases #31 added) plus one article that repeats `dup_official` under
+another title, so clustering missed it. Keeping the set fixed keeps each Judge
+run comparable with the ones recorded before. The
 decision below is one the Selector's own checks accept - every Evidence ID
 exists and every 根拠 cites concrete evidence - yet it carries the problems the
 Judge is there to catch:
@@ -39,7 +41,15 @@ REPOST = case(
     hours=3,
 )
 
-PACKETS: tuple[EvidencePacket, ...] = (*(c.packet for c in CASES), REPOST.packet)
+SELECTOR_CASES_BEFORE_31 = frozenset(
+    {"harness_retry", "funding_news", "thin_post", "vendor_promo", "numbers_no_conditions",
+     "context_essay", "dup_official", "dup_hn", "injected"}
+)
+
+PACKETS: tuple[EvidencePacket, ...] = (
+    *(c.packet for c in CASES if c.packet.article_id in SELECTOR_CASES_BEFORE_31),
+    REPOST.packet,
+)
 
 GOOD = {"practicality": 4, "specificity_reproducibility": 4, "novelty": 3, "source_reliability": 4, "reader_impact": 4, "read_original_value": 4}
 MIDDLE = {"practicality": 3, "specificity_reproducibility": 3, "novelty": 3, "source_reliability": 3, "reader_impact": 3, "read_original_value": 3}
@@ -51,7 +61,7 @@ def _ids(article_id: str) -> list[str]:
     return [e.evidence_id for e in next(p for p in PACKETS if p.article_id == article_id).evidence]
 
 
-def _included(article_id: str, reason: str, what: tuple[str, tuple[int, ...]], why: str, evidence: tuple[str, tuple[int, ...]], scores: dict = GOOD) -> dict[str, Any]:
+def _included(article_id: str, reason: str, what: tuple[str, tuple[int, ...]], why: str, evidence: tuple[str, tuple[int, ...]], headline: str, scores: dict = GOOD) -> dict[str, Any]:
     ids = _ids(article_id)
     return {
         "article_id": article_id,
@@ -61,6 +71,7 @@ def _included(article_id: str, reason: str, what: tuple[str, tuple[int, ...]], w
             "what_happened": {"text": what[0], "evidence_ids": [ids[i] for i in what[1]]},
             "why_read": why,
             "evidence": {"text": evidence[0], "evidence_ids": [ids[i] for i in evidence[1]]},
+            "headline": headline,
         },
     }
 
@@ -73,6 +84,7 @@ DECISION: dict[str, Any] = {
             ("著者はステージごとの再試行を3回に制限し、完了タスクがほぼ2倍になった。", (0, 2)),
             "再試行の上限をどう置くかを決める材料になる。",
             ("RetryBudget(max_attempts=3, per_stage=True) の設定と、240件を同じコミットで再実行した手順。", (1, 3)),
+            "ステージごとの再試行の上限と完了数の変化",
         ),
     ],
     "worth_knowing": [
@@ -82,6 +94,7 @@ DECISION: dict[str, Any] = {
             ("Anthropic は PreToolUse フックでツール呼び出しを実行前に止められることを示した。", (0,)),
             "Coding Agent の危険な操作を実行前に止める仕組みを検討する材料になる。",
             ("Bash に対する PreToolUse フックの設定例。", (1,)),
+            "PreToolUse フックでツール呼び出しを実行前に止める",
         ),
         _included(
             "funding_news",
@@ -89,6 +102,7 @@ DECISION: dict[str, Any] = {
             ("AI 企業が新たな資金調達を発表し、評価額は400億ドルとされた。", (0, 1)),
             "業界の資金の流れを把握できる。",
             ("評価額400億ドルという数字。", (1,)),
+            "AI 企業の資金調達と評価額",
             MIDDLE,
         ),
         _included(
@@ -97,6 +111,7 @@ DECISION: dict[str, Any] = {
             ("著者はコーディングエージェントの計画ステップを、テスト実行を明示する形に作り直した。", (0,)),
             "計画ステップの設計を見直す材料になる。",
             ("社内スイートでタスクの85%を解決し、作り直す前より20ポイント改善した。", (1,)),
+            "計画ステップの作り直しと解決率",
             MIDDLE,
         ),
         _included(
@@ -105,6 +120,7 @@ DECISION: dict[str, Any] = {
             ("著者は PreToolUse フックで Bash の実行前に確認を挟む設定を紹介した。", (0,)),
             "Coding Agent の危険な操作を止める設定をそのまま試せる。",
             ("Bash に対する PreToolUse フックの設定例。", (1,)),
+            "PreToolUse フックで Bash の実行前に確認を挟む",
         ),
     ],
     "excluded": [

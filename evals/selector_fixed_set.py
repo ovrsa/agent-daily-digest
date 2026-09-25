@@ -58,6 +58,7 @@ def main() -> None:
     for article in output.included:
         e = article.entry
         print(f"\n## {article.article_id}\nscores: {article.scores.model_dump()}\nreason: {article.decision_reason}")
+        print(f"- 一覧の1行: {e.headline}")
         print(f"- 何をしたか: {e.what_happened.text} {e.what_happened.evidence_ids}")
         print(f"- 読む理由: {e.why_read}")
         print(f"- 根拠: {e.evidence.text} {e.evidence.evidence_ids}")

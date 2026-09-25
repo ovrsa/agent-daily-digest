@@ -24,6 +24,7 @@ def entry(article_id: str, *, what: tuple[int, ...] = (0,), evidence: tuple[int,
         "what_happened": {"text": "著者はステージごとの再試行を3回に制限した。", "evidence_ids": [ids[i] for i in what]},
         "why_read": "再試行の上限をどう置くかを決める材料になる。",
         "evidence": {"text": "RetryBudget の設定と、212件から229件への変化。", "evidence_ids": [ids[i] for i in evidence]},
+        "headline": "ステージごとの再試行の上限と完了数の変化",
     }
     if caveat is not None:
         data["caveat"] = caveat
@@ -31,14 +32,14 @@ def entry(article_id: str, *, what: tuple[int, ...] = (0,), evidence: tuple[int,
 
 
 def decision(**changes: Any) -> dict:
-    """A decision that passes every rule, following `EXPECTED` with both `either` cases excluded."""
+    """A decision that passes every rule. It adopts two articles and excludes the rest."""
     data = {
         "must_read": [{"article_id": "harness_retry", "scores": SCORES, "decision_reason": "再現手順と数値がそろう。", "entry": entry("harness_retry")}],
         "worth_knowing": [{"article_id": "dup_official", "scores": SCORES, "decision_reason": "公式の設定例がある。", "entry": entry("dup_official")}],
         "excluded": [
             {"article_id": a, "scores": LOW, "decision_reason": "対象外か根拠が弱い。"}
-            for a, expected in EXPECTED.items()
-            if expected != "include"
+            for a in EXPECTED
+            if a not in ("harness_retry", "dup_official")
         ],
         "duplicate_groups": [{"representative_id": "dup_official", "duplicate_ids": ["dup_hn"]}],
     }
@@ -114,6 +115,7 @@ def test_a_caveat_is_optional_and_may_cite_no_evidence() -> None:
         ),
         (lambda d: d["must_read"][0]["entry"].update(why_read="画期的な手法で、必見である。"), "forbidden_abstract_praise"),
         (lambda d: d["must_read"][0]["entry"].update(why_read="再試行の上限—その決め方がわかる。"), "forbidden_fullwidth_dash"),
+        (lambda d: d["must_read"][0]["entry"].update(headline="画期的な再試行の上限"), "forbidden_abstract_praise"),
     ],
 )
 def test_a_decision_that_breaks_a_rule_is_rejected_with_the_rule_named(mutate, issue) -> None:
@@ -192,24 +194,38 @@ def test_the_ordinary_input_is_packets_and_partial_packets_add_their_paragraphs(
 
 @pytest.mark.parametrize(
     ("field", "limit"),
-    [("what_happened", 300), ("why_read", 200), ("evidence", 300), ("caveat", 200)],
+    [("what_happened", 200), ("why_read", 200), ("evidence", 200), ("caveat", 200), ("headline", 40)],
 )
 def test_entry_text_over_its_length_cap_is_rejected(field: str, limit: int) -> None:
     data = decision()
     target = data["must_read"][0]["entry"]
     if field == "caveat":
         target["caveat"] = {"text": "x", "evidence_ids": []}
+    plain = field in ("why_read", "headline")
     long_text = "あ" * (limit + 1)
-    if field == "why_read":
-        target["why_read"] = long_text
+    if plain:
+        target[field] = long_text
     else:
         target[field]["text"] = long_text
     assert "entry_too_long" in issue_types(data)
-    if field == "why_read":
-        target["why_read"] = "あ" * limit
+    if plain:
+        target[field] = "あ" * limit
     else:
         target[field]["text"] = "あ" * limit
     assert "entry_too_long" not in issue_types(data)
+
+
+def test_the_prompt_is_written_for_developers_who_use_coding_agents() -> None:
+    """#31: the reader uses Claude Code, Codex or Hermes; agent internals and bug-fix notes are out."""
+    assert PROMPT_VERSION == "selector-v2"
+    assert "Coding Agent を日々の開発に使う開発者" in SYSTEM_PROMPT
+    for target in ("新しいモデル", "新しい概念や手法", "活用事例", "使い方が変わる新機能"):
+        assert target in SYSTEM_PROMPT
+    for out in ("不具合修正が中心のリリースノート", "内部の実装の詳細"):
+        assert out in SYSTEM_PROMPT
+    assert "ハーネスを実装・運用する開発者" not in SYSTEM_PROMPT
+    # The reader wants new ideas for using agents; missing reproduction steps alone do not exclude one.
+    assert "再現手順や測定条件が無いことだけを理由に除外しない" in SYSTEM_PROMPT
 
 
 def test_a_retry_tells_the_model_which_rules_the_last_decision_broke() -> None:
