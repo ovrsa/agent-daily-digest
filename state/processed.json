@@ -1,0 +1,35 @@
+{
+  "records": [
+    {
+      "canonical_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.282",
+      "content_hash": "e42382b862dd658bdb1fccccbc7372f14e9919ec3435dff6784755d71d56a0c8",
+      "first_seen_at": "2026-09-25T02:19:07.103290Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://koi.rest/",
+      "content_hash": "066d4fbb218ec732852d97bd1e1f12d7e388db3009bbaf35dc69dfb38e9b092c",
+      "first_seen_at": "2026-09-25T02:19:07.103290Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://simonwillison.net/2026/Sep/24/commit-rewriter/",
+      "content_hash": "bcbb27aa1f19b210f2f351c6681e6094f1853824ee54b421886082af3df24424",
+      "first_seen_at": "2026-09-25T02:19:07.103290Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://simonwillison.net/2026/Sep/24/datasette/",
+      "content_hash": "dda257a0b2867d897dd3baafa535180f8dc40b35e361cc5d24c3ba6c57b100e4",
+      "first_seen_at": "2026-09-25T02:19:07.103290Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://www.latent.space/p/runway",
+      "content_hash": "840fdf6400099b99e5c2b0c0acba14f4357614c8a860c443311ebb5295f33609",
+      "first_seen_at": "2026-09-25T02:19:07.103290Z",
+      "last_decision": "included"
+    }
+  ],
+  "schema_version": 1
+}
