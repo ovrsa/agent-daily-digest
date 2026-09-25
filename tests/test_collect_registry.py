@@ -1,8 +1,7 @@
 """The registry that ships in `config/config.json`, run end to end on recorded responses.
 
-Sources that share an endpoint shape share a recording: the seven GitHub
-repositories replay one releases payload and the four subreddits one Atom
-feed, because only the path differs between them.
+The feeds added in #31 were recorded on 2026-09-25 and cut to their first two
+entries, with long bodies shortened; `<source_id>_feed.xml` holds each one.
 """
 
 from __future__ import annotations
@@ -30,6 +29,34 @@ REQUIRED_BLOGS = (
 QUIET_IN_RECORDING = ("boristane", "nyosegawa", "addyosmani", "anthropic_engineering")
 """Required blogs with no post in the week before the fixed clock."""
 
+RECORDED_FEEDS = (
+    "goedecke",
+    "syu-m-5151",
+    "mizchi",
+    "ronacher",
+    "breunig",
+    "harper",
+    "hamel",
+    "pragmatic_engineer",
+    "karpathy",
+    "mitchellh",
+    "ghuntley",
+    "yegge",
+    "lilianweng",
+    "eugeneyan",
+    "litt",
+    "huyenchip",
+    "steipete",
+    "arxiv_surveys",
+)
+"""Sources added in #31, each replayed from its own recording.
+
+The fetcher finds each recording by the URL the shipped config gives the
+source; `test_collect_config.py` pins those URLs, so a drifted URL fails there."""
+
+EVERY_ENTRY = 3650
+"""A window in days wide enough to keep every recorded entry."""
+
 BY_URL = {
     "https://simonwillison.net/atom/everything/": "simonwillison_atom.xml",
     "https://boristane.com/rss.xml": "boristane_rss.xml",
@@ -43,10 +70,7 @@ BY_URL = {
 }
 
 BY_PREFIX = (
-    ("https://www.reddit.com/r/", "reddit_localllama_atom.xml"),
-    ("https://api.github.com/repos/", "gh_releases.json"),
     ("https://hn.algolia.com/", "hn_algolia.json"),
-    ("https://huggingface.co/api/daily_papers?date=2026-09-17", "hf_papers.json"),
     ("https://claude.com/blog/", "claude_post_head.html"),
     ("https://www.anthropic.com/engineering/", "anthropic_post_head.html"),
 )
@@ -57,19 +81,21 @@ class RegistryFetcher:
 
     def __init__(self) -> None:
         self.requested: list[str] = []
+        shipped = load_collection_config(CONFIG_PATH)
+        self.by_url = BY_URL | {
+            shipped.source(source_id).url: f"{source_id.replace('-', '_')}_feed.xml"
+            for source_id in RECORDED_FEEDS
+        }
 
     def get(self, url: str, *, accept: str = "*/*") -> HttpResponse:
         self.requested.append(url)
-        name = BY_URL.get(url)
+        name = self.by_url.get(url)
         if name is None:
             for prefix, candidate in BY_PREFIX:
                 if url.startswith(prefix):
                     name = candidate
                     break
         if name is None:
-            # `?date=<today>` answers 400 until the day's list is published.
-            if url.startswith("https://huggingface.co/api/daily_papers"):
-                raise s.http_error(400, url)
             raise AssertionError(f"the registry asked for an unrecorded URL: {url}")
         return HttpResponse(url=url, status=200, body=s.read(name))
 
@@ -149,6 +175,19 @@ class TestRequiredBlogs:
         for source_id in ("claude_blog", "anthropic_engineering"):
             cap = shipped.source(source_id).max_metadata_probes
             assert wide.probe(source_id).attempted <= cap
+
+
+class TestAddedSources:
+    @pytest.mark.parametrize("source_id", RECORDED_FEEDS)
+    def test_each_added_source_reads_every_entry_of_its_recording(
+        self, shipped, source_id: str
+    ) -> None:
+        result = report_with_window(shipped, EVERY_ENTRY).result(source_id)
+        assert result.status is SourceFetchStatus.SUCCEEDED
+        assert result.item_count == 2
+
+    def test_the_arxiv_surveys_are_a_discovery_path(self, report) -> None:
+        assert report.result("arxiv_surveys").source_kind is SourceKind.DISCOVERY
 
 
 class TestPartialFailure:

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><?xml-stylesheet href="/pretty-feed-v3.xsl" type="text/xsl"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:media="http://search.yahoo.com/mrss/">
+  <channel>
+    <title>
+        
+            
+                Home on 
+            
+            Harper Reed&#39;s Blog
+        
+    </title>
+    <link>https://harper.blog/</link>
+    <description>
+        Recent content 
+        
+            
+                in Home 
+            
+        
+        on harper.blog
+    </description>
+    <generator>Hugo -- gohugo.io</generator>
+    
+    <language>en-US</language>
+    
+    <managingEditor>harper@modest.com (Harper Reed)</managingEditor>
+    
+    
+    <webMaster>harper@modest.com (Harper Reed)</webMaster>
+    
+    
+    <lastBuildDate>
+        Tue, 22 Sep 2026 12:10:00 -0600
+    </lastBuildDate>
+    
+        <atom:link href="https://harper.blog/index.xml" rel="self" type="application/rss+xml" />
+            <item>
+                <title>Why Don&#39;t My Agents Break Containment?</title>
+                <link>
+                    https://harper.blog/2026/09/22/break-away/
+                </link>
+                <pubDate>
+                    Tue, 22 Sep 2026 12:10:00 -0600
+                </pubDate>
+                    <author>
+                        harper@modest.com (Harper Reed)
+                    </author>
+                
+                <guid>https://harper.blog/2026/09/22/break-away/</guid>
+                        <media:content url="https://harper.blog/2026/09/22/break-away/L1030630.jpeg" medium="image" />
+                        <media:content url="https://harper.blog/2026/09/22/break-away/R0003170.jpeg" medium="image" />
+                        <media:content url="https://harper.blog/2026/09/22/break-away/breakaway-findings.png" medium="image" />
+                        <media:content url="https://harper.blog/2026/09/22/break-away/breakaway-scanners.png" medium="image" />
+                        <media:content url="https://harper.blog/2026/09/22/break-away/clint-chat.png" medium="image" />
+                <description><![CDATA[<p>The <a href="https://en.wikipedia.org/wiki/OpenAI%E2%80%93HuggingFace_incident">Openai and hugging face situation</a> is so fucking insane. If you haven’t, I highly recommend watching the <a href="https://www.youtube.com/watch?v=87DyyMV0kCY">blackhat talk</a>, and then jumping directly into the firehose of subsequent disclosures and reporting.</p>
+<p>When it all came out I mentioned to <a href="https://fsck.com">Jesse</a> “why aren’t our agents breaking out of containment” and we thought through a handful of reasons.</p>
+<p>There were a lot of reasons:</p>
+<ul>
+<li>architecture</li>
+<li>eva]]></description>
+            </item>
+            <item>
+                <title>Notes From a Fugue State: Put the Things in Your Head That You Love</title>
+                <link>
+                    https://harper.blog/2026/08/15/fugue-state-love/
+                </link>
+                <pubDate>
+                    Sat, 15 Aug 2026 12:10:00 -0600
+                </pubDate>
+                    <author>
+                        harper@modest.com (Harper Reed)
+                    </author>
+                
+                <guid>https://harper.blog/2026/08/15/fugue-state-love/</guid>
+                        <media:content url="https://harper.blog/2026/08/15/fugue-state-love/img20250725_14190679.jpeg" medium="image" />
+                <description><![CDATA[<p>A week or so ago I had the opportunity to speak to some high school kids as part of my friend Makiko’s <a href="https://spice.fsi.stanford.edu/fellowship/stanford-e-entrepreneurship-us">program</a>. I always love talking with them. They are super smart, don’t let things slide, and always push me.</p>
+<p>Often when I am in these situations I go into a fugue state and whatever I have been thinking about for the last couple weeks surfaces. A severe case of recency bias.</p>
+<p>The session seemed to resonate. Afterwards, I got curious about exactly what I had said. Weird, I know.</p>
+<p>So, lik]]></description>
+            </item>
+            </channel>
+</rss>

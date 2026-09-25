@@ -124,9 +124,9 @@ class Pipeline:
     The Selector decides every researched article in one call, and that call has
     a cost and a time limit; `config.DEFAULT_MAX_ARTICLES` says why the command
     line never runs without a cap. Fixed-watch sources fill it first and
-    discovery (Hacker News, Reddit) takes what is left, the newest first within
-    each: discovery is found by keyword and brings articles off the topic, which
-    would otherwise take the places of the official blogs and releases. The
+    discovery (Hacker News, arXiv surveys) takes what is left, the newest first
+    within each: discovery is found by keyword and brings articles off the topic,
+    which would otherwise take the places of the blogs and newsletters. The
     rest are neither researched nor recorded in the processing state: they
     compete again in the next run while they are inside the collection window,
     and leave it unresearched when other articles keep filling the cap. That is

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0" xmlns:cc="http://cyber.law.harvard.edu/rss/creativeCommonsRssModule.html">
+    <channel>
+        <title><![CDATA[Stories by Steve Yegge on Medium]]></title>
+        <description><![CDATA[Stories by Steve Yegge on Medium]]></description>
+        <link>https://medium.com/@steve-yegge?source=rss-c1ec701babb7------2</link>
+        <image>
+            <url>https://cdn-images-1.medium.com/fit/c/150/150/1*8Ae2b9dv-sQtme8C4_sjhA.jpeg</url>
+            <title>Stories by Steve Yegge on Medium</title>
+            <link>https://medium.com/@steve-yegge?source=rss-c1ec701babb7------2</link>
+        </image>
+        <generator>Medium</generator>
+        <lastBuildDate>Fri, 25 Sep 2026 07:04:39 GMT</lastBuildDate>
+        <atom:link href="https://medium.com/@steve-yegge/feed" rel="self" type="application/rss+xml"/>
+        <webMaster><![CDATA[yourfriends@medium.com]]></webMaster>
+        <atom:link href="http://medium.superfeedr.com" rel="hub"/>
+        <item>
+            <title><![CDATA[Fences, not Sandboxes]]></title>
+            <link>https://steve-yegge.medium.com/fences-not-sandboxes-5719cd9b04bd?source=rss-c1ec701babb7------2</link>
+            <guid isPermaLink="false">https://medium.com/p/5719cd9b04bd</guid>
+            <category><![CDATA[ai-governance]]></category>
+            <category><![CDATA[ai-security]]></category>
+            <dc:creator><![CDATA[Steve Yegge]]></dc:creator>
+            <pubDate>Mon, 24 Aug 2026 16:57:19 GMT</pubDate>
+            <atom:updated>2026-08-24T16:57:19.759Z</atom:updated>
+            <content:encoded><![CDATA[<figure><img alt="" src="https://cdn-images-1.medium.com/max/1024/1*Qaj9xYO5tcAAjLJ2lgugBw.jpeg" /></figure><p>I’m here to give you a glimpse of a future that I think none of us expected. It’s a future where AIs are governed by laws, not by programs that try to contain and control them.</p><p>First, my secret: I see the future by living in it. I am spending the equivalent of $122k/month of API token spend, or about $4,000 per day, using 21 Claude Max accounts, a number that has been growing steadily at 2 per week. I’m using them to build my video game, Wyvern, which I’ve worked on for 30 years]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[The Flat Curve Society]]></title>
+            <link>https://steve-yegge.medium.com/the-flat-curve-society-36c8b01eb33b?source=rss-c1ec701babb7------2</link>
+            <guid isPermaLink="false">https://medium.com/p/36c8b01eb33b</guid>
+            <category><![CDATA[ai-training]]></category>
+            <category><![CDATA[ai-safety]]></category>
+            <category><![CDATA[model-safety]]></category>
+            <category><![CDATA[ai-literacy]]></category>
+            <dc:creator><![CDATA[Steve Yegge]]></dc:creator>
+            <pubDate>Fri, 19 Jun 2026 03:31:56 GMT</pubDate>
+            <atom:updated>2026-06-19T03:54:32.884Z</atom:updated>
+            <content:encoded><![CDATA[<figure><img alt="" src="https://cdn-images-1.medium.com/max/1024/1*41EEUrrzzmBVn8-UZ9oGjA.jpeg" /><figcaption>The Flat Curve Society</figcaption></figure><p>Hi-ho, we’ve reached the moment, in this movie we’re all watching together on X, where model intelligence has become dangerous. Dario predicted years ago that it would happen this year. With Fable being (briefly) shut off by the USG, it’s the first highly visible sign that we’ve crossed into treacherous waters.</p><p>Which is too bad, really. I was hoping that we’d get a couple more generations of model upgrades, powerful enough to convin]]></content:encoded>
+        </item>
+        </channel>
+</rss>

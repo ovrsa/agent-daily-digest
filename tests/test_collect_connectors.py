@@ -590,6 +590,15 @@ class TestHackerNewsConnector:
         since = int((s.NOW - dt.timedelta(hours=48)).timestamp())
         assert str(since) in asked
 
+    def test_the_query_matches_the_keyword_in_the_title_as_written(self) -> None:
+        # Algolia's default searched the URL and story text too and allowed
+        # typos: on 2026-09-25, 45 of 81 stories had no keyword in the title.
+        fetcher = s.FixtureFetcher({}, default=b'{"hits": []}')
+        run(self.SPEC, fetcher)
+        asked = fetcher.requested[0]
+        assert "restrictSearchableAttributes=title" in asked
+        assert "typoTolerance=false" in asked
+
     def test_the_item_cap_is_respected(self) -> None:
         items, _ = run(
             self.SPEC, s.FixtureFetcher({}, default=s.read("hn_algolia.json")), max_items=2

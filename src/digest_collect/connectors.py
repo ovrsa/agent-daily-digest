@@ -409,12 +409,16 @@ def collect_hackernews(spec: HackerNewsSource, ctx: CollectContext) -> tuple[Col
     by_id: dict[str, tuple[CollectedItem, int]] = {}
     failures: list[Exception] = []
     for keyword in spec.keywords:
+        # Algolia's default also searches the URL and story text and allows typos,
+        # so a keyword finds stories whose titles never mention it.
         query = urllib.parse.urlencode(
             {
                 "query": keyword,
                 "tags": "story",
                 "numericFilters": f"created_at_i>{since},points>{spec.min_points}",
                 "hitsPerPage": spec.hits_per_keyword,
+                "restrictSearchableAttributes": "title",
+                "typoTolerance": "false",
             }
         )
         try:

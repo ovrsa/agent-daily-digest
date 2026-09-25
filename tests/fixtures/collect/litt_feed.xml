@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Geoffrey Litt</title>
+  <id>http://geoffreylitt.com/</id>
+  <link href="https://geoffreylitt.com"/>
+  <link href="https://geoffreylitt.com/feed.xml" rel="self"/>
+  <updated>2026-07-02T10:00:00+00:00</updated>
+  <author>
+    <name>Geoffrey Litt</name>
+  </author>
+  <entry>
+    <title>Understanding is the new bottleneck</title>
+    <link rel="alternate" href="https://geoffreylitt.com/2026/07/02/understanding-is-the-new-bottleneck.html"/>
+    <id>https://geoffreylitt.com/2026/07/02/understanding-is-the-new-bottleneck.html</id>
+    <published>2026-07-02T10:00:00+00:00</published>
+    <updated>2026-07-02T10:00:00+00:00</updated>
+    <author>
+      <name>Geoffrey Litt</name>
+    </author>
+    <summary type="html">&lt;article class="talk"&gt;
+&lt;div class="talk-header"&gt;
+&lt;h3 class="date"&gt;July 2026&lt;/h3&gt;
+&lt;h1 class="title"&gt;Understanding is the new bottleneck&lt;/h1&gt;
+&lt;p class="talk-context"&gt;
+This is a written version of a talk I gave at the
+&lt;a href="https://www.ai.engineer/"&gt;AI Engineer&lt;/a&gt;
+conference in July 2026, also shared as
+&lt;a href="https://x.com/geoffreylitt/status/2072522251300409556"&gt;a tweet thread.&lt;/a&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="talk-segment"&gt;
+&lt;div class="talk-slide"&gt;
+&lt;img alt="Title slide: Understanding is the new bottl</summary>
+    <content type="html">&lt;article class='talk'&gt;
+&lt;div class='talk-header'&gt;
+&lt;h3 class='date'&gt;July 2026&lt;/h3&gt;
+&lt;h1 class='title'&gt;Understanding is the new bottleneck&lt;/h1&gt;
+&lt;p class='talk-context'&gt;
+This is a written version of a talk I gave at the
+&lt;a href='https://www.ai.engineer/'&gt;AI Engineer&lt;/a&gt;
+conference in July 2026, also shared as
+&lt;a href='https://x.com/geoffreylitt/status/2072522251300409556'&gt;a tweet thread.&lt;/a&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class='talk-segment'&gt;
+&lt;div class='talk-slide'&gt;
+&lt;img alt='Title slide: Understanding is the new bottl</content>
+  </entry>
+  <entry>
+    <title>Code like a surgeon</title>
+    <link rel="alternate" href="https://geoffreylitt.com/2025/10/24/code-like-a-surgeon.html"/>
+    <id>https://geoffreylitt.com/2025/10/24/code-like-a-surgeon.html</id>
+    <published>2025-10-24T14:59:00+00:00</published>
+    <updated>2025-10-24T14:59:00+00:00</updated>
+    <author>
+      <name>Geoffrey Litt</name>
+    </author>
+    <summary type="html">&lt;p&gt;A lot of people say AI will make us all “managers” or “editors”…but I think this is a dangerously incomplete view!&lt;/p&gt;
+
+&lt;p&gt;Personally, I’m trying to &lt;strong&gt;code like a surgeon.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;A surgeon isn’t a manager, they do the actual work! But their skills and time are highly...&lt;/p&gt;</summary>
+    <content type="html">&lt;p&gt;A lot of people say AI will make us all &amp;ldquo;managers&amp;rdquo; or &amp;ldquo;editors&amp;rdquo;&amp;hellip;but I think this is a dangerously incomplete view!&lt;/p&gt;
+
+&lt;p&gt;Personally, I&amp;rsquo;m trying to &lt;strong&gt;code like a surgeon.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;A surgeon isn&amp;rsquo;t a manager, they do the actual work! But their skills and time are highly leveraged with a support team that handles prep, secondary tasks, admin. The surgeon focuses on the important stuff they are uniquely good at.&lt;/p&gt;
+
+&lt;p&gt;My current goal with AI coding tools </content>
+  </entry>
+  </feed>

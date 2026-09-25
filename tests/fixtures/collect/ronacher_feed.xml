@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>https://lucumr.pocoo.org/feed.atom</id>
+  <title>Armin Ronacher's Thoughts and Writings</title>
+  <link href="https://lucumr.pocoo.org/" />
+  <link href="https://lucumr.pocoo.org/feed.atom" rel="self" />
+  <description>Armin Ronacher's personal blog about programming, games and random thoughts that come to his mind.</description>
+  <language>en</language>
+  <updated>2026-09-25T06:14:39.712971+00:00</updated>
+  <author>
+    <name>Armin Ronacher</name>
+  </author>
+  <entry>
+    <id>https://lucumr.pocoo.org/2026/9/14/interpreting-pangram/</id>
+    <title>Interpreting Pangram</title>
+    <link href="https://lucumr.pocoo.org/2026/9/14/interpreting-pangram/" />
+    <published>2026-09-14T00:00:00+00:00</published>
+    <updated>2026-09-14T00:00:00+00:00</updated>
+    <author>
+      <name>Armin Ronacher</name>
+    </author>
+    <content type="html"><![CDATA[<p>Yesterday David Sacks <a href="https://x.com/DavidSacks/status/2098973625252708460">wrote a
+tweet</a> and within a few
+minutes people did, what they usually do, and they asked Pangram if it was AI.
+And Pangram said it&#8217;s <a href="https://www.pangram.com/history/a6f16402-f194-4cc7-8315-ae8caeffbb67?ucc=c1me1lFm6Pf">entirely AI
+generated</a>.
+To which David replied that these AI detectors <a href="https://x.com/DavidSacks/status/2099040321351106807?s=20">are
+bogus</a>.</p>
+<p>Now Pangram has a pretty low false positive rate, but if you have ever used an
+LLM as a writing assitant, you wil]]></content>
+  </entry>
+  <entry>
+    <id>https://lucumr.pocoo.org/2026/9/12/pdoom/</id>
+    <title>P(doom)</title>
+    <link href="https://lucumr.pocoo.org/2026/9/12/pdoom/" />
+    <published>2026-09-12T00:00:00+00:00</published>
+    <updated>2026-09-12T00:00:00+00:00</updated>
+    <author>
+      <name>Armin Ronacher</name>
+    </author>
+    <content type="html"><![CDATA[<p>This week some flavor of &#8220;AI is going to kill us all&#8221; went viral.  In particular
+one where an employee put his personal probability of that happening above
+10%.  Which made me go to the <a href="https://en.wikipedia.org/wiki/P(doom)">Wikipedia page of
+P(doom)</a> and I realized that Dario
+Amodei&#8217;s apparent probability of something bad happening seems to be between
+10-25%.  And well, Dario then wrote about <a href="https://darioamodei.com/post/we-must-pace-the-frontier">pacing the frontier
+</a>.  And Sam read it and
+<a href="https://x.com/sama/status/2098811563415150910">wa]]></content>
+  </entry>
+  </feed>

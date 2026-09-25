@@ -41,12 +41,29 @@ The site re-generates in bulk — 23 of the 34 moved on one day — so a cap
 below this fills up with old posts whose `lastmod` happens to be recent and
 pushes the day's new ones out."""
 
-REDDIT_SOURCES = (
-    "reddit_localllama",
-    "reddit_claudeai",
-    "reddit_cursor",
-    "reddit_machinelearning",
-)
+NOTABLE_BLOG_FEEDS = {
+    "goedecke": "https://www.seangoedecke.com/rss.xml",
+    "syu-m-5151": "https://syu-m-5151.hatenablog.com/feed",
+    "mizchi": "https://zenn.dev/mizchi/feed",
+    "ronacher": "https://lucumr.pocoo.org/feed.atom",
+    "breunig": "https://www.dbreunig.com/feed.xml",
+    "harper": "https://harper.blog/index.xml",
+    "hamel": "https://hamel.dev/index.xml",
+    "pragmatic_engineer": "https://newsletter.pragmaticengineer.com/feed",
+    "karpathy": "https://karpathy.bearblog.dev/feed/",
+    "mitchellh": "https://mitchellh.com/feed.xml",
+    "ghuntley": "https://ghuntley.com/rss/",
+    "yegge": "https://steve-yegge.medium.com/feed",
+    "lilianweng": "https://lilianweng.github.io/index.xml",
+    "eugeneyan": "https://eugeneyan.com/rss/",
+    "litt": "https://www.geoffreylitt.com/feed.xml",
+    "huyenchip": "https://huyenchip.com/feed.xml",
+    "steipete": "https://steipete.me/rss.xml",
+}
+"""Blogs by well-known developers and researchers who write about using coding agents (#31).
+
+The first eight posted about coding agents in the 60 days to 2026-09-25. The
+rest post rarely; a quiet feed costs one request a run and no research."""
 
 
 @pytest.fixture(scope="module")
@@ -76,11 +93,38 @@ class TestShippedRegistry:
         kinds = {source.kind for source in loaded.sources}
         assert kinds == {SourceKind.FIXED_WATCH, SourceKind.DISCOVERY}
 
-    def test_discovery_sources_are_the_hacker_news_and_reddit_paths(
+    def test_discovery_sources_are_hacker_news_and_the_arxiv_surveys(
         self, loaded: CollectionConfig
     ) -> None:
         discovery = {s.id for s in loaded.sources if s.kind is SourceKind.DISCOVERY}
-        assert discovery == {"hackernews", *REDDIT_SOURCES}
+        assert discovery == {"hackernews", "arxiv_surveys"}
+
+    def test_no_release_notes_papers_or_subreddits_are_collected(
+        self, loaded: CollectionConfig
+    ) -> None:
+        # #31: release notes were mostly bug fixes and the daily papers seldom
+        # touched how coding agents are used; big releases reach the blogs.
+        assert {spec.connector for spec in loaded.sources} <= {"feed", "sitemap", "hackernews"}
+        assert not any("reddit.com" in getattr(spec, "url", "") for spec in loaded.sources)
+
+    @pytest.mark.parametrize(("source_id", "url"), sorted(NOTABLE_BLOG_FEEDS.items()))
+    def test_every_notable_blog_is_an_enabled_fixed_watch_feed(
+        self, loaded: CollectionConfig, source_id: str, url: str
+    ) -> None:
+        spec = loaded.source(source_id)
+        assert spec.enabled
+        assert spec.kind is SourceKind.FIXED_WATCH
+        assert spec.connector == "feed"
+        assert spec.url == url
+
+    def test_the_arxiv_source_asks_for_the_newest_software_engineering_surveys_on_agents(
+        self, loaded: CollectionConfig
+    ) -> None:
+        spec = loaded.source("arxiv_surveys")
+        assert spec.connector == "feed"
+        assert spec.url.startswith("https://export.arxiv.org/api/query?")
+        for term in ("cat:cs.SE", "ti:survey", "abs:agent", "sortBy=submittedDate", "sortOrder=descending"):
+            assert term in spec.url
 
     def test_the_two_blogs_without_a_feed_use_the_sitemap_connector(
         self, loaded: CollectionConfig
@@ -117,15 +161,6 @@ class TestShippedRegistry:
 
 class TestPerSourceCaps:
     """The item caps the collection block sets, kept from the collector it replaced."""
-
-    def test_each_subreddit_gets_three_items(self, loaded: CollectionConfig) -> None:
-        for source_id in REDDIT_SOURCES:
-            assert loaded.items_for(loaded.source(source_id)) == 3
-
-    def test_each_repository_gets_its_two_latest_releases(self, loaded: CollectionConfig) -> None:
-        for spec in loaded.sources:
-            if spec.connector == "gh_releases":
-                assert loaded.items_for(spec) == 2
 
     def test_a_source_without_an_override_uses_the_shared_cap(
         self, loaded: CollectionConfig
