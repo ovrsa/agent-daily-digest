@@ -225,5 +225,8 @@
     "max_open_questions": 3,
     "max_seconds": 240.0,
     "max_source_chars": 40000
+  },
+  "run": {
+    "max_articles": 20
   }
 }

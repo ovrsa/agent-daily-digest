@@ -27,6 +27,9 @@ REQUIRED_BLOGS = (
     "anthropic_engineering",
 )
 
+QUIET_IN_RECORDING = ("boristane", "nyosegawa", "addyosmani", "anthropic_engineering")
+"""Required blogs with no post in the week before the fixed clock."""
+
 BY_URL = {
     "https://simonwillison.net/atom/everything/": "simonwillison_atom.xml",
     "https://boristane.com/rss.xml": "boristane_rss.xml",
@@ -111,11 +114,20 @@ class TestRequiredBlogs:
         assert result.status is SourceFetchStatus.SUCCEEDED
         assert result.source_kind is SourceKind.FIXED_WATCH
 
-    @pytest.mark.parametrize("source_id", [b for b in REQUIRED_BLOGS if b != "anthropic_engineering"])
+    @pytest.mark.parametrize("source_id", [b for b in REQUIRED_BLOGS if b not in QUIET_IN_RECORDING])
     def test_each_required_blog_with_recent_posts_yields_candidates(
         self, report, source_id: str
     ) -> None:
         assert report.result(source_id).item_count > 0
+
+    @pytest.mark.parametrize("source_id", QUIET_IN_RECORDING)
+    def test_a_quiet_blog_is_empty_only_because_of_the_window(self, shipped, source_id: str) -> None:
+        # Their newest recorded posts are more than `window_days` before the
+        # fixed clock. Widening the window brings the same posts back.
+        assert report_with_window(shipped, 7).result(source_id).item_count == 0
+        wide = report_with_window(shipped, 90).result(source_id)
+        assert wide.item_count > 0
+        assert wide.status is SourceFetchStatus.SUCCEEDED
 
     def test_the_engineering_blog_is_empty_only_because_of_the_window(self, shipped) -> None:
         # The recorded sitemap's newest engineering entry is 2026-08-10, more

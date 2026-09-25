@@ -23,7 +23,7 @@ from digest_normalize import DEFAULT_STATE_PATH, BodyFetcher, fetch_page
 from digest_observe import DEFAULT_METRICS_DIR, MetricsStore, load_pricing, new_run_id, utc_now
 from digest_research import load_research_budget
 
-from .config import load_models
+from .config import load_max_articles, load_models
 from .pipeline import Collector, Invoker, Paths, Pipeline, RunResult
 from .publisher import DryRunPublisher, GitPublisher
 
@@ -55,9 +55,14 @@ def build(
     collect: Collector | None = None,
     max_articles: int | None = None,
 ) -> Plan:
-    """Wire a run from the config in `repo`. The seams after `dry_run` exist for tests."""
+    """Wire a run from the config in `repo`. The seams after `dry_run` exist for tests.
+
+    `max_articles` overrides the config's `run.max_articles` for this run.
+    """
     config_path = repo / config
     run_id = run_id or new_run_id()
+    if max_articles is None:
+        max_articles = load_max_articles(config_path)
     if collect is None:
         collection = load_collection_config(config_path)
         fetcher = make_fetcher(collection.http)
@@ -105,7 +110,7 @@ def summary(result: RunResult, out_dir: Path | None) -> str:
     if result.digest_path is not None:
         lines.append(f"digest: {result.digest_path}")
     if result.deferred:
-        lines.append(f"deferred: {result.deferred} articles past the gates wait for a later run (--max-articles)")
+        lines.append(f"deferred: {result.deferred} older articles past the gates were not researched (the article cap)")
     if out_dir is not None:
         lines.append(f"dry-run output: {out_dir}")
     return "\n".join(lines)
@@ -127,7 +132,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--max-articles",
         type=_positive,
         default=None,
-        help="research at most N articles past the gates, oldest first; the rest wait for a later run",
+        help="research at most N articles past the gates, newest first; config run.max_articles by default",
     )
     args = parser.parse_args(argv)
 
