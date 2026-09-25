@@ -10,6 +10,7 @@ summary. Fetching and normalizing the body is #5.
 from __future__ import annotations
 
 import datetime as dt
+import email.utils
 import hashlib
 import html
 import json
@@ -152,6 +153,18 @@ def _feed_entries(root: ET.Element) -> Iterator[tuple[str | None, str | None, st
         )
 
 
+def _feed_date(value: str | None) -> dt.datetime | None:
+    """An Atom or Dublin Core date (W3C) or an RSS `pubDate` (RFC 822), or `None`."""
+    parsed = parse_w3c_datetime(value)
+    if parsed is not None or not value:
+        return parsed
+    try:
+        parsed = email.utils.parsedate_to_datetime(value.strip())
+    except (TypeError, ValueError, IndexError):
+        return None
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=_UTC)
+
+
 def _atom_link(entry: ET.Element) -> str | None:
     links = entry.findall(f"{{{ATOM_NS}}}link")
     for link in links:
@@ -168,9 +181,16 @@ def collect_feed(spec: FeedSource, ctx: CollectContext) -> tuple[CollectedItem, 
         spec.url, accept="application/atom+xml, application/rss+xml, application/xml"
     )
     root = parse_xml(response.body)
+    cutoff = ctx.now - ctx.window
     items = []
     for title, url, published, summary in _feed_entries(root):
         if url in ctx.known_urls:
+            continue
+        # A feed lists its latest entries whatever their age, so a quiet blog's
+        # entries are months old. The window leaves them out as it does for the
+        # sitemap and the releases; a date read nowhere here goes on to #5's gate.
+        published_dt = _feed_date(published)
+        if published_dt is not None and published_dt < cutoff:
             continue
         items.append(
             _item(spec, url=url, title=title, published_at=published, feed_summary=summary)

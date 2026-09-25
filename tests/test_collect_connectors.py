@@ -39,6 +39,10 @@ def context(fetcher, *, max_items: int = 12, window_days: int = 7, known_urls=fr
     )
 
 
+EVERY_ENTRY = 3650
+"""A window in days that keeps every entry of the recorded feeds, which reach back to 2025."""
+
+
 def run(source: dict, fetcher, **kwargs):
     parsed = spec(source)
     ctx = context(fetcher, **kwargs)
@@ -69,7 +73,7 @@ class TestFeedConnector:
     ) -> None:
         name, url = recorded
         items, _ = run(
-            s.feed_source(source_id, url=url), s.FixtureFetcher({url: s.read(name)})
+            s.feed_source(source_id, url=url), s.FixtureFetcher({url: s.read(name)}), window_days=EVERY_ENTRY
         )
         assert items
         for item in items:
@@ -111,18 +115,19 @@ class TestFeedConnector:
     def test_the_item_cap_is_respected(self) -> None:
         url = "https://boristane.com/rss.xml"
         items, _ = run(
-            s.feed_source(url=url), s.FixtureFetcher({url: s.read("boristane_rss.xml")}), max_items=1
+            s.feed_source(url=url), s.FixtureFetcher({url: s.read("boristane_rss.xml")}), max_items=1, window_days=EVERY_ENTRY
         )
         assert len(items) == 1
 
     def test_already_processed_urls_are_left_out(self) -> None:
         url = "https://boristane.com/rss.xml"
-        all_items, _ = run(s.feed_source(url=url), s.FixtureFetcher({url: s.read("boristane_rss.xml")}))
+        all_items, _ = run(s.feed_source(url=url), s.FixtureFetcher({url: s.read("boristane_rss.xml")}), window_days=EVERY_ENTRY)
         skipped = all_items[0].url
         kept, _ = run(
             s.feed_source(url=url),
             s.FixtureFetcher({url: s.read("boristane_rss.xml")}),
             known_urls=frozenset({skipped}),
+            window_days=EVERY_ENTRY,
         )
         assert skipped not in {item.url for item in kept}
         assert len(kept) == len(all_items) - 1
@@ -136,7 +141,7 @@ class TestFeedConnector:
             b"<description>&lt;p&gt;one&lt;/p&gt; &lt;b&gt;two&lt;/b&gt;</description>"
             b"</item></channel></rss>"
         )
-        items, _ = run(s.feed_source(url=url), s.FixtureFetcher({url: feed}))
+        items, _ = run(s.feed_source(url=url), s.FixtureFetcher({url: feed}), window_days=EVERY_ENTRY)
         assert items[0].feed_summary == "one two"
 
     def test_a_feed_item_without_a_date_still_becomes_a_candidate(self) -> None:
@@ -151,8 +156,52 @@ class TestFeedConnector:
 
     def test_published_at_is_handed_over_as_the_raw_text(self) -> None:
         url = "https://boristane.com/rss.xml"
-        items, _ = run(s.feed_source(url=url), s.FixtureFetcher({url: s.read("boristane_rss.xml")}))
+        items, _ = run(s.feed_source(url=url), s.FixtureFetcher({url: s.read("boristane_rss.xml")}), window_days=EVERY_ENTRY)
         assert items[0].published_at == "Fri, 21 Aug 2026 00:00:00 GMT"
+
+
+    @staticmethod
+    def rss(*dates: str) -> bytes:
+        entries = "".join(
+            f"<item><title>T{i}</title><link>https://example.com/{i}</link><pubDate>{d}</pubDate></item>"
+            for i, d in enumerate(dates)
+        )
+        return f'<?xml version="1.0"?><rss version="2.0"><channel>{entries}</channel></rss>'.encode()
+
+    def test_entries_older_than_the_window_are_left_out(self) -> None:
+        # NOW is Fri, 18 Sep 2026 06:00 UTC.
+        url = "https://example.com/feed"
+        feed = self.rss(
+            "Wed, 16 Sep 2026 00:00:00 GMT",
+            "Tue, 08 Sep 2026 00:00:00 GMT",
+            "Fri, 11 Sep 2026 07:00:00 +0000",
+            # RFC 2822's "-0000" says the zone is unknown; it is read as UTC.
+            "Mon, 07 Sep 2026 00:00:00 -0000",
+            "Thu, 17 Sep 2026 00:00:00 -0000",
+        )
+        items, _ = run(s.feed_source(url=url), s.FixtureFetcher({url: feed}), window_days=7)
+        assert [item.url for item in items] == ["https://example.com/0", "https://example.com/2", "https://example.com/4"]
+
+    def test_an_atom_entry_older_than_the_window_is_left_out(self) -> None:
+        url = "https://example.com/feed"
+        entries = "".join(
+            f'<entry><title>T{i}</title><link rel="alternate" href="https://example.com/{i}"/><published>{d}</published></entry>'
+            for i, d in enumerate(("2026-09-17T00:00:00Z", "2026-09-01T00:00:00Z"))
+        )
+        feed = f'<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">{entries}</feed>'.encode()
+        items, _ = run(s.feed_source(url=url), s.FixtureFetcher({url: feed}), window_days=7)
+        assert [item.url for item in items] == ["https://example.com/0"]
+
+    def test_an_entry_whose_date_cannot_be_read_is_kept_for_the_gate(self) -> None:
+        url = "https://example.com/feed"
+        items, _ = run(s.feed_source(url=url), s.FixtureFetcher({url: self.rss("sometime last week")}), window_days=1)
+        assert [item.published_at for item in items] == ["sometime last week"]
+
+    def test_entries_outside_the_window_do_not_use_up_the_item_cap(self) -> None:
+        url = "https://example.com/feed"
+        feed = self.rss("Tue, 01 Sep 2026 00:00:00 GMT", "Wed, 02 Sep 2026 00:00:00 GMT", "Thu, 17 Sep 2026 00:00:00 GMT")
+        items, _ = run(s.feed_source(url=url), s.FixtureFetcher({url: feed}), window_days=7, max_items=1)
+        assert [item.url for item in items] == ["https://example.com/2"]
 
 
 class TestArticleId:

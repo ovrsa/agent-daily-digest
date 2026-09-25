@@ -15,6 +15,10 @@ BORISTANE_URL = "https://boristane.com/rss.xml"
 CLAUDE_POST = "https://claude.com/blog/build-artifacts"
 
 
+BORISTANE_IN_90_DAYS = 1
+"""boristane's recorded feed has three posts; only the August one is within 90 days of the fixed clock."""
+
+
 def two_feeds() -> tuple[dict, dict]:
     return (
         s.feed_source("simonw", url=SIMONW_URL),
@@ -138,10 +142,10 @@ class TestSitemapIndex:
 class TestFailureIsolation:
     def test_one_failing_source_does_not_stop_the_others(self) -> None:
         routes = both_recorded() | {SIMONW_URL: s.timeout()}
-        report = collect_all(s.config(*two_feeds()), fetcher=s.FixtureFetcher(routes), now=s.NOW)
+        report = collect_all(s.config(*two_feeds(), window_days=90), fetcher=s.FixtureFetcher(routes), now=s.NOW)
         assert report.failed_source_ids == ("simonw",)
         assert report.result("boristane").status is SourceFetchStatus.SUCCEEDED
-        assert report.result("boristane").item_count == 3
+        assert report.result("boristane").item_count == BORISTANE_IN_90_DAYS
 
     def test_a_source_that_fails_first_does_not_stop_a_later_one(self) -> None:
         routes = both_recorded() | {BORISTANE_URL: s.http_error(500)}
@@ -292,8 +296,8 @@ class TestReportShape:
         assert report.metrics[0].failure == report.result("simonw").failure
 
     def test_items_flattens_every_source(self) -> None:
-        report = collect_all(s.config(*two_feeds()), fetcher=s.FixtureFetcher(both_recorded()), now=s.NOW)
-        assert len(report.items) == 6
+        report = collect_all(s.config(*two_feeds(), window_days=90), fetcher=s.FixtureFetcher(both_recorded()), now=s.NOW)
+        assert len(report.items) == 3 + BORISTANE_IN_90_DAYS
 
     def test_the_report_is_frozen(self) -> None:
         report = CollectionReport()
