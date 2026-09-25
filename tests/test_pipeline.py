@@ -155,7 +155,7 @@ def test_a_cap_researches_only_that_many_and_leaves_the_rest_for_a_later_run(tmp
     assert a002.gate.passed and a002.decision is None
 
 
-def test_the_cap_takes_the_oldest_first_and_keeps_collection_order() -> None:
+def test_the_cap_takes_the_newest_first_and_keeps_collection_order() -> None:
     from types import SimpleNamespace
 
     from digest_contracts import SourceKind
@@ -172,11 +172,32 @@ def test_the_cap_takes_the_oldest_first_and_keeps_collection_order() -> None:
         result("hn_old", SourceKind.DISCOVERY, 20),
     ]
     ids = lambda rs: [r.article.article_id for r in rs]  # noqa: E731
-    # Closest to leaving the collection window first, whatever the kind of source.
-    assert ids(_within(1, passed)) == ["blog_old"]
-    assert ids(_within(2, passed)) == ["blog_old", "hn_old"]
-    assert ids(_within(3, passed)) == ["blog_old", "blog_new", "hn_old"]
+    # The freshest first, whatever the kind of source.
+    assert ids(_within(1, passed)) == ["hn_new"]
+    assert ids(_within(2, passed)) == ["hn_new", "blog_new"]
+    assert ids(_within(3, passed)) == ["hn_new", "blog_new", "hn_old"]
     assert _within(None, passed) == passed and _within(9, passed) == passed
+    # Equally fresh articles are taken in collection order.
+    tied = [result("first", SourceKind.DISCOVERY, 5), result("second", SourceKind.DISCOVERY, 5)]
+    assert ids(_within(1, tied)) == ["first"]
+
+
+def test_under_a_cap_an_older_article_waits_while_a_newer_one_is_researched(tmp_path) -> None:
+    def dated(entry, published_at):
+        return {**entry, "published_at": published_at}
+
+    older, newer = ITEMS[0], ITEMS[1]
+    items = (dated(older, "2026-09-20T06:00:00+00:00"), dated(newer, "2026-09-24T06:00:00+00:00"))
+    only_a002 = decision()
+    only_a002["must_read"] = []
+    model = happy_model(selector=[only_a002])
+    p = pipeline(tmp_path, model, FakePublisher(), collect=lambda known: report(items=items))
+    p.max_articles = 1
+    result = p.run(DIGEST_DATE, run_id=RUN_ID)
+
+    assert result.status is RunStatus.SUCCEEDED and result.deferred == 1
+    assert ["article_id: a002" in r.prompt for r in model.requests["research"]] == [True]
+    assert [r.canonical_url for r in state_of(tmp_path).records] == ["https://example.com/posts/eval-method"]
 
 
 def test_a_capped_backlog_drains_over_later_runs(tmp_path) -> None:

@@ -8,6 +8,7 @@ from pathlib import Path
 
 from digest_contracts import RunStatus
 from digest_pipeline import DRY_RUN_COMMIT, DryRunPublisher, GitPublisher, RunResult, build, summary
+from digest_pipeline.config import DEFAULT_MAX_ARTICLES, load_max_articles
 from pipeline_support import DIGEST_DATE, ROOT, RoutedModel, decision, fetcher, finding, report
 
 RUN_ID = "run-20260925T070000Z-abcdef"
@@ -71,9 +72,34 @@ def test_a_real_run_works_in_the_repository_and_publishes_with_git(tmp_path: Pat
     )
     assert plan.pipeline.store.directory == repo / "logs" / "metrics"
     assert plan.pipeline.models.selector == "claude-sonnet-5"
-    assert plan.pipeline.max_articles is None
+    assert plan.pipeline.max_articles == load_max_articles(repo / "config" / "config.json")
     capped = build(repo, dry_run=True, run_id=RUN_ID, invoke=RoutedModel(), fetch=fetcher(), collect=lambda known: report(), max_articles=7)
     assert capped.pipeline.max_articles == 7
+
+
+def test_the_article_cap_comes_from_the_config_and_a_broken_value_stops_the_run_before_it_starts(tmp_path: Path) -> None:
+    import json
+
+    import pytest
+
+    repo = checkout(tmp_path)
+    config = repo / "config" / "config.json"
+    data = json.loads(config.read_text(encoding="utf-8"))
+    # The shipped value and the fallback agree, so a config without the block runs the same.
+    assert load_max_articles(config) == data["run"]["max_articles"] == DEFAULT_MAX_ARTICLES
+
+    del data["run"]
+    config.write_text(json.dumps(data), encoding="utf-8")
+    assert load_max_articles(config) == DEFAULT_MAX_ARTICLES
+
+    for bad in ({"max_articles": 0}, {"max_articles": -1}, {"max_articles": 2.5}, {"max_articles": True},
+                {"max_articles": "20"}, {"max_articles": None}, {"max_article": 20}, [20]):
+        data["run"] = bad
+        config.write_text(json.dumps(data), encoding="utf-8")
+        with pytest.raises(ValueError):
+            load_max_articles(config)
+        with pytest.raises(ValueError):
+            build(repo, dry_run=True, run_id=RUN_ID, invoke=RoutedModel(), fetch=fetcher(), collect=lambda known: report())
 
 
 def test_the_article_cap_is_passed_through_and_must_be_positive(tmp_path: Path, monkeypatch, capsys) -> None:
@@ -99,7 +125,7 @@ def test_the_summary_names_the_run_its_status_and_where_to_look(tmp_path: Path) 
     text = summary(RunResult(RUN_ID, RunStatus.PARTIALLY_FAILED, "abc", tmp_path / "d.md"), tmp_path)
     assert text.splitlines() == [f"run: {RUN_ID}", "status: partially_failed", "commit: abc", f"digest: {tmp_path / 'd.md'}", f"dry-run output: {tmp_path}"]
     capped = summary(RunResult(RUN_ID, RunStatus.SUCCEEDED, deferred=110), None)
-    assert "deferred: 110 articles past the gates wait for a later run (--max-articles)" in capped.splitlines()
+    assert "deferred: 110 older articles past the gates were not researched (the article cap)" in capped.splitlines()
 
 
 def test_the_exit_code_is_zero_only_when_the_digest_run_finished_cleanly(tmp_path: Path, monkeypatch, capsys) -> None:

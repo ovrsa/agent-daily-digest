@@ -90,7 +90,7 @@ class RunResult:
     digest_path: Path | None = None
     """Set when a digest was published."""
     deferred: int = 0
-    """Articles past the gates left for a later run by `Pipeline.max_articles`.
+    """Articles past the gates not researched in this run because of `Pipeline.max_articles`.
 
     Their metrics show a passed gate and no decision, the same as an article the
     Selector did not decide; this count is what tells the two apart."""
@@ -120,13 +120,16 @@ class Pipeline:
     max_articles: int | None = None
     """At most this many articles past the gates are researched in one run.
 
-    The oldest go first, the ones closest to leaving the collection window. The
-    rest are neither researched nor recorded in the processing state, so a later
-    run takes them up while they are still inside the window: a backlog drains
-    as long as the cap is above the daily inflow. The cap applies before
-    research clusters duplicates, so the members of one story can be researched
-    on different days. `None` researches every article, which on a first run is
-    the whole window.
+    The Selector decides every researched article in one call, and that call has
+    a cost and a time limit; `config.DEFAULT_MAX_ARTICLES` says why the command
+    line never runs without a cap. The newest go first. The rest are neither
+    researched nor recorded in the processing state: they compete again in the
+    next run while they are inside the collection window, and leave it
+    unresearched when newer articles keep filling the cap. That is how a first
+    run, with the whole window new, researches the newest and lets the older
+    backlog go. The cap applies before research clusters duplicates, so the
+    members of one story can be researched on different days. `None` researches
+    every article.
     """
 
     def run(self, digest_date: date, *, run_id: str | None = None) -> RunResult:
@@ -319,10 +322,10 @@ def comment_body(run_id: str, digest_date: date, report: str) -> str:
 
 
 def _within(cap: int | None, passed: list[NormalizationResult]) -> list[NormalizationResult]:
-    """The articles a run takes up under `cap`, oldest first; the chosen keep their collection order."""
+    """The articles a run takes up under `cap`, newest first; the chosen keep their collection order."""
     if cap is None or len(passed) <= cap:
         return passed
-    ranked = sorted(passed, key=lambda r: r.article.published_at.timestamp())
+    ranked = sorted(passed, key=lambda r: r.article.published_at.timestamp(), reverse=True)
     chosen = {id(r) for r in ranked[:cap]}
     return [r for r in passed if id(r) in chosen]
 
