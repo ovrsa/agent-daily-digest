@@ -130,8 +130,8 @@ class Pipeline:
     rest are neither researched nor recorded in the processing state: they
     compete again in the next run while they are inside the collection window,
     and leave it unresearched when other articles keep filling the cap. That is
-    how a first run, with the whole window new, lets the older backlog go. The
-    cap applies before research clusters duplicates, so the
+    how a first run, with the whole window new, leaves the rest of the window
+    unresearched, discovery included however new. The cap applies before research clusters duplicates, so the
     members of one story can be researched on different days. `None` researches
     every article.
     """
