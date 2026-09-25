@@ -4,7 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 import factories as f
-from digest_contracts import (
+from agent_daily_digest.contracts import (
     GATE_ORDER,
     GATE_REASONS,
     GateExclusionReason,

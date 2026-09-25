@@ -1,4 +1,4 @@
-"""Cost is computed from `config/config.json`, so it can be checked by hand."""
+"""Cost is computed from `config.json`, so it can be checked by hand."""
 
 from __future__ import annotations
 
@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from digest_contracts import CostBasis
-from digest_observe import ModelUsage, estimate_cost, load_pricing, token_usage
+from agent_daily_digest.contracts import CostBasis
+from agent_daily_digest.observe import ModelUsage, estimate_cost, load_pricing, token_usage
 
-CONFIG = Path(__file__).resolve().parents[1] / "config" / "config.json"
+CONFIG = Path(__file__).resolve().parents[1] / "config.json"
 
 
 @pytest.fixture(scope="module")

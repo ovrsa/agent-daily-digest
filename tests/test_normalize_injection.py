@@ -12,8 +12,8 @@ import datetime as dt
 
 import pytest
 
-from digest_contracts import BodySource, NormalizedArticle, compute_content_hash
-from digest_normalize import (
+from agent_daily_digest.contracts import BodySource, NormalizedArticle, compute_content_hash
+from agent_daily_digest.normalize import (
     UNTRUSTED_CLOSE,
     UNTRUSTED_OPEN,
     as_untrusted_block,

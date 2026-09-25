@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Template for the daily run. ops/launchd/install.sh sets every @NAME@ value with
+  plutil and installs the result in ~/Library/LaunchAgents; do not load this
+  file directly.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.ovrsa.agent-daily-digest</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>@REPO@/ops/run-local.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>@REPO@</string>
+
+    <!-- Every day at 08:00 local time. A run missed while the Mac slept starts once on wake. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>8</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <!-- launchd starts jobs with a bare environment. git and gh come from Homebrew;
+         HOME holds the gh and Claude Code credentials. -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>@PATH@</string>
+        <key>HOME</key>
+        <string>@HOME@</string>
+        <key>USER</key>
+        <string>@USER@</string>
+    </dict>
+
+    <!-- The script writes its own dated log and prints the same lines, so standard
+         output is dropped. Standard error keeps a failure that happens before the
+         script can open its log, such as a missing checkout. -->
+    <key>StandardOutPath</key>
+    <string>/dev/null</string>
+    <key>StandardErrorPath</key>
+    <string>@REPO@/logs/launchd.log</string>
+</dict>
+</plist>

@@ -23,8 +23,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from digest_contracts import EvidencePacket, SelectorOutput, SourceKind
-from digest_research import SourceLibrary
+from agent_daily_digest.contracts import EvidencePacket, SelectorOutput, SourceKind
+from agent_daily_digest.research import SourceLibrary
 from selector_support import CASES, case
 from selector_support import library as selector_library
 

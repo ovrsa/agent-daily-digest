@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from digest_normalize import collapse_text, is_blank, strip_invisible
+from agent_daily_digest.normalize import collapse_text, is_blank, strip_invisible
 
 
 class TestIsBlank:

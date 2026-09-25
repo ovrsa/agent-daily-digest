@@ -6,7 +6,7 @@ import datetime as dt
 
 import pytest
 
-from digest_contracts import (
+from agent_daily_digest.contracts import (
     GATE_ORDER,
     BodySource,
     ErrorKind,
@@ -15,7 +15,7 @@ from digest_contracts import (
     ProcessedState,
     compute_content_hash,
 )
-from digest_normalize import (
+from agent_daily_digest.normalize import (
     MIN_PRIMARY_INFO_CHARS,
     FetchFailure,
     FetchedPage,

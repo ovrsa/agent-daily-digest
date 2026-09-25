@@ -8,14 +8,14 @@ import pytest
 from pydantic import ValidationError
 
 import render_factories as f
-from digest_contracts import (
+from agent_daily_digest.contracts import (
     MUST_READ_MAX,
     WORTH_KNOWING_MAX,
     IncludedArticle,
     SelectorOutput,
     Tier,
 )
-from digest_render import MissingArticleError, TierCapError, digest_filename
+from agent_daily_digest.render import MissingArticleError, TierCapError, digest_filename
 
 
 def test_matches_the_snapshot_byte_for_byte() -> None:

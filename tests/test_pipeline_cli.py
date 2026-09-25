@@ -6,9 +6,9 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from digest_contracts import RunStatus
-from digest_pipeline import DRY_RUN_COMMIT, DryRunPublisher, GitPublisher, RunResult, build, summary
-from digest_pipeline.config import DEFAULT_MAX_ARTICLES, load_max_articles
+from agent_daily_digest.contracts import RunStatus
+from agent_daily_digest import DRY_RUN_COMMIT, DryRunPublisher, GitPublisher, RunResult, build, summary
+from agent_daily_digest.config import DEFAULT_MAX_ARTICLES, load_max_articles
 from pipeline_support import DIGEST_DATE, ROOT, RoutedModel, decision, fetcher, finding, report
 
 RUN_ID = "run-20260925T070000Z-abcdef"
@@ -16,8 +16,8 @@ RUN_ID = "run-20260925T070000Z-abcdef"
 
 def checkout(tmp_path: Path) -> Path:
     repo = tmp_path / "repo"
-    (repo / "config").mkdir(parents=True)
-    shutil.copy2(ROOT / "config" / "config.json", repo / "config" / "config.json")
+    repo.mkdir(parents=True)
+    shutil.copy2(ROOT / "config.json", repo / "config.json")
     shutil.copytree(ROOT / "digests", repo / "digests")
     return repo
 
@@ -72,7 +72,7 @@ def test_a_real_run_works_in_the_repository_and_publishes_with_git(tmp_path: Pat
     )
     assert plan.pipeline.store.directory == repo / "logs" / "metrics"
     assert plan.pipeline.models.selector == "claude-sonnet-5"
-    assert plan.pipeline.max_articles == load_max_articles(repo / "config" / "config.json")
+    assert plan.pipeline.max_articles == load_max_articles(repo / "config.json")
     capped = build(repo, dry_run=True, run_id=RUN_ID, invoke=RoutedModel(), fetch=fetcher(), collect=lambda known: report(), max_articles=7)
     assert capped.pipeline.max_articles == 7
 
@@ -83,7 +83,7 @@ def test_the_article_cap_comes_from_the_config_and_a_broken_value_stops_the_run_
     import pytest
 
     repo = checkout(tmp_path)
-    config = repo / "config" / "config.json"
+    config = repo / "config.json"
     data = json.loads(config.read_text(encoding="utf-8"))
     # The shipped value and the fallback agree, so a config without the block runs the same.
     assert load_max_articles(config) == data["run"]["max_articles"] == DEFAULT_MAX_ARTICLES
@@ -105,7 +105,7 @@ def test_the_article_cap_comes_from_the_config_and_a_broken_value_stops_the_run_
 def test_the_article_cap_is_passed_through_and_must_be_positive(tmp_path: Path, monkeypatch, capsys) -> None:
     import pytest
 
-    from digest_pipeline import cli
+    from agent_daily_digest import cli
 
     seen = {}
 
@@ -129,8 +129,8 @@ def test_the_summary_names_the_run_its_status_and_where_to_look(tmp_path: Path) 
 
 
 def test_the_exit_code_is_zero_only_when_the_digest_run_finished_cleanly(tmp_path: Path, monkeypatch, capsys) -> None:
-    from digest_contracts import ErrorKind, ErrorRecord
-    from digest_pipeline import cli
+    from agent_daily_digest.contracts import ErrorKind, ErrorRecord
+    from agent_daily_digest import cli
 
     outcomes = {
         RunStatus.SUCCEEDED: 0,

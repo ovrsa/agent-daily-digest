@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 import render_factories as f
-from digest_contracts import SelectorOutput
-from digest_render import (
+from agent_daily_digest.contracts import SelectorOutput
+from agent_daily_digest.render import (
     RULE_DESCRIPTIONS,
     ForbiddenArtifactError,
     ForbiddenRule,
@@ -50,7 +50,7 @@ ALLOWED = [
     "入力 -> 出力 の対応を表にしている。",
     "入力 → 出力 の変換を表にしている。",
     "権限スコープが実装されている。",
-    "設定ファイルは `config/config.json` に置かれている。",
+    "設定ファイルは `config.json` に置かれている。",
     "著者は再試行の上限を 3 回に設定したと書いている。",
     "一方の条件では失敗率が上がった。",
     "ASCII hyphens -- and --- are untouched.",

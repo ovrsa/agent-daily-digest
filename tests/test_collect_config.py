@@ -1,4 +1,4 @@
-"""The registry in `config/config.json`, and that it has not drifted from the legacy keys."""
+"""The registry in `config.json`, and that it has not drifted from the legacy keys."""
 
 from __future__ import annotations
 
@@ -8,20 +8,20 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-import digest_collect
-from digest_collect import (
+import agent_daily_digest.collect
+from agent_daily_digest.collect import (
     CollectionConfig,
     SitemapSource,
     UrllibFetcher,
     load_collection_config,
     make_fetcher,
 )
-from digest_contracts import SourceKind
+from agent_daily_digest.contracts import SourceKind
 
 import collect_support as s
 
 REPO = Path(__file__).resolve().parents[1]
-CONFIG_PATH = REPO / "config" / "config.json"
+CONFIG_PATH = REPO / "config.json"
 
 REQUIRED_BLOG_URLS = {
     "claude_blog": "https://claude.com/blog/",
@@ -267,7 +267,7 @@ class TestValidation:
 class TestConfigPath:
     """The caller names the config file. There is no default.
 
-    The default was `Path(__file__).parents[2] / "config" / "config.json"`,
+    The default was `Path(__file__).parents[2] / "config.json"`,
     which only resolves inside the source tree; from an installed wheel it
     pointed outside site-packages. No test called `load_collection_config()`
     without a path, so the breakage was invisible. #10 passes the path.
@@ -278,5 +278,5 @@ class TestConfigPath:
             load_collection_config()
 
     def test_the_package_exports_no_default_path(self) -> None:
-        assert "DEFAULT_CONFIG_PATH" not in digest_collect.__all__
-        assert not hasattr(digest_collect, "DEFAULT_CONFIG_PATH")
+        assert "DEFAULT_CONFIG_PATH" not in agent_daily_digest.collect.__all__
+        assert not hasattr(agent_daily_digest.collect, "DEFAULT_CONFIG_PATH")

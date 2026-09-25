@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 
 import factories as f
-from digest_contracts import ErrorKind, ErrorRecord, RunMetrics, StageName
-from digest_observe import (
+from agent_daily_digest.contracts import ErrorKind, ErrorRecord, RunMetrics, StageName
+from agent_daily_digest.observe import (
     DEFAULT_METRICS_DIR,
     MetricsLeakError,
     MetricsStore,

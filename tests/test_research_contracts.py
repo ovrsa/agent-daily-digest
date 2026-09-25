@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from digest_contracts import (
+from agent_daily_digest.contracts import (
     EvidencePacket,
     ResearchBudget,
     SourceDocument,

@@ -6,7 +6,7 @@ from contextlib import contextmanager
 
 import pytest
 
-from digest_collect import (
+from agent_daily_digest.collect import (
     DETAIL_MAX_CHARS,
     HttpResponse,
     HttpSettings,
@@ -18,8 +18,8 @@ from digest_collect import (
     parse_json,
     parse_xml,
 )
-from digest_collect import transport
-from digest_contracts import ErrorKind
+from agent_daily_digest.collect import transport
+from agent_daily_digest.contracts import ErrorKind
 
 import collect_support as s
 
@@ -219,7 +219,7 @@ class TestMakeFetcher:
     """Every value in `collection.http` has to reach the fetcher.
 
     Nothing read `HttpSettings` before: the block was declared in
-    `config/config.json` and no code applied it, so a caller could build a
+    `config.json` and no code applied it, so a caller could build a
     `UrllibFetcher` with other values and the config would say nothing.
     """
 

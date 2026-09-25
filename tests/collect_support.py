@@ -19,8 +19,8 @@ import xml.etree.ElementTree as ET
 from collections.abc import Callable
 from pathlib import Path
 
-from digest_collect import CollectionConfig, HttpResponse, ResponseTooLargeError, UnsafeXmlError
-from digest_contracts import ErrorKind
+from agent_daily_digest.collect import CollectionConfig, HttpResponse, ResponseTooLargeError, UnsafeXmlError
+from agent_daily_digest.contracts import ErrorKind
 
 FIXTURES = Path(__file__).parent / "fixtures" / "collect"
 

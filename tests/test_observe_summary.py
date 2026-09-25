@@ -5,9 +5,9 @@ from __future__ import annotations
 import inspect
 
 import factories as f
-from digest_contracts import ErrorKind, LLMRole, RunMetrics, RunStatus, Severity
-from digest_observe import render_summary, summarize
-from digest_observe import report as report_module
+from agent_daily_digest.contracts import ErrorKind, LLMRole, RunMetrics, RunStatus, Severity
+from agent_daily_digest.observe import render_summary, summarize
+from agent_daily_digest.observe import report as report_module
 
 
 def sample_run() -> RunMetrics:
@@ -86,4 +86,4 @@ def test_render_summary_prints_figures_and_no_free_text() -> None:
 
 def test_the_presentation_layer_does_not_read_run_metrics() -> None:
     source = inspect.getsource(report_module)
-    assert "RunMetrics" not in source and "digest_contracts" not in source.split("from .summary")[0]
+    assert "RunMetrics" not in source and "agent_daily_digest.contracts" not in source.split("from .summary")[0]

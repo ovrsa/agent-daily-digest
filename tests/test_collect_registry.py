@@ -1,4 +1,4 @@
-"""The registry that ships in `config/config.json`, run end to end on recorded responses.
+"""The registry that ships in `config.json`, run end to end on recorded responses.
 
 The feeds added in #31 were recorded on 2026-09-25 and cut to their first two
 entries, with long bodies shortened; `<source_id>_feed.xml` holds each one.
@@ -10,12 +10,12 @@ from pathlib import Path
 
 import pytest
 
-from digest_collect import CollectionConfig, HttpResponse, collect_all, load_collection_config
-from digest_contracts import SourceFetchStatus, SourceKind
+from agent_daily_digest.collect import CollectionConfig, HttpResponse, collect_all, load_collection_config
+from agent_daily_digest.contracts import SourceFetchStatus, SourceKind
 
 import collect_support as s
 
-CONFIG_PATH = Path(__file__).resolve().parents[1] / "config" / "config.json"
+CONFIG_PATH = Path(__file__).resolve().parents[1] / "config.json"
 
 REQUIRED_BLOGS = (
     "simonw",

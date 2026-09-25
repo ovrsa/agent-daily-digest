@@ -20,7 +20,7 @@ origin: user
 1. 既定は dry-run。公開しない:
 
    ```bash
-   ./scripts/run-local.sh --dry-run --max-articles 5
+   ./ops/run-local.sh --dry-run --max-articles 5
    ```
 
    結果は `logs/dry-run/<run_id>/`（`digests/<日付>.md`、`comment.md`、`commit.txt`、`metrics/`）。
@@ -28,7 +28,7 @@ origin: user
 2. 本番の実行（main への push とコミットコメント）は、ユーザーが明示したときだけ行う:
 
    ```bash
-   ./scripts/run-local.sh
+   ./ops/run-local.sh
    ```
 
 3. 実行後は、出力の最後にある `run:` と `status:` と、dry-run の出力先をユーザーに報告する。

@@ -7,9 +7,9 @@ from typing import Any
 
 import pytest
 
-from digest_contracts import ErrorKind, LLMCallMetrics, LLMRole, SelectorOutput
-from digest_observe import RetryPolicy
-from digest_select import PROMPT_VERSION, SYSTEM_PROMPT, Selector, selection_issues
+from agent_daily_digest.contracts import ErrorKind, LLMCallMetrics, LLMRole, SelectorOutput
+from agent_daily_digest.observe import RetryPolicy
+from agent_daily_digest.select import PROMPT_VERSION, SYSTEM_PROMPT, Selector, selection_issues
 from observe_support import PRICING
 from research_support import ScriptedModel
 from selector_support import EXPECTED, PACKETS, library, packet

@@ -11,7 +11,7 @@ import datetime as dt
 
 import pytest
 
-from digest_normalize import PublishedAtProblem, PublishedAtRejected, parse_published_at
+from agent_daily_digest.normalize import PublishedAtProblem, PublishedAtRejected, parse_published_at
 
 UTC = dt.timezone.utc
 JST = dt.timezone(dt.timedelta(hours=9))
