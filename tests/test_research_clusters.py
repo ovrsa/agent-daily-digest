@@ -21,6 +21,21 @@ def test_an_article_linking_to_another_joins_its_cluster() -> None:
     assert cluster.representative.article_id == "p1" and [a.article_id for a in cluster.supporting] == ["h1"]
 
 
+def test_articles_of_one_source_linking_each_other_stay_apart() -> None:
+    # A blog's sidebar links its other posts whatever their topic.
+    release = article("s1", title="llm 0.36", url="https://blog.example/2026/llm-0-36")
+    prices = article("s2", title="The frontier model price war", url="https://blog.example/2026/prices")
+    clusters = cluster_articles([release, prices], {"s1": (prices.canonical_url,), "s2": (release.canonical_url,)})
+    assert [(c.representative.article_id, c.supporting) for c in clusters] == [("s1", ()), ("s2", ())]
+
+
+def test_articles_of_one_source_still_join_on_similar_titles() -> None:
+    a = article("a1", title="Claude Code hooks for permission gating")
+    b = article("b1", title="Permission gating with Claude Code hooks")
+    (cluster,) = cluster_articles([a, b])
+    assert [x.article_id for x in cluster.supporting] == ["b1"]
+
+
 def test_similar_titles_join_and_different_titles_do_not() -> None:
     a = article("a1", title="Claude Code hooks for permission gating")
     b = article("b1", title="Permission gating with Claude Code hooks", source_id="reddit_claudeai", kind=SourceKind.DISCOVERY)
