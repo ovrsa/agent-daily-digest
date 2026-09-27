@@ -6,7 +6,8 @@ by fixed rules. Whether two articles really say the same thing is the Selector's
 judgement (`DuplicateGroup`), so a cluster only decides where research is spent.
 
 Two articles are one cluster when one links to the other's canonical URL, or
-when their titles share most of their words.
+when their titles share most of their words. A link only counts between two
+sources: a blog's sidebar links its own posts whatever their topic.
 """
 
 from __future__ import annotations
@@ -63,7 +64,7 @@ def cluster_articles(
     for i, article in enumerate(articles):
         for url in links.get(article.article_id, ()):
             j = by_url.get(url)
-            if j is not None and j != i:
+            if j is not None and articles[j].source_id != article.source_id:
                 union(i, j)
     words = [_title_words(article.title) for article in articles]
     for i in range(len(articles)):
