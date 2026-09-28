@@ -56,6 +56,26 @@
         "max_metadata_probes": 10
       },
       {
+        "id": "openai_news",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://openai.com/news/rss.xml",
+        "categories": [
+          "Product",
+          "Research",
+          "Engineering",
+          "Applied AI"
+        ]
+      },
+      {
+        "id": "cursor_changelog",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://cursor.com/changelog/rss.xml"
+      },
+      {
         "id": "ai_news_smol",
         "kind": "fixed_watch",
         "connector": "feed",
@@ -219,6 +239,14 @@
         "min_points": 30,
         "window_hours": 24,
         "hits_per_keyword": 20
+      },
+      {
+        "id": "reddit_coding_agents",
+        "kind": "discovery",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://www.reddit.com/r/ClaudeAI+ClaudeCode+codex/top.rss?t=day&limit=5",
+        "max_items": 5
       },
       {
         "id": "arxiv_surveys",

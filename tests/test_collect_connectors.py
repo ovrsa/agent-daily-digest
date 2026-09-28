@@ -204,6 +204,63 @@ class TestFeedConnector:
         assert [item.url for item in items] == ["https://example.com/2"]
 
 
+class TestFeedCategories:
+    """A feed narrowed to the categories it names, as the OpenAI news feed is (#38)."""
+
+    URL = "https://example.com/feed"
+
+    @staticmethod
+    def rss(*categories: tuple[str, ...]) -> bytes:
+        entries = "".join(
+            f"<item><title>T{i}</title><link>https://example.com/{i}</link>"
+            f"<pubDate>Thu, 17 Sep 2026 00:00:00 GMT</pubDate>"
+            + "".join(f"<category>{c}</category>" for c in cats)
+            + "</item>"
+            for i, cats in enumerate(categories)
+        )
+        return f'<?xml version="1.0"?><rss version="2.0"><channel>{entries}</channel></rss>'.encode()
+
+    def urls(self, feed: bytes, **source) -> list[str]:
+        items, _ = run(s.feed_source(url=self.URL, **source), s.FixtureFetcher({self.URL: feed}))
+        return [item.url for item in items]
+
+    def test_only_entries_carrying_a_named_category_are_kept(self) -> None:
+        feed = self.rss(("Product",), ("Global Affairs",), ("Company", "Research"), ("Startup",))
+        assert self.urls(feed, categories=["Product", "Research"]) == [
+            "https://example.com/0",
+            "https://example.com/2",
+        ]
+
+    def test_an_entry_without_a_category_is_left_out(self) -> None:
+        # The OpenAI feed leaves its customer stories uncategorised.
+        assert self.urls(self.rss((), ("Product",)), categories=["Product"]) == ["https://example.com/1"]
+
+    def test_case_and_spacing_do_not_matter(self) -> None:
+        assert self.urls(self.rss((" applied  AI ",)), categories=["Applied AI"]) == ["https://example.com/0"]
+
+    def test_an_atom_category_is_read_from_its_term(self) -> None:
+        entries = "".join(
+            f'<entry><title>T{i}</title><link rel="alternate" href="https://example.com/{i}"/>'
+            f'<published>2026-09-17T00:00:00Z</published><category term="{term}"/></entry>'
+            for i, term in enumerate(("Engineering", "Company"))
+        )
+        feed = f'<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">{entries}</feed>'.encode()
+        assert self.urls(feed, categories=["Engineering"]) == ["https://example.com/0"]
+
+    def test_entries_left_out_by_category_do_not_use_up_the_item_cap(self) -> None:
+        feed = self.rss(("Company",), ("Company",), ("Product",))
+        items, _ = run(
+            s.feed_source(url=self.URL, categories=["Product"]),
+            s.FixtureFetcher({self.URL: feed}),
+            max_items=1,
+        )
+        assert [item.url for item in items] == ["https://example.com/2"]
+
+    def test_a_feed_that_names_no_category_keeps_every_entry(self) -> None:
+        feed = self.rss((), ("Company",))
+        assert self.urls(feed) == ["https://example.com/0", "https://example.com/1"]
+
+
 class TestArticleId:
     def test_an_id_is_stable_across_runs(self) -> None:
         assert make_article_id("simonw", "https://a.example/x") == make_article_id(

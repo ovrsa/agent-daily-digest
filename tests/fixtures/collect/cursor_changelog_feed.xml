@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Cursor Changelog</title>
+    <description>The latest product updates, release notes, and improvements from Cursor.</description>
+    <link>https://cursor.com/changelog</link>
+    <language>en-US</language>
+    <lastBuildDate>Mon, 28 Sep 2026 15:00:07 GMT</lastBuildDate>
+    <atom:link href="https://cursor.com/changelog/rss.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Rollouts and Security Review</title>
+      <link>https://cursor.com/changelog/rollouts-and-security-reviewer</link>
+      <guid isPermaLink="true">https://cursor.com/changelog/rollouts-and-security-reviewer</guid>
+      <pubDate>Wed, 23 Sep 2026 00:00:00 GMT</pubDate>
+      <description>Two bots for the last mile of shipping code: Rollouts watches every change as it deploys, and Security Review reports exploitable bugs on every pull request.</description>
+
+      <content:encoded><![CDATA[<p>Today we&#39;re launching two Cursor bots for the last mile of shipping code. Rollouts watches every change as it deploys and reports its health per environment. Security Review reports exploitable bugs on every pull request.</p>
+<p>Both are available today on Teams and Enterprise plans.</p>
+<h2>Rollouts</h2>
+<p>Rollouts attaches a monitor to every pull request and watches the change as it depl]]></content:encoded>
+    </item>
+<item>
+      <title>Cursor Projects</title>
+      <link>https://cursor.com/changelog/projects</link>
+      <guid isPermaLink="true">https://cursor.com/changelog/projects</guid>
+      <pubDate>Thu, 10 Sep 2026 00:00:00 GMT</pubDate>
+      <description>Projects lets you take on larger bodies of work, maintain context over months, and delegate tasks to thousands of subagents.</description>
+
+      <content:encoded><![CDATA[<p>Today we&#39;re launching Projects in Cursor. Projects lets you take on larger bodies of work, such as a feature, a migration, or a full app. It maintains context over months of work, delegates tasks to thousands of subagents, and performs recurring work without being prompted.</p>
+<p>Access Projects from the left-hand nav. The coordinator agent in a project doesn&#39;t write code itself; it pl]]></content:encoded>
+    </item>
+  </channel>
+</rss>

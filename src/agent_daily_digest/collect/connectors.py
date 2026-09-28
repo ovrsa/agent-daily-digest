@@ -130,8 +130,11 @@ def _first_text(element: ET.Element, *paths: str) -> str | None:
 # feed
 
 
-def _feed_entries(root: ET.Element) -> Iterator[tuple[str | None, str | None, str | None, str | None]]:
-    """Yield `(title, url, published, summary)` for RSS 2.0 and Atom alike."""
+_FeedEntry = tuple[str | None, str | None, str | None, str | None, tuple[str, ...]]
+
+
+def _feed_entries(root: ET.Element) -> Iterator[_FeedEntry]:
+    """Yield `(title, url, published, summary, categories)` for RSS 2.0 and Atom alike."""
     items = root.findall(".//item")
     if items:
         for item in items:
@@ -140,6 +143,7 @@ def _feed_entries(root: ET.Element) -> Iterator[tuple[str | None, str | None, st
                 _first_text(item, "link", "guid"),
                 _first_text(item, "pubDate", f"{{{DC_NS}}}date"),
                 _strip_markup(item.findtext("description")),
+                tuple(category.text or "" for category in item.findall("category")),
             )
         return
     for entry in root.findall(f".//{{{ATOM_NS}}}entry"):
@@ -150,7 +154,12 @@ def _feed_entries(root: ET.Element) -> Iterator[tuple[str | None, str | None, st
             _strip_markup(
                 entry.findtext(f"{{{ATOM_NS}}}summary") or entry.findtext(f"{{{ATOM_NS}}}content")
             ),
+            tuple(category.get("term") or "" for category in entry.findall(f"{{{ATOM_NS}}}category")),
         )
+
+
+def _category_key(category: str) -> str:
+    return " ".join(category.split()).casefold()
 
 
 def _feed_date(value: str | None) -> dt.datetime | None:
@@ -182,9 +191,12 @@ def collect_feed(spec: FeedSource, ctx: CollectContext) -> tuple[CollectedItem, 
     )
     root = parse_xml(response.body)
     cutoff = ctx.now - ctx.window
+    wanted = frozenset(map(_category_key, spec.categories)) if spec.categories else None
     items = []
-    for title, url, published, summary in _feed_entries(root):
+    for title, url, published, summary, categories in _feed_entries(root):
         if url in ctx.known_urls:
+            continue
+        if wanted is not None and wanted.isdisjoint(map(_category_key, categories)):
             continue
         # A feed lists its latest entries whatever their age, so a quiet blog's
         # entries are months old. The window leaves them out as it does for the
