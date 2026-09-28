@@ -1,6 +1,12 @@
 {
   "records": [
     {
+      "canonical_url": "https://ghuntley.com/eighteen-month-recap/",
+      "content_hash": "4ae69baf09ecf5feef50e399263e420de6c9faf3a69c262da7c27244ccef90b4",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "excluded"
+    },
+    {
       "canonical_url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.282",
       "content_hash": "e42382b862dd658bdb1fccccbc7372f14e9919ec3435dff6784755d71d56a0c8",
       "first_seen_at": "2026-09-25T02:19:07.103290Z",
@@ -10,6 +16,12 @@
       "canonical_url": "https://koi.rest/",
       "content_hash": "066d4fbb218ec732852d97bd1e1f12d7e388db3009bbaf35dc69dfb38e9b092c",
       "first_seen_at": "2026-09-25T02:19:07.103290Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://newsletter.pragmaticengineer.com/p/the-pulse-end-of-coding-by-hand",
+      "content_hash": "aab222e7e6a48399501d58ec91ede89137da9811742c8c33885409d414d1107e",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
       "last_decision": "excluded"
     },
     {
@@ -25,9 +37,117 @@
       "last_decision": "excluded"
     },
     {
+      "canonical_url": "https://simonwillison.net/2026/Sep/24/harder/",
+      "content_hash": "7fa0fb745b666ac3cf4485e34f9008db3c701e1472b84857b4eb9c6cf9a0eaca",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://simonwillison.net/2026/Sep/25/john-gruber/",
+      "content_hash": "d140ef1705a51791ea0b44a228201bacd15018138952c97a351354dbb677a3bf",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://simonwillison.net/2026/Sep/25/sighting-403293902/",
+      "content_hash": "a274290863cc03080e244e39d964e4cae2dde262548a31bf41546384b2b158b4",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://simonwillison.net/2026/Sep/26/kakapo-party/",
+      "content_hash": "42431df4b10b80367527785e44049640b24a68602c23bc18fc591ee6948ff4a8",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "included"
+    },
+    {
+      "canonical_url": "https://simonwillison.net/2026/Sep/27/2026-in-llms-so-far/",
+      "content_hash": "0f72cad1815266b931d3030c1a0054e14b7f370ffc9510030be83c5a6d78c973",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "included"
+    },
+    {
+      "canonical_url": "https://simonwillison.net/2026/Sep/27/bluesky-bot-check/",
+      "content_hash": "61c421a6690cb3ded9bb2ee4e2543fb03b57328c8c1f64d4af9d6de5af2158c2",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "included"
+    },
+    {
+      "canonical_url": "https://simonwillison.net/2026/Sep/27/hn-49871741/",
+      "content_hash": "a1893a575a579b8efc50b846c92f64e62db0551fac00707ff33e5c9eda4a9686",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://simonwillison.net/2026/Sep/28/muse-ai-agent/",
+      "content_hash": "cee45aa143d7a0bbbc0b64e78d23869557de31c683749f536a2dae9fb04aba93",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://syu-m-5151.hatenablog.com/entry/2026/09/25/102941",
+      "content_hash": "81de620204cb152d069c9152b8c50d1af0c50e594ec1fcb03942d2220e84f859",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "included"
+    },
+    {
+      "canonical_url": "https://syu-m-5151.hatenablog.com/entry/2026/09/26/103930",
+      "content_hash": "3b88cc2568c8ebca4cd361bfcc0dc35c4387de7588a1cdff00f0ed0b1109563b",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "included"
+    },
+    {
+      "canonical_url": "https://syu-m-5151.hatenablog.com/entry/2026/09/27/120017",
+      "content_hash": "9b7981f0e138d88da41356d33f40aa85b3c24e2d72ed4f584d46d67ad86ccd2d",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "included"
+    },
+    {
+      "canonical_url": "https://syu-m-5151.hatenablog.com/entry/2026/09/28/121135",
+      "content_hash": "392193728daf317e4762f4a0655db477f3488504dffd5ce66b8f78af29821045",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://www.latent.space/p/ainews-the-future-of-latent-space",
+      "content_hash": "c8670da9345c06b4d72bb1feb2bf1db750270579ca8ce4ca9f6fc97a5c76353c",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://www.latent.space/p/openrouter",
+      "content_hash": "5a5f7af4a57edb21a49b3adb6abdd9274da3492d240f7b5ff62bc7268cf7f43e",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "excluded"
+    },
+    {
       "canonical_url": "https://www.latent.space/p/runway",
       "content_hash": "840fdf6400099b99e5c2b0c0acba14f4357614c8a860c443311ebb5295f33609",
       "first_seen_at": "2026-09-25T02:19:07.103290Z",
+      "last_decision": "included"
+    },
+    {
+      "canonical_url": "https://www.seangoedecke.com/advice-to-a-beginning-software-engineer/",
+      "content_hash": "743bb9f0430eb3ac0e0f3ba309ebbe390d39bedf3a8bb28fe3d09767206ae90b",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://www.seangoedecke.com/human-ai-partnerships-are-for-alignment-not-capability/",
+      "content_hash": "9c69bada76770ebab47e6f36b9b557ae03847d64e93d09280c04f1a8029612e2",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "included"
+    },
+    {
+      "canonical_url": "https://www.seangoedecke.com/you-should-all-be-asking-way-more-questions/",
+      "content_hash": "ea3ae5dc5bf8f0212b2de292d4ea371e8cff971d592180764c3f79fea8b5a425",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "included"
+    },
+    {
+      "canonical_url": "https://zenn.dev/mizchi/articles/rust-mutants-proptest-kani",
+      "content_hash": "ead771e92105b635c95f30617bf08515d09ff8318d0302c4a4e960ef5ce22df5",
+      "first_seen_at": "2026-09-28T09:12:10.186203Z",
       "last_decision": "included"
     }
   ],
