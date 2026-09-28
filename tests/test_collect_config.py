@@ -93,19 +93,46 @@ class TestShippedRegistry:
         kinds = {source.kind for source in loaded.sources}
         assert kinds == {SourceKind.FIXED_WATCH, SourceKind.DISCOVERY}
 
-    def test_discovery_sources_are_hacker_news_and_the_arxiv_surveys(
+    def test_discovery_sources_are_hacker_news_reddit_and_the_arxiv_surveys(
         self, loaded: CollectionConfig
     ) -> None:
         discovery = {s.id for s in loaded.sources if s.kind is SourceKind.DISCOVERY}
-        assert discovery == {"hackernews", "arxiv_surveys"}
+        assert discovery == {"hackernews", "reddit_coding_agents", "arxiv_surveys"}
 
-    def test_no_release_notes_papers_or_subreddits_are_collected(
-        self, loaded: CollectionConfig
-    ) -> None:
+    def test_no_release_notes_or_papers_are_collected(self, loaded: CollectionConfig) -> None:
         # #31: release notes were mostly bug fixes and the daily papers seldom
         # touched how coding agents are used; big releases reach the blogs.
         assert {spec.connector for spec in loaded.sources} <= {"feed", "sitemap", "hackernews"}
-        assert not any("reddit.com" in getattr(spec, "url", "") for spec in loaded.sources)
+
+    def test_reddit_is_one_feed_over_the_coding_agent_subreddits(self, loaded: CollectionConfig) -> None:
+        # #38: one request for all three. Reddit answers 429 after a dozen or so
+        # unauthenticated requests, and each item costs a page fetch as well.
+        reddit = [spec for spec in loaded.sources if "reddit.com" in getattr(spec, "url", "")]
+        assert [spec.id for spec in reddit] == ["reddit_coding_agents"]
+        spec = reddit[0]
+        assert spec.connector == "feed"
+        assert spec.url.startswith("https://www.reddit.com/r/ClaudeAI+ClaudeCode+codex/top.rss?")
+        assert "t=day" in spec.url and "limit=5" in spec.url
+        assert loaded.items_for(spec) == 5
+
+    def test_openai_is_a_fixed_watch_feed_narrowed_to_four_categories(
+        self, loaded: CollectionConfig
+    ) -> None:
+        # #38: most of the week's fifteen posts are policy, partnerships and
+        # customer stories, which would take research slots from the other blogs.
+        spec = loaded.source("openai_news")
+        assert spec.enabled
+        assert spec.kind is SourceKind.FIXED_WATCH
+        assert spec.url == "https://openai.com/news/rss.xml"
+        assert set(spec.categories) == {"Product", "Research", "Engineering", "Applied AI"}
+
+    def test_cursor_is_its_changelog_feed(self, loaded: CollectionConfig) -> None:
+        # #38: the blog has no feed, and its sitemap dates every page today.
+        spec = loaded.source("cursor_changelog")
+        assert spec.enabled
+        assert spec.kind is SourceKind.FIXED_WATCH
+        assert spec.url == "https://cursor.com/changelog/rss.xml"
+        assert not any("cursor.com/blog" in getattr(other, "url_prefix", "") for other in loaded.sources)
 
     @pytest.mark.parametrize(("source_id", "url"), sorted(NOTABLE_BLOG_FEEDS.items()))
     def test_every_notable_blog_is_an_enabled_fixed_watch_feed(
@@ -247,6 +274,15 @@ class TestValidation:
     def test_a_feed_window_has_the_same_bounds(self, days: int) -> None:
         with pytest.raises(ValidationError):
             s.config(s.feed_source(window_days=days))
+
+    @pytest.mark.parametrize("categories", [[], ["Product", " "]])
+    def test_a_category_list_names_at_least_one_category(self, categories: list[str]) -> None:
+        with pytest.raises(ValidationError):
+            s.config(s.feed_source(categories=categories))
+
+    def test_categories_are_a_feed_setting(self) -> None:
+        with pytest.raises(ValidationError):
+            s.config(s.sitemap_source(categories=["Product"]))
 
     def test_the_discovery_search_keeps_its_own_hours_instead(self) -> None:
         with pytest.raises(ValidationError):

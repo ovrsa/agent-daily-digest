@@ -2,6 +2,8 @@
 
 The feeds added in #31 were recorded on 2026-09-25 and cut to their first two
 entries, with long bodies shortened; `<source_id>_feed.xml` holds each one.
+The three added in #38 were recorded on 2026-09-29 the same way, except that
+OpenAI's keeps two posts in its categories and two outside them.
 """
 
 from __future__ import annotations
@@ -48,8 +50,11 @@ RECORDED_FEEDS = (
     "huyenchip",
     "steipete",
     "arxiv_surveys",
+    "openai_news",
+    "cursor_changelog",
+    "reddit_coding_agents",
 )
-"""Sources added in #31, each replayed from its own recording.
+"""Sources added in #31 and #38, each replayed from its own recording.
 
 The fetcher finds each recording by the URL the shipped config gives the
 source; `test_collect_config.py` pins those URLs, so a drifted URL fails there."""
@@ -186,8 +191,18 @@ class TestAddedSources:
         assert result.status is SourceFetchStatus.SUCCEEDED
         assert result.item_count == 2
 
-    def test_the_arxiv_surveys_are_a_discovery_path(self, report) -> None:
-        assert report.result("arxiv_surveys").source_kind is SourceKind.DISCOVERY
+    @pytest.mark.parametrize("source_id", ["arxiv_surveys", "reddit_coding_agents"])
+    def test_a_discovery_path(self, report, source_id: str) -> None:
+        assert report.result(source_id).source_kind is SourceKind.DISCOVERY
+
+    def test_openai_leaves_out_the_posts_outside_its_categories(self, shipped) -> None:
+        # The recording holds a customer story with no category and a Company post
+        # besides the two Product posts.
+        items = report_with_window(shipped, EVERY_ENTRY).result("openai_news").items
+        assert [item.title for item in items] == [
+            "Better prompt caching for GPT-6",
+            "Introducing GPT-6 Sol and Luna",
+        ]
 
 
 class TestPartialFailure:

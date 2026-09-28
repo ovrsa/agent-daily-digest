@@ -48,6 +48,15 @@ class FeedSource(_Spec):
     arXiv posts a survey on coding agents about once a month, which a week's window
     mostly misses. The processing state keeps a longer window from researching one twice.
     """
+    categories: tuple[NonBlankStr, ...] | None = Field(default=None, min_length=1)
+    """Keeps only the entries that carry at least one of these categories.
+
+    Most of the fifteen posts a week in OpenAI's news feed are policy, partnerships
+    and customer stories, which would take research slots from the other blogs. The
+    feed's own categories tell the model and product posts apart. An entry with no
+    category is left out, since the customer stories carry none. Case and spacing
+    are ignored.
+    """
 
 
 class SitemapSource(_Spec):
