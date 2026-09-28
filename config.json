@@ -225,6 +225,7 @@
         "kind": "discovery",
         "connector": "feed",
         "enabled": true,
+        "window_days": 30,
         "url": "https://export.arxiv.org/api/query?search_query=cat:cs.SE+AND+ti:survey+AND+abs:agent&sortBy=submittedDate&sortOrder=descending&max_results=20"
       }
     ]

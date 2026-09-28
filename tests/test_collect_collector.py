@@ -349,6 +349,36 @@ class TestKnownUrls:
         assert report.result("simonw").item_count == 3
 
 
+class TestPerSourceWindow:
+    """A feed's own `window_days` replaces the shared window for that feed alone."""
+
+    RECENT = "https://example.com/two-days-ago"
+    OLDER = "https://example.com/twenty-days-ago"
+
+    def run(self) -> CollectionReport:
+        # NOW is Fri, 18 Sep 2026 06:00 UTC.
+        entries = "".join(
+            f"<item><title>{url}</title><link>{url}</link><pubDate>{date}</pubDate></item>"
+            for url, date in ((self.RECENT, "Wed, 16 Sep 2026 00:00:00 GMT"), (self.OLDER, "Sat, 29 Aug 2026 00:00:00 GMT"))
+        )
+        feed = f'<?xml version="1.0"?><rss version="2.0"><channel>{entries}</channel></rss>'.encode()
+        return collect_all(
+            s.config(
+                s.feed_source("arxiv_surveys", url="https://a.example/feed", window_days=30),
+                s.feed_source("simonw", url="https://b.example/feed"),
+                window_days=7,
+            ),
+            fetcher=s.FixtureFetcher({"https://a.example/feed": feed, "https://b.example/feed": feed}),
+            now=s.NOW,
+        )
+
+    def test_a_feed_with_its_own_window_keeps_what_the_shared_window_leaves_out(self) -> None:
+        assert [item.url for item in self.run().result("arxiv_surveys").items] == [self.RECENT, self.OLDER]
+
+    def test_a_feed_without_one_keeps_the_shared_window(self) -> None:
+        assert [item.url for item in self.run().result("simonw").items] == [self.RECENT]
+
+
 class TestCollectSource:
     def test_a_single_source_can_be_collected_on_its_own(self) -> None:
         import datetime as dt

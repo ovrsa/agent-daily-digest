@@ -42,6 +42,12 @@ class FeedSource(_Spec):
 
     connector: Literal["feed"]
     url: HttpUrlStr
+    window_days: int | None = Field(default=None, ge=1, le=90)
+    """Overrides the collection's `window_days` for this feed alone.
+
+    arXiv posts a survey on coding agents about once a month, which a week's window
+    mostly misses. The processing state keeps a longer window from researching one twice.
+    """
 
 
 class SitemapSource(_Spec):
@@ -119,6 +125,11 @@ class CollectionConfig(BaseModel):
 
     def items_for(self, spec: SourceSpec) -> int:
         return spec.max_items if spec.max_items is not None else self.max_items_per_source
+
+    def window_days_for(self, spec: SourceSpec) -> int:
+        if isinstance(spec, FeedSource) and spec.window_days is not None:
+            return spec.window_days
+        return self.window_days
 
     def source(self, source_id: str) -> SourceSpec:
         for spec in self.sources:

@@ -243,6 +243,24 @@ class TestValidation:
         with pytest.raises(ValidationError):
             s.config(s.feed_source(), window_days=days)
 
+    @pytest.mark.parametrize("days", [0, 91])
+    def test_a_feed_window_has_the_same_bounds(self, days: int) -> None:
+        with pytest.raises(ValidationError):
+            s.config(s.feed_source(window_days=days))
+
+    def test_the_discovery_search_keeps_its_own_hours_instead(self) -> None:
+        with pytest.raises(ValidationError):
+            s.config(
+                {
+                    "id": "hackernews",
+                    "kind": "discovery",
+                    "connector": "hackernews",
+                    "enabled": True,
+                    "keywords": ["llm"],
+                    "window_days": 30,
+                }
+            )
+
     def test_a_disabled_source_is_kept_but_not_enabled(self) -> None:
         config = s.config(s.feed_source(enabled=False), s.feed_source("boristane", url="https://b.example/f"))
         assert len(config.sources) == 2

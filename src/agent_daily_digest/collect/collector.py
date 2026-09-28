@@ -127,7 +127,6 @@ def collect_all(
     collector does not read that state itself: #5 and #10 own it, and until
     #10 passes a value this defaults to empty.
     """
-    window = dt.timedelta(days=config.window_days)
     results = []
     probes = []
     for spec in config.enabled_sources:
@@ -135,7 +134,7 @@ def collect_all(
             spec,
             fetcher=fetcher,
             now=now,
-            window=window,
+            window=dt.timedelta(days=config.window_days_for(spec)),
             max_items=config.items_for(spec),
             known_urls=known_urls,
         )
