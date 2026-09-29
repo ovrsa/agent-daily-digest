@@ -1,6 +1,42 @@
 {
   "records": [
     {
+      "canonical_url": "https://claude.com/blog/build-plugins-for-claude",
+      "content_hash": "374a6f2b2669fde9bd3470f8034e4c30110c45504196b2a0eb371eb8f107696a",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "included"
+    },
+    {
+      "canonical_url": "https://claude.com/blog/claude-marketplace",
+      "content_hash": "99e395683aaa06f52bfe572f284e94de468738ed0a62116749a5cb25d0471361",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://claude.com/blog/claude-opus-5-5-built-for-coding-sessions-that-use-more-context",
+      "content_hash": "a78741c6717b8543004b0325719b0e6b7b3cb01123751d428f49e363a42af3e0",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://claude.com/blog/claude-tag-now-supports-personal-connectors-in-channels",
+      "content_hash": "dd2c24d8ab8571315f184799cbb98e2a9a05a40d08aff48c72b4fe3b54568634",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "included"
+    },
+    {
+      "canonical_url": "https://claude.com/blog/how-coderabbit-power-digital-and-thoughtspot-scale-with-snowflake-and-vercel-on-claude-marketplace",
+      "content_hash": "b51e709c4e5d0f3cb204aa08f446d069c73c140a347bd4b574d8561a8be4a2c6",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "included"
+    },
+    {
+      "canonical_url": "https://claude.com/blog/how-to-prepare-for-ai-driven-code-modernization-projects",
+      "content_hash": "084eb375b34ac5522f3b4c34d8b8683e9ca03afee92268b9c18530edcb5edb16",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "included"
+    },
+    {
       "canonical_url": "https://ghuntley.com/eighteen-month-recap/",
       "content_hash": "4ae69baf09ecf5feef50e399263e420de6c9faf3a69c262da7c27244ccef90b4",
       "first_seen_at": "2026-09-28T09:12:10.186203Z",
@@ -19,10 +55,46 @@
       "last_decision": "excluded"
     },
     {
+      "canonical_url": "https://newsletter.pragmaticengineer.com/p/design-engineering-with-maggie-appleton",
+      "content_hash": "8ea672d2e0b6360f30e16a77a7ab55d7fc85a55898a0e2e513fadf806f077d85",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "included"
+    },
+    {
       "canonical_url": "https://newsletter.pragmaticengineer.com/p/the-pulse-end-of-coding-by-hand",
       "content_hash": "aab222e7e6a48399501d58ec91ede89137da9811742c8c33885409d414d1107e",
       "first_seen_at": "2026-09-28T09:12:10.186203Z",
       "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://simonwillison.net/2026/Sep/22/opus-and-sol-and-luna/",
+      "content_hash": "59d125417d3a36f536405ae350e354007a61ab73833bf00fe86c9123aae5352a",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://simonwillison.net/2026/Sep/23/bof-agentic-engineering/",
+      "content_hash": "67614eb46864a4fd80f43af9c6798093b21b36ad047ac46067fabf3bcef49f54",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://simonwillison.net/2026/Sep/23/gemini-tts-playground/",
+      "content_hash": "ede6fb9e8e8d8233bb767ec85a9691602e2d4b4b59ae2203a14dede0671bfed3",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://simonwillison.net/2026/Sep/23/hn-49823961/",
+      "content_hash": "4a8a0cc68317bf22fe2fe3e991be62e81e6a010680a0e4dc6a4821678a0dccd1",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://simonwillison.net/2026/Sep/23/shadow-roots/",
+      "content_hash": "2c010b8562b9839dd4b88174c9bb741dda7958b241ddb77ebce0cdca5de154b6",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "included"
     },
     {
       "canonical_url": "https://simonwillison.net/2026/Sep/24/commit-rewriter/",
@@ -79,9 +151,33 @@
       "last_decision": "excluded"
     },
     {
+      "canonical_url": "https://simonwillison.net/2026/Sep/28/claude-sonnet-5-5/",
+      "content_hash": "cc444d98b561e66c3af42fbcfd8c75392ae1ead1072eef5504e714a4eba1befc",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://simonwillison.net/2026/Sep/28/joedaroo/",
+      "content_hash": "2e7e3c5b598c73426075da23356223d76a4928f26ec470e7ec55b0ec7d57d399",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "excluded"
+    },
+    {
       "canonical_url": "https://simonwillison.net/2026/Sep/28/muse-ai-agent/",
       "content_hash": "cee45aa143d7a0bbbc0b64e78d23869557de31c683749f536a2dae9fb04aba93",
       "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://syu-m-5151.hatenablog.com/entry/2026/09/23/123604",
+      "content_hash": "69c30b0f711eb56b7c6bc38983d664a2102b8670111b409f3700bdae7a36bd11",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://syu-m-5151.hatenablog.com/entry/2026/09/24/123105",
+      "content_hash": "b084f44d6f6e696c328514ef44141ddfdd83f7db3dcd750f5fd9d5434b69739a",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
       "last_decision": "excluded"
     },
     {
@@ -109,9 +205,33 @@
       "last_decision": "excluded"
     },
     {
+      "canonical_url": "https://www.latent.space/p/ainews-claude-opus-55-the-new-default",
+      "content_hash": "5bd625ac845905c9ae1259903f75df979b31949123112e894f4ad53a9af33a1c",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://www.latent.space/p/ainews-meta-connect-2026-muse-glasses",
+      "content_hash": "4add96063160515dfb17784817cf2116d49e16d8e4a30f1ead4c8c6d6e28a967",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "excluded"
+    },
+    {
       "canonical_url": "https://www.latent.space/p/ainews-the-future-of-latent-space",
       "content_hash": "c8670da9345c06b4d72bb1feb2bf1db750270579ca8ce4ca9f6fc97a5c76353c",
       "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://www.latent.space/p/bio-security-is-an-ai-arms-race-eric",
+      "content_hash": "bd77c3b51fc376b5f38175e9bd92a5b59fb1762ec47608645d3b8818b00c8e41",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://www.latent.space/p/foundries-vs-navigators-lowering",
+      "content_hash": "d7a0dceb2bb710d6183dd4e713f5859f17acb657a4555383640fe44294fa2849",
+      "first_seen_at": "2026-09-29T00:19:45.019519Z",
       "last_decision": "excluded"
     },
     {
