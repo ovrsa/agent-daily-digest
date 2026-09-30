@@ -1,6 +1,6 @@
 """Addressed paragraphs, and the untrusted blocks a model reads them in.
 
-`agent_daily_digest.normalize` joins the blocks it keeps with a blank line, glues list items
+`agent_daily_digest.content.extract` joins the blocks it keeps with a blank line, glues list items
 and table rows with a single newline, and fences code with three backticks. A
 paragraph here is one of those blocks: splitting on blank lines recovers them,
 except inside a fenced code block, whose own blank lines belong to the code.
