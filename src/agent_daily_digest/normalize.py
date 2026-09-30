@@ -14,7 +14,6 @@ is not used to build the article.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-
 from agent_daily_digest.contracts import (
     GATE_ORDER,
     BodySource,
@@ -27,13 +26,34 @@ from agent_daily_digest.contracts import (
     NormalizedArticle,
     compute_content_hash,
 )
+from agent_daily_digest.content.text import collapse_text, is_blank
 
-from ._text import collapse_text, is_blank
-from .dates import PublishedAtProblem, PublishedAtRejected, parse_published_at
-from .extract import ExtractedDocument, extract_document
-from .fetching import BodyFetcher, FetchedPage
-from .state import ProcessedIndex
-from .urls import UrlProblem, UrlRejected, canonicalize_url, same_site
+from agent_daily_digest.content.extract import ExtractedDocument, extract_document
+from agent_daily_digest.content.fetch import BodyFetcher, FetchedPage
+from agent_daily_digest.state import ProcessedIndex
+from agent_daily_digest.content.urls import UrlProblem, UrlRejected, canonicalize_url, same_site
+import datetime as dt
+import re
+from email.utils import parsedate_to_datetime
+from enum import Enum
+from agent_daily_digest.content.text import is_blank, strip_invisible
+
+
+class PublishedAtProblem(Enum):
+    """Why a publication date is unusable, in the two shapes the gate records."""
+
+    MISSING = "missing"
+    """Blank: the source carried no date, sent as `""`, as whitespace or not at all."""
+    UNPARSEABLE = "unparseable"
+    """Present but no accepted format reads it."""
+
+
+class PublishedAtRejected(ValueError):
+    def __init__(self, problem: PublishedAtProblem) -> None:
+        super().__init__(problem.value)
+        self.problem = problem
+
+
 
 MIN_PRIMARY_INFO_CHARS = 200
 """How much text counts as primary information.
@@ -266,3 +286,121 @@ def _canonical_url(page: FetchedPage, requested_url: str, extracted: ExtractedDo
     except UrlRejected:
         return base
     return declared if same_site(declared, base) or same_site(declared, requested_url) else base
+
+
+UTC = dt.timezone.utc
+
+_ISO = re.compile(
+    r"""
+    ^
+    (?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})
+    (?:
+        [Tt ]
+        (?P<hour>\d{2}):(?P<minute>\d{2})
+        (?::(?P<second>\d{2})(?:\.(?P<fraction>\d+))?)?
+        (?P<offset>[Zz]|[+-]\d{2}(?::?\d{2})?)?
+    )?
+    $
+    """,
+    re.VERBOSE,
+)
+
+
+_MONTHS = {
+    name: number
+    for number, names in enumerate(
+        (
+            ("jan", "january"),
+            ("feb", "february"),
+            ("mar", "march"),
+            ("apr", "april"),
+            ("may",),
+            ("jun", "june"),
+            ("jul", "july"),
+            ("aug", "august"),
+            ("sep", "sept", "september"),
+            ("oct", "october"),
+            ("nov", "november"),
+            ("dec", "december"),
+        ),
+        start=1,
+    )
+    for name in names
+}
+
+_MONTH_NAME = re.compile(r"^(?P<month>[A-Za-z]{3,9})\.?\s+(?P<day>\d{1,2}),?\s+(?P<year>\d{4})$")
+
+
+
+
+
+
+def parse_published_at(raw: str | None) -> dt.datetime:
+    """Return the timezone-aware publication date, or raise `PublishedAtRejected`."""
+    if is_blank(raw):
+        raise PublishedAtRejected(PublishedAtProblem.MISSING)
+    assert raw is not None
+    value = strip_invisible(raw).strip()
+
+    parsed = _parse_iso(value) or _parse_rfc5322(value) or _parse_month_name(value)
+    if parsed is None:
+        raise PublishedAtRejected(PublishedAtProblem.UNPARSEABLE)
+    return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
+
+
+def _parse_iso(value: str) -> dt.datetime | None:
+    match = _ISO.match(value)
+    if match is None:
+        return None
+    parts = match.groupdict()
+    second = int(parts["second"] or 0)
+    # RFC 3339 allows a leap second. Python's `datetime` does not, and clamping
+    # keeps the value within the same minute.
+    second = min(second, 59)
+    fraction = (parts["fraction"] or "")[:6].ljust(6, "0") if parts["fraction"] else "0"
+    try:
+        return dt.datetime(
+            int(parts["year"]),
+            int(parts["month"]),
+            int(parts["day"]),
+            int(parts["hour"] or 0),
+            int(parts["minute"] or 0),
+            second,
+            int(fraction),
+            tzinfo=_offset(parts["offset"]),
+        )
+    except ValueError:
+        return None
+
+
+def _offset(raw: str | None) -> dt.timezone | None:
+    if raw is None:
+        return None
+    if raw in ("Z", "z"):
+        return UTC
+    digits = raw[1:].replace(":", "")
+    hours, minutes = int(digits[:2]), int(digits[2:] or 0)
+    if hours > 23 or minutes > 59:
+        raise ValueError("offset out of range")
+    delta = dt.timedelta(hours=hours, minutes=minutes)
+    return UTC if raw[0] == "-" and not delta else dt.timezone(-delta if raw[0] == "-" else delta)
+
+
+def _parse_rfc5322(value: str) -> dt.datetime | None:
+    try:
+        return parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _parse_month_name(value: str) -> dt.datetime | None:
+    match = _MONTH_NAME.match(value)
+    if match is None:
+        return None
+    month = _MONTHS.get(match.group("month").lower())
+    if month is None:
+        return None
+    try:
+        return dt.datetime(int(match.group("year")), month, int(match.group("day")), tzinfo=UTC)
+    except ValueError:
+        return None

@@ -13,14 +13,9 @@ import datetime as dt
 import pytest
 
 from agent_daily_digest.contracts import BodySource, NormalizedArticle, compute_content_hash
-from agent_daily_digest.normalize import (
-    UNTRUSTED_CLOSE,
-    UNTRUSTED_OPEN,
-    as_untrusted_block,
-    escape_untrusted,
-    extract_document,
-    normalize_item,
-)
+from agent_daily_digest.content.text import UNTRUSTED_CLOSE, UNTRUSTED_OPEN, as_untrusted_block, escape_untrusted
+from agent_daily_digest.content.extract import extract_document
+from agent_daily_digest.normalize import normalize_item
 from normalize_helpers import StubFetcher, collected, page, read_html
 
 # Every channel is exercised from inside <article>, so dropping one defence

@@ -15,7 +15,6 @@ import datetime as dt
 import json
 from dataclasses import dataclass
 from pathlib import Path
-
 from agent_daily_digest.contracts import (
     ContentHash,
     Decision,
@@ -24,6 +23,7 @@ from agent_daily_digest.contracts import (
     ProcessedRecord,
     ProcessedState,
 )
+
 
 DEFAULT_STATE_PATH = Path("state/processed.json")
 """Where the pipeline keeps the state unless #10 points it elsewhere."""

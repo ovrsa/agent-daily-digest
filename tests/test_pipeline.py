@@ -9,7 +9,7 @@ import pytest
 
 from agent_daily_digest.contracts import Decision, ErrorKind, RunStatus, StageName, StageStatus
 from agent_daily_digest.observe import LLMInvocationError, MetricsStore
-from agent_daily_digest.normalize import extract_document
+from agent_daily_digest.content.extract import extract_document
 from normalize_helpers import read_html
 from pipeline_support import (
     DIGEST_DATE,

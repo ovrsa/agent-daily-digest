@@ -15,15 +15,10 @@ from agent_daily_digest.contracts import (
     ProcessedState,
     compute_content_hash,
 )
-from agent_daily_digest.normalize import (
-    MIN_PRIMARY_INFO_CHARS,
-    FetchFailure,
-    FetchedPage,
-    ProcessedIndex,
-    extract_document,
-    normalize_item,
-    normalize_items,
-)
+from agent_daily_digest.normalize import MIN_PRIMARY_INFO_CHARS, normalize_item, normalize_items
+from agent_daily_digest.content.fetch import FetchFailure, FetchedPage
+from agent_daily_digest.state import ProcessedIndex
+from agent_daily_digest.content.extract import extract_document
 from normalize_helpers import FEED_URL, StubFetcher, collected, feed_summary, page, processed_record
 
 JST = dt.timezone(dt.timedelta(hours=9))

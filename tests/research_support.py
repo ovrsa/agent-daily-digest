@@ -6,7 +6,8 @@ from datetime import datetime, timezone
 from typing import Any
 
 from agent_daily_digest.contracts import BodySource, ErrorKind, NormalizedArticle, SourceKind, compute_content_hash
-from agent_daily_digest.normalize import FetchedPage, FetchFailure, extract_document
+from agent_daily_digest.content.fetch import FetchedPage, FetchFailure
+from agent_daily_digest.content.extract import extract_document
 from agent_daily_digest.observe import LLMResponse, ModelUsage
 from normalize_helpers import read_html
 

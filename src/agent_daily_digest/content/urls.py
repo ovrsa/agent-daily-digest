@@ -16,8 +16,8 @@ import ipaddress
 import re
 from enum import Enum
 from urllib.parse import quote, urlsplit, urlunsplit
+from agent_daily_digest.content.text import is_blank, strip_invisible
 
-from ._text import is_blank, strip_invisible
 
 MAX_URL_CHARS = 2048
 """Same cap as `HttpUrlStr`, checked here so the gate can report `invalid_url`."""

@@ -19,7 +19,8 @@ from typing import Any
 from agent_daily_digest.collect import CollectionReport
 from agent_daily_digest.contracts import ErrorKind, ProcessedState, SourceFetchResult
 from agent_daily_digest.judge import SYSTEM_PROMPT as JUDGE_SYSTEM_PROMPT
-from agent_daily_digest.normalize import FetchedPage, load_state
+from agent_daily_digest.content.fetch import FetchedPage
+from agent_daily_digest.state import load_state
 from agent_daily_digest.observe import LLMResponse, MetricsStore, StageFailed
 from agent_daily_digest import Models, Paths, Pipeline
 from agent_daily_digest.research import SYSTEM_PROMPT as RESEARCH_SYSTEM_PROMPT

@@ -19,7 +19,8 @@ from pathlib import Path
 from agent_daily_digest.collect import collect_all, load_collection_config, make_fetcher
 from agent_daily_digest.contracts import RunStatus
 from agent_daily_digest.llm import invoke_structured
-from agent_daily_digest.normalize import DEFAULT_STATE_PATH, BodyFetcher, fetch_page
+from agent_daily_digest.state import DEFAULT_STATE_PATH
+from agent_daily_digest.content.fetch import BodyFetcher, fetch_page
 from agent_daily_digest.observe import DEFAULT_METRICS_DIR, MetricsStore, load_pricing, new_run_id, utc_now
 from agent_daily_digest.research import load_research_budget
 

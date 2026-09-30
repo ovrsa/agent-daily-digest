@@ -15,7 +15,7 @@ from agent_daily_digest.contracts import (
     ProcessedState,
     compute_content_hash,
 )
-from agent_daily_digest.normalize import ProcessedIndex, dump_state_json, load_state, record_article, save_state
+from agent_daily_digest.state import ProcessedIndex, dump_state_json, load_state, record_article, save_state
 from normalize_helpers import processed_record
 
 UTC = dt.timezone.utc

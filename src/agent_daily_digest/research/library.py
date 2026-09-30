@@ -23,7 +23,7 @@ from agent_daily_digest.contracts import (
     SourceDocument,
     parse_evidence_id,
 )
-from agent_daily_digest.normalize import HEADER, UNTRUSTED_CLOSE, UNTRUSTED_OPEN, escape_untrusted
+from agent_daily_digest.content.text import HEADER, UNTRUSTED_CLOSE, UNTRUSTED_OPEN, escape_untrusted
 
 from .extraction import EvidenceMap
 

@@ -17,8 +17,8 @@ import re
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from typing import TypeVar
+from agent_daily_digest.content.text import collapse_text, is_blank, normalize_block
 
-from ._text import collapse_text, is_blank, normalize_block
 
 MAX_AUTHOR_CHARS = 100
 """An author is a name. A longer value is prose that landed in the wrong tag."""

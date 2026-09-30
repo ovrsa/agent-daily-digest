@@ -41,15 +41,9 @@ from agent_daily_digest.contracts import (
 from agent_daily_digest.judge import PROMPT_VERSION as JUDGE_PROMPT_VERSION
 from agent_daily_digest.judge import Judge, JudgeResult, finding_metrics, render_report
 from agent_daily_digest.llm import StructuredRequest
-from agent_daily_digest.normalize import (
-    BodyFetcher,
-    NormalizationResult,
-    ProcessedIndex,
-    load_state,
-    normalize_items,
-    record_article,
-    save_state,
-)
+from agent_daily_digest.content.fetch import BodyFetcher
+from agent_daily_digest.normalize import NormalizationResult, normalize_items
+from agent_daily_digest.state import ProcessedIndex, load_state, record_article, save_state
 from agent_daily_digest.observe import (
     Clock,
     LLMResponse,

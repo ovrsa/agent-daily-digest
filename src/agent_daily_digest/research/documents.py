@@ -18,7 +18,7 @@ from __future__ import annotations
 from collections.abc import Collection
 
 from agent_daily_digest.contracts import NormalizedArticle, Paragraph, SourceDocument
-from agent_daily_digest.normalize import HEADER, UNTRUSTED_CLOSE, UNTRUSTED_OPEN, escape_untrusted
+from agent_daily_digest.content.text import HEADER, UNTRUSTED_CLOSE, UNTRUSTED_OPEN, escape_untrusted
 
 _FENCE = "```"
 

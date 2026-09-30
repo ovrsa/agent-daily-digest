@@ -23,8 +23,8 @@ import urllib.request
 from dataclasses import dataclass
 from collections.abc import Callable
 from email.message import Message
-
 from agent_daily_digest.contracts import ERROR_DETAIL_MAX_CHARS, ErrorKind, ErrorRecord
+
 
 MAX_BODY_BYTES = 2 * 1024 * 1024
 """Bytes read from one page before the fetch is abandoned."""
