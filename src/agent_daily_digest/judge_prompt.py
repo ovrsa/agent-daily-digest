@@ -36,6 +36,8 @@ SYSTEM_PROMPT = """\
 - recommendation_validity: 採用した記事と区分（Must Read / Worth Knowing）と並び順が妥当か
   読む価値が同程度ならバックオフィスへの具体的な応用事例を少し優先することは妥当。
   他領域の高価値記事を押しのけたり、宣伝や根拠不足を採用したり、固定枠を埋める判断は妥当でない。
+  editor_decision の番号は全体の優先度配列内の位置。MarkdownはCoding Agent、Hermes系の順にまとめ、
+  各セクション・優先度内ではその配列の順序を維持する。本文の通し番号と混同しない。
 - duplication: 実質的に同じ情報の記事が重複して採用されていないか、代表の選び方は妥当か
 - exclusion_validity: 除外した記事の中に、採用すべきだったものが無いか
 
