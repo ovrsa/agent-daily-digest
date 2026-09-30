@@ -1,6 +1,6 @@
 ---
 name: llm-daily-digest
-description: Run or rehearse the agent-daily-digest pipeline, which builds an evidence-backed Japanese daily digest for developers who build AI agents and coding agents. Use when the user wants to run today's digest by hand, see what would be published without publishing (dry run), or inspect the latest run's results.
+description: Run or rehearse the agent-daily-digest pipeline, which builds an evidence-backed Japanese daily digest for readers using coding agents in development and AI agents in everyday and back-office work. Use when the user wants to run today's digest by hand, see what would be published without publishing (dry run), or inspect the latest run's results.
 origin: user
 ---
 

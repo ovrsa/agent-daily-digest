@@ -190,10 +190,10 @@ def test_each_target_shows_the_decision_the_entry_and_the_cited_source() -> None
     assert "dup_hn" not in prompt.split("\n\n")[0]  # not a target itself
 
 
-def test_the_prompt_audits_for_developers_who_use_coding_agents() -> None:
+def test_the_prompt_audits_coding_and_personal_agent_articles() -> None:
     """#31: scope_fit judges against the reader who uses coding agents, and the headline is checked."""
-    assert PROMPT_VERSION == "judge-v2"
-    assert "Coding Agent を日々の開発に使う開発者" in SYSTEM_PROMPT
+    assert PROMPT_VERSION == "judge-v3"
+    assert "OpenClaw" in SYSTEM_PROMPT and "Hermes Agent" in SYSTEM_PROMPT
     assert "Coding Agent を実装・運用する開発者" not in SYSTEM_PROMPT
     assert "headline" in SYSTEM_PROMPT
 

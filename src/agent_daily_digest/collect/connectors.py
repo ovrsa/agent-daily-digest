@@ -20,14 +20,17 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass, field
+from html.parser import HTMLParser
 from typing import Any
 
 from agent_daily_digest.contracts import CollectedItem, SourceKind
 
 from .config import (
+    BlogIndexSource,
     FeedSource,
     GitHubReleasesSource,
     HackerNewsSource,
+    HermesStoriesSource,
     HuggingFacePapersSource,
     SitemapSource,
     SourceSpec,
@@ -48,7 +51,7 @@ _UTC = dt.timezone.utc
 
 @dataclass
 class ProbeRecorder:
-    """Counts for the sitemap connector's extra metadata requests.
+    """Counts for sitemap and blog-index metadata requests.
 
     The collector owns the instance and reads it whether the connector
     returned or raised, so a source that fails after probing still reports
@@ -210,6 +213,111 @@ def collect_feed(spec: FeedSource, ctx: CollectContext) -> tuple[CollectedItem, 
         if len(items) >= ctx.max_items:
             break
     return tuple(items)
+
+
+class _BlogLinks(HTMLParser):
+    def __init__(self, link_class: str) -> None:
+        super().__init__()
+        self.link_class = link_class
+        self.urls: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attributes = dict(attrs)
+        if tag == "a" and self.link_class in (attributes.get("class") or "").split():
+            self.urls.append(attributes.get("href") or "")
+
+
+def collect_blog_index(spec: BlogIndexSource, ctx: CollectContext) -> tuple[CollectedItem, ...]:
+    """Use the article's publication date, never the listing's update time."""
+    parser = _BlogLinks(spec.link_class)
+    parser.feed(ctx.fetcher.get(spec.url, accept="text/html").body.decode("utf-8"))
+    if not parser.urls:
+        raise ET.ParseError("Blog links missing; listing markup may have changed")
+    urls = list(dict.fromkeys(urllib.parse.urljoin(spec.url, url) for url in parser.urls))
+    urls = [url for url in urls if url.startswith(spec.url_prefix) and url not in ctx.known_urls]
+    ctx.probe.skipped_over_cap = max(0, len(urls) - spec.max_metadata_probes)
+    items = []
+    dated_pages = 0
+    for url in urls[:spec.max_metadata_probes]:
+        metadata = _probe(url, spec.url_prefix, ctx)
+        date = parse_w3c_datetime(metadata.published_at)
+        dated_pages += date is not None
+        if date is None or not ctx.now - ctx.window <= date <= ctx.now:
+            continue
+        items.append(
+            _item(spec, url=url, title=metadata.title,
+                  published_at=metadata.published_at, feed_summary=metadata.description)
+        )
+    if ctx.probe.attempted and not dated_pages:
+        raise ET.ParseError("No publication dates from blog metadata probes")
+    items.sort(key=lambda item: parse_w3c_datetime(item.published_at), reverse=True)
+    return tuple(items[:ctx.max_items])
+
+
+class _StoryCards(HTMLParser):
+    """Read semantic fields within Hermes cards, ignoring CSS hash suffixes."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.rows: list[dict[str, str]] = []
+        self.card: dict[str, str] | None = None
+        self.field: str | None = None
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attributes = dict(attrs)
+        classes = (attributes.get("class") or "").split()
+        if tag == "a" and any(c.startswith("tile_") for c in classes):
+            self.card = {"url": attributes.get("href") or ""}
+        if self.card is not None:
+            for prefix, name in (("headline_", "title"), ("author_", "date")):
+                if any(c.startswith(prefix) for c in classes):
+                    self.field = name
+
+    def handle_data(self, data: str) -> None:
+        if self.card is not None and self.field:
+            self.card[self.field] = self.card.get(self.field, "") + data
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in ("h3", "span"):
+            self.field = None
+        if tag == "a" and self.card is not None:
+            self.rows.append(self.card)
+            self.card = None
+            self.field = None
+
+
+def collect_hermes_stories(spec: HermesStoriesSource, ctx: CollectContext) -> tuple[CollectedItem, ...]:
+    """Collect dated originals, never the directory's curated quotations as evidence."""
+    parser = _StoryCards()
+    parser.feed(ctx.fetcher.get(spec.url, accept="text/html").body.decode("utf-8"))
+    if not parser.rows:
+        raise ET.ParseError("Hermes story cards missing; directory markup may have changed")
+    items = []
+    dated_cards = 0
+    for row in parser.rows:
+        match = re.search(r"\b\d{4}-\d{2}-\d{2}\b", row.get("date", ""))
+        published = match.group() if match else None
+        date = parse_w3c_datetime(published)
+        dated_cards += date is not None
+        if date is None or not ctx.now - ctx.window <= date <= ctx.now:
+            continue
+        url = row["url"].strip()
+        try:
+            parts = urllib.parse.urlsplit(url)
+        except ValueError:
+            continue
+        if parts.scheme not in ("http", "https") or not parts.hostname or parts.username or parts.password:
+            continue
+        if url in ctx.known_urls:
+            continue
+        items.append(
+            _item(spec, url=url, title=row.get("title"),
+                  published_at=published, feed_summary=None)
+        )
+    if not dated_cards:
+        raise ET.ParseError("No dated Hermes stories; directory markup may have changed")
+    items.sort(key=lambda item: item.published_at or "", reverse=True)
+    return dedupe(items)[:ctx.max_items]
 
 
 # --------------------------------------------------------------------------
@@ -546,6 +654,8 @@ def collect_gh_releases(spec: GitHubReleasesSource, ctx: CollectContext) -> tupl
 
 CONNECTORS: Mapping[str, Connector] = {
     "feed": collect_feed,
+    "hermes_stories": collect_hermes_stories,
+    "blog_index": collect_blog_index,
     "sitemap": collect_sitemap,
     "hackernews": collect_hackernews,
     "hf_papers": collect_hf_papers,

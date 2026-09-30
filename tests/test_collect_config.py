@@ -93,22 +93,22 @@ class TestShippedRegistry:
         kinds = {source.kind for source in loaded.sources}
         assert kinds == {SourceKind.FIXED_WATCH, SourceKind.DISCOVERY}
 
-    def test_discovery_sources_are_hacker_news_reddit_and_the_arxiv_surveys(
+    def test_discovery_sources_cover_coding_and_personal_agents(
         self, loaded: CollectionConfig
     ) -> None:
         discovery = {s.id for s in loaded.sources if s.kind is SourceKind.DISCOVERY}
-        assert discovery == {"hackernews", "reddit_coding_agents", "arxiv_surveys"}
+        assert discovery == {"hackernews", "reddit_coding_agents", "arxiv_surveys", "hermes_stories", "reddit_personal_agents"}
 
     def test_no_release_notes_or_papers_are_collected(self, loaded: CollectionConfig) -> None:
         # #31: release notes were mostly bug fixes and the daily papers seldom
         # touched how coding agents are used; big releases reach the blogs.
-        assert {spec.connector for spec in loaded.sources} <= {"feed", "sitemap", "hackernews"}
+        assert {spec.connector for spec in loaded.sources} <= {"feed", "sitemap", "hackernews", "hermes_stories", "blog_index"}
 
-    def test_reddit_is_one_feed_over_the_coding_agent_subreddits(self, loaded: CollectionConfig) -> None:
+    def test_reddit_groups_coding_and_personal_agent_subreddits(self, loaded: CollectionConfig) -> None:
         # #38: one request for all three. Reddit answers 429 after a dozen or so
         # unauthenticated requests, and each item costs a page fetch as well.
         reddit = [spec for spec in loaded.sources if "reddit.com" in getattr(spec, "url", "")]
-        assert [spec.id for spec in reddit] == ["reddit_coding_agents"]
+        assert [spec.id for spec in reddit] == ["reddit_coding_agents", "reddit_personal_agents"]
         spec = reddit[0]
         assert spec.connector == "feed"
         assert spec.url.startswith("https://www.reddit.com/r/ClaudeAI+ClaudeCode+codex/top.rss?")

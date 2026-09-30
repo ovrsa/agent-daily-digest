@@ -29,7 +29,7 @@ from .transport import Fetcher, classify_failure
 class SourceProbeStats(BaseModel):
     """What one source spent on extra head-metadata requests.
 
-    Only the sitemap connector probes, so every other source reports zeroes.
+    Sitemap and blog-index connectors probe; other sources report zeroes.
     `SourceMetrics` has no field for this, and #3 owns the contracts, so the
     counts stay in the collection layer. #9 decides whether run metrics need
     them.
@@ -42,7 +42,7 @@ class SourceProbeStats(BaseModel):
     succeeded: int = Field(ge=0)
     failed: int = Field(ge=0)
     skipped_over_cap: int = Field(ge=0)
-    """Candidates inside the window that were left unprobed by the cap."""
+    """Candidates left unprobed by the cap (blog-index dates are not known yet)."""
     duration_ms: int = Field(ge=0)
     """Not counted in `SourceFetchResult.duration_ms`; the two do not overlap."""
 
