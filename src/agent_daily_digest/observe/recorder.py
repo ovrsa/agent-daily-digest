@@ -21,29 +21,29 @@ from types import TracebackType
 
 from pydantic import ValidationError
 
-from agent_daily_digest.contracts import (
-    ArticleMetrics,
+from agent_daily_digest.contracts.articles import (
     CollectedItem,
-    ErrorKind,
-    ErrorRecord,
-    FindingMetrics,
     GateOutcome,
-    LLMCallMetrics,
     NormalizedArticle,
+    SourceMetrics,
+)
+from agent_daily_digest.contracts.base import ErrorKind, ErrorRecord
+from agent_daily_digest.contracts.editorial import FindingMetrics, SelectorOutput
+from agent_daily_digest.contracts.metrics import (
+    ArticleMetrics,
+    LLMCallMetrics,
     RunMetrics,
     RunStatus,
-    SelectorOutput,
-    SourceMetrics,
     StageMetrics,
     StageName,
     StageStatus,
 )
-
-from .store import Clock, utc_now, describe_exception, safe_detail
-
-
-
-
+from agent_daily_digest.observe.store import (
+    Clock,
+    describe_exception,
+    safe_detail,
+    utc_now,
+)
 
 TOLERATED_STAGE_FAILURES = frozenset({StageName.JUDGE, StageName.COMMENT})
 """Stages whose failure leaves the digest published (Design Doc, Failure policy)."""
@@ -113,9 +113,7 @@ def article_metrics(
         except KeyError:
             decision = tier = None
         else:
-            evaluated = next(
-                a for a in (*selection.included, *selection.excluded) if a.article_id == item.article_id
-            )
+            evaluated = next(a for a in (*selection.included, *selection.excluded) if a.article_id == item.article_id)
             scores, reason = evaluated.scores, evaluated.decision_reason
     return ArticleMetrics(
         article_id=item.article_id,
@@ -198,7 +196,9 @@ class RunRecorder:
         return self._result
 
     def _close_after(self, exc: BaseException) -> None:
-        interrupted = not isinstance(exc, Exception) or isinstance(exc, (RunAborted, TimeoutError, asyncio.TimeoutError))
+        interrupted = not isinstance(exc, Exception) or isinstance(
+            exc, (RunAborted, TimeoutError, asyncio.TimeoutError)
+        )
         error = classify_exception(exc)
         now = self._clock()
         for name, stage in self._stages.items():

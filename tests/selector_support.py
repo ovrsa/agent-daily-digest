@@ -19,16 +19,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from agent_daily_digest.contracts import (
+from agent_daily_digest.contracts.articles import SourceKind
+from agent_daily_digest.contracts.research import (
     EvidencePacket,
     Paragraph,
     ResearchStatus,
     ResearchStopReason,
     SourceDocument,
-    SourceKind,
     make_evidence_id,
 )
-from agent_daily_digest.research import SourceLibrary
+from agent_daily_digest.research.evidence import SourceLibrary
 
 BASE = datetime(2026, 9, 24, 6, 0, tzinfo=timezone.utc)
 

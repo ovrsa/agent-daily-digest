@@ -1,30 +1,23 @@
-"""Aggregation: one `RunMetrics` reduced to the figures a reviewer reads.
-
-This module computes; it does not format. `report.py` renders a `RunSummary`
-and never looks at `RunMetrics` itself, so the figures are defined in one place.
-"""
+"""Summarize a RunMetrics, then render its counts and costs without free-text payloads."""
 
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
-from agent_daily_digest.contracts import (
+
+from agent_daily_digest.contracts.articles import SourceFetchStatus
+from agent_daily_digest.contracts.base import ErrorKind
+from agent_daily_digest.contracts.editorial import Confidence, Decision, Severity, Tier
+from agent_daily_digest.contracts.metrics import (
     AttemptStatus,
-    Confidence,
-    Decision,
-    ErrorKind,
     LLMRole,
     RunMetrics,
     RunStatus,
-    Severity,
-    SourceFetchStatus,
     StageName,
     StageStatus,
-    Tier,
 )
-from collections.abc import Iterable
-
 
 
 @dataclass(frozen=True)
@@ -80,9 +73,7 @@ class RunSummary:
 
 
 def summarize(run: RunMetrics) -> RunSummary:
-    exclusions = Counter(
-        reason.value for article in run.articles for reason in article.gate.exclusion_reasons
-    )
+    exclusions = Counter(reason.value for article in run.articles for reason in article.gate.exclusion_reasons)
     roles = tuple(_role_usage(run, role) for role in LLMRole if any(c.role is role for c in run.llm_calls))
     costs = [usage.cost_usd for usage in roles]
     severity = Counter(finding.severity for finding in run.judge_findings)
@@ -102,9 +93,7 @@ def summarize(run: RunMetrics) -> RunSummary:
             for stage in run.stages
         ),
         sources_succeeded=sum(s.status is SourceFetchStatus.SUCCEEDED for s in run.sources),
-        sources_failed=tuple(
-            (s.source_id, s.failure.kind) for s in run.sources if s.failure is not None
-        ),
+        sources_failed=tuple((s.source_id, s.failure.kind) for s in run.sources if s.failure is not None),
         items_collected=sum(s.item_count for s in run.sources),
         articles_recorded=len(run.articles),
         gate_passed=sum(article.gate.passed for article in run.articles),
@@ -154,8 +143,7 @@ def render_summary(summary: RunSummary) -> str:
         f"- 状態: {summary.status.value}",
         f"- 開始: {summary.started_at.isoformat()}",
         f"- 所要時間: {_ms(summary.duration_ms)}",
-        f"- ソース: 成功 {summary.sources_succeeded} / 失敗 {len(summary.sources_failed)}"
-        + _failed_sources(summary),
+        f"- ソース: 成功 {summary.sources_succeeded} / 失敗 {len(summary.sources_failed)}" + _failed_sources(summary),
         f"- 収集件数: {summary.items_collected}、ゲート通過: {summary.gate_passed}"
         f" / 記録 {summary.articles_recorded}、抽出文字数合計: {summary.extracted_chars_total}",
         f"- ゲート除外理由: {_pairs(summary.gate_exclusions)}",

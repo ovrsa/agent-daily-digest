@@ -19,10 +19,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tests"))
 
+from selector_support import EXPECTED, PACKETS, library  # noqa: E402
+
 from agent_daily_digest.llm.client import invoke_structured
 from agent_daily_digest.llm.pricing import load_pricing
 from agent_daily_digest.select import Selector  # noqa: E402
-from selector_support import EXPECTED, PACKETS, library  # noqa: E402
 
 
 def main() -> None:

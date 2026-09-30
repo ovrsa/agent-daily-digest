@@ -10,7 +10,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from agent_daily_digest.contracts import ResearchBudget
+from agent_daily_digest.contracts.research import ResearchBudget
 from agent_daily_digest.llm.pricing import MODELS_KEY
 
 RUN_KEY = "run"
@@ -39,7 +39,9 @@ class Models:
 def load_models(path: Path | str) -> Models:
     """Read `models.research`, `models.selector` and `models.judge`. A missing name is an error."""
     block = json.loads(Path(path).read_text(encoding="utf-8")).get(MODELS_KEY, {})
-    missing = [role for role in ("research", "selector", "judge") if not isinstance(block.get(role), str) or not block[role]]
+    missing = [
+        role for role in ("research", "selector", "judge") if not isinstance(block.get(role), str) or not block[role]
+    ]
     if missing:
         raise KeyError(f"{path} has no {MODELS_KEY}.{', '.join(missing)}")
     return Models(research=block["research"], selector=block["selector"], judge=block["judge"])

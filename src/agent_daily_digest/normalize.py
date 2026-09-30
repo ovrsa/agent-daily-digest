@@ -13,30 +13,33 @@ is not used to build the article.
 
 from __future__ import annotations
 
+import datetime as dt
+import re
 from dataclasses import dataclass, field
-from agent_daily_digest.contracts import (
+from email.utils import parsedate_to_datetime
+from enum import Enum
+
+from agent_daily_digest.content.extract import ExtractedDocument, extract_document
+from agent_daily_digest.content.fetch import BodyFetcher, FetchedPage
+from agent_daily_digest.content.text import collapse_text, is_blank, strip_invisible
+from agent_daily_digest.content.urls import (
+    UrlProblem,
+    UrlRejected,
+    canonicalize_url,
+    same_site,
+)
+from agent_daily_digest.contracts.articles import (
     GATE_ORDER,
     BodySource,
     CollectedItem,
-    ErrorRecord,
     GateExclusionReason,
     GateName,
     GateOutcome,
     GateResult,
     NormalizedArticle,
-    compute_content_hash,
 )
-from agent_daily_digest.content.text import collapse_text, is_blank
-
-from agent_daily_digest.content.extract import ExtractedDocument, extract_document
-from agent_daily_digest.content.fetch import BodyFetcher, FetchedPage
+from agent_daily_digest.contracts.base import ErrorRecord, compute_content_hash
 from agent_daily_digest.state import ProcessedIndex
-from agent_daily_digest.content.urls import UrlProblem, UrlRejected, canonicalize_url, same_site
-import datetime as dt
-import re
-from email.utils import parsedate_to_datetime
-from enum import Enum
-from agent_daily_digest.content.text import is_blank, strip_invisible
 
 
 class PublishedAtProblem(Enum):
@@ -52,7 +55,6 @@ class PublishedAtRejected(ValueError):
     def __init__(self, problem: PublishedAtProblem) -> None:
         super().__init__(problem.value)
         self.problem = problem
-
 
 
 MIN_PRIMARY_INFO_CHARS = 200
@@ -170,9 +172,7 @@ def normalize_item(
     # 3. not_previously_processed ----------------------------------------
     urls = (canonical_url,) if canonical_url == requested_url else (canonical_url, requested_url)
     if any(index.has_url(url) for url in urls):
-        return _excluded(
-            item, passed, GateExclusionReason.ALREADY_PROCESSED_URL, extracted=extracted, failure=failure
-        )
+        return _excluded(item, passed, GateExclusionReason.ALREADY_PROCESSED_URL, extracted=extracted, failure=failure)
     if index.has_content_hash(content_hash):
         return _excluded(
             item,
@@ -247,9 +247,7 @@ def _excluded(
     )
 
 
-def _body(
-    extracted: ExtractedDocument | None, item: CollectedItem
-) -> tuple[str, BodySource] | tuple[None, None]:
+def _body(extracted: ExtractedDocument | None, item: CollectedItem) -> tuple[str, BodySource] | tuple[None, None]:
     """The body to keep: the page when it carries enough, the feed otherwise."""
     if extracted is not None and len(extracted.body_text) >= MIN_PRIMARY_INFO_CHARS:
         return extracted.body_text, BodySource.EXTRACTED
@@ -329,10 +327,6 @@ _MONTHS = {
 }
 
 _MONTH_NAME = re.compile(r"^(?P<month>[A-Za-z]{3,9})\.?\s+(?P<day>\d{1,2}),?\s+(?P<year>\d{4})$")
-
-
-
-
 
 
 def parse_published_at(raw: str | None) -> dt.datetime:

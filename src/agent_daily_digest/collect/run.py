@@ -1,36 +1,37 @@
-"""The source registry, read from `config.json`.
+"""Collect enabled sources independently and return their items, failures and probe counts.
 
-The `collection` block of `config.json` is the registry. The keys the
-retired `src/fetch.py` read (`sources` / `reddit_subs` / `gh_repos`) were
-removed with it in #11.
-
-Every source declares its `kind`, which is how 定点観測 (`fixed_watch`) and
-発見経路 (`discovery`) are told apart, and its `connector`, which decides how
-it is fetched.
+CollectionConfig and the source settings live beside collect_all/collect_source.
+Each source dispatches to its connector and transport; one failed source does
+not stop the remaining sources.
 """
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-from typing import Annotated, Literal, Union
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
-from agent_daily_digest.contracts import HttpUrlStr, NonBlankStr, SourceId, SourceKind
 import datetime as dt
+import json
 import time
-from pydantic import BaseModel, ConfigDict, Field
-from agent_daily_digest.contracts import (
+from pathlib import Path
+from typing import TYPE_CHECKING, Annotated, Literal, Union
+
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
+
+from agent_daily_digest.collect.transport import Fetcher, classify_failure
+from agent_daily_digest.contracts.articles import (
     CollectedItem,
-    ErrorRecord,
     SourceFetchResult,
     SourceFetchStatus,
-    SourceId,
     SourceKind,
     SourceMetrics,
 )
+from agent_daily_digest.contracts.base import (
+    ErrorRecord,
+    HttpUrlStr,
+    NonBlankStr,
+    SourceId,
+)
 
-from agent_daily_digest.collect.transport import Fetcher, classify_failure
-
+if TYPE_CHECKING:
+    from agent_daily_digest.collect.connectors import ProbeRecorder
 
 COLLECTION_KEY = "collection"
 
@@ -239,11 +240,7 @@ class CollectionReport(BaseModel):
 
     @property
     def failed_source_ids(self) -> tuple[str, ...]:
-        return tuple(
-            result.source_id
-            for result in self.results
-            if result.status is SourceFetchStatus.FAILED
-        )
+        return tuple(result.source_id for result in self.results if result.status is SourceFetchStatus.FAILED)
 
     def result(self, source_id: str) -> SourceFetchResult:
         for result in self.results:
@@ -285,9 +282,7 @@ def collect_source(
         items = dedupe(CONNECTORS[spec.connector](spec, context))[:max_items]
         result = _result(spec, SourceFetchStatus.SUCCEEDED, started, probe, items=items)
     except Exception as exc:
-        result = _result(
-            spec, SourceFetchStatus.FAILED, started, probe, failure=classify_failure(exc)
-        )
+        result = _result(spec, SourceFetchStatus.FAILED, started, probe, failure=classify_failure(exc))
     return result, _stats(spec, probe)
 
 

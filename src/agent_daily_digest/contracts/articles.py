@@ -2,16 +2,26 @@
 
 from __future__ import annotations
 
-from enum import Enum
-from typing import Literal
-from pydantic import AwareDatetime, model_validator
-from agent_daily_digest.contracts.base import ArticleId, ContentHash, ContractModel, HttpUrlStr, NonBlankStr, NonNegativeInt, SourceId, compute_content_hash, first_duplicate
-from agent_daily_digest.contracts.base import ErrorRecord
-from agent_daily_digest.contracts.editorial import Decision
 from collections.abc import Mapping
+from enum import Enum
 from types import MappingProxyType
-from pydantic import Field, StrictBool, model_validator
-from agent_daily_digest.contracts.base import ArticleId, ContractModel
+from typing import Literal
+
+from pydantic import AwareDatetime, Field, StrictBool, model_validator
+
+from agent_daily_digest.contracts.base import (
+    ArticleId,
+    ContentHash,
+    ContractModel,
+    ErrorRecord,
+    HttpUrlStr,
+    NonBlankStr,
+    NonNegativeInt,
+    SourceId,
+    compute_content_hash,
+    first_duplicate,
+)
+from agent_daily_digest.contracts.editorial import Decision
 
 
 class SourceKind(str, Enum):
@@ -53,9 +63,7 @@ class CollectedItem(ContractModel):
     feed_summary: str | None = None
 
 
-def _check_source_outcome(
-    status: SourceFetchStatus, failure: ErrorRecord | None, item_count: int
-) -> None:
+def _check_source_outcome(status: SourceFetchStatus, failure: ErrorRecord | None, item_count: int) -> None:
     if status is SourceFetchStatus.FAILED:
         if failure is None:
             raise ValueError("a failed source requires `failure`")
@@ -208,9 +216,7 @@ GATE_REASONS: Mapping[GateName, frozenset[GateExclusionReason]] = MappingProxyTy
             }
         ),
         GateName.CONTENT_AVAILABLE: frozenset({_R.BODY_FETCH_FAILED, _R.BODY_EXTRACTION_FAILED}),
-        GateName.NOT_PREVIOUSLY_PROCESSED: frozenset(
-            {_R.ALREADY_PROCESSED_URL, _R.ALREADY_PROCESSED_CONTENT_HASH}
-        ),
+        GateName.NOT_PREVIOUSLY_PROCESSED: frozenset({_R.ALREADY_PROCESSED_URL, _R.ALREADY_PROCESSED_CONTENT_HASH}),
         GateName.NOT_KNOWN_DUPLICATE: frozenset({_R.DUPLICATE_OF_KNOWN_ARTICLE}),
     }
 )

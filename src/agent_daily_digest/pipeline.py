@@ -24,36 +24,45 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
 
-from agent_daily_digest.collect import CollectionReport
-from agent_daily_digest.contracts import (
+from agent_daily_digest.collect.run import CollectionReport
+from agent_daily_digest.config import Models
+from agent_daily_digest.content.fetch import BodyFetcher
+from agent_daily_digest.contracts.articles import (
     CollectedItem,
-    ErrorKind,
-    ErrorRecord,
-    EvidencePacket,
-    NormalizedArticle,
     ProcessedState,
-    ResearchBudget,
-    RunStatus,
-    SelectorOutput,
     SourceKind,
-    StageName,
 )
+from agent_daily_digest.contracts.base import ErrorKind, ErrorRecord
+from agent_daily_digest.contracts.editorial import SelectorOutput
+from agent_daily_digest.contracts.metrics import RunStatus, StageName
+from agent_daily_digest.contracts.research import EvidencePacket, ResearchBudget
 from agent_daily_digest.judge import PROMPT_VERSION as JUDGE_PROMPT_VERSION
 from agent_daily_digest.judge import Judge, JudgeResult, finding_metrics, render_report
-from agent_daily_digest.llm.call import StructuredRequest
-from agent_daily_digest.content.fetch import BodyFetcher
-from agent_daily_digest.normalize import NormalizationResult, normalize_items
-from agent_daily_digest.state import ProcessedIndex, load_state, record_article, save_state
-from agent_daily_digest.observe.store import Clock, MetricsLeakError, MetricsStore, safe_detail, utc_now
-from agent_daily_digest.llm.call import LLMResponse
+from agent_daily_digest.llm.call import LLMResponse, StructuredRequest
 from agent_daily_digest.llm.pricing import PricingTable
-from agent_daily_digest.observe.recorder import RunRecorder, StageFailed, article_metrics, classify_exception
-from agent_daily_digest.render import README_FILENAME, digest_filename, render_digest, write_digest
-from agent_daily_digest.research import Researcher, ResearchInput, ResearchResult
+from agent_daily_digest.normalize import NormalizationResult, normalize_items
+from agent_daily_digest.observe.recorder import (
+    RunRecorder,
+    StageFailed,
+    article_metrics,
+    classify_exception,
+)
+from agent_daily_digest.observe.store import (
+    Clock,
+    MetricsLeakError,
+    MetricsStore,
+    safe_detail,
+    utc_now,
+)
+from agent_daily_digest.publish import Publisher, publish_selection
+from agent_daily_digest.render.digest import render_digest
+from agent_daily_digest.research.run import Researcher, ResearchInput, ResearchResult
 from agent_daily_digest.select import Selector
-
-from .config import Models
-from .publisher import Publisher
+from agent_daily_digest.state import (
+    ProcessedIndex,
+    load_state,
+    record_article,
+)
 
 Invoker = Callable[[StructuredRequest], LLMResponse]
 Collector = Callable[[frozenset[str]], CollectionReport]
@@ -137,7 +146,13 @@ class Pipeline:
         except Exception as exc:
             status = recorder.result.status if recorder.result is not None else RunStatus.FAILED
             return RunResult(
-                recorder.run_id, status, run.commit, run.digest_path, run.deferred, _error_of(exc), _sink_error(recorder)
+                recorder.run_id,
+                status,
+                run.commit,
+                run.digest_path,
+                run.deferred,
+                _error_of(exc),
+                _sink_error(recorder),
             )
         return RunResult(recorder.run_id, recorder.result.status, run.commit, run.digest_path, run.deferred)
 
@@ -211,7 +226,19 @@ class _Run:
 
         with recorder.stage(StageName.PUBLISH):
             decided = _decided_state(state, passed, output, self.pipeline.clock())
-            self._publish(output, articles, decided, adopted)
+            publication = publish_selection(
+                output,
+                articles,
+                decided,
+                self.digest_date,
+                digests_dir=p.paths.digests_dir,
+                state_path=p.paths.state_path,
+                publisher=p.publisher,
+                adopted=adopted,
+            )
+            self.commit, self.digest_path = publication.commit, publication.digest_path
+            if adopted:
+                recorder.set_published(len(output.must_read), len(output.worth_knowing))
         if not adopted:
             return
 
@@ -219,26 +246,6 @@ class _Run:
         self._comment(judged, research.packets)
 
     # -- stages that need more than a few lines --------------------------------
-
-    def _publish(self, output: SelectorOutput, articles: dict[str, NormalizedArticle], decided: ProcessedState, adopted: bool) -> None:
-        paths = self.pipeline.paths
-        written = _Snapshot.of(paths.digests_dir / digest_filename(self.digest_date), paths.digests_dir / README_FILENAME, paths.state_path)
-        try:
-            files: list[Path] = []
-            if adopted:
-                digest = write_digest(output, articles, self.digest_date, paths.digests_dir)
-                files += [digest, paths.digests_dir / README_FILENAME]
-            save_state(paths.state_path, decided)
-            files.append(paths.state_path)
-            kind = "digest" if adopted else "state"
-            commit = self.pipeline.publisher.publish(files, f"{kind}: {self.digest_date.isoformat()}")
-        except BaseException:
-            written.restore()
-            raise
-        self.commit = commit
-        if adopted:
-            self.digest_path = paths.digests_dir / digest_filename(self.digest_date)
-            self.recorder.set_published(len(output.must_read), len(output.worth_knowing))
 
     def _audit(self, output: SelectorOutput, research: ResearchResult) -> JudgeResult:
         """Audit the published digest. Any failure, a bug included, is recorded and returned, not raised."""
@@ -287,7 +294,9 @@ class _Run:
         selection: SelectorOutput | None = None,
     ) -> None:
         for item, result in zip(items, results):
-            extracted = len(result.extracted.body_text) if result.extracted is not None and result.article is None else None
+            extracted = (
+                len(result.extracted.body_text) if result.extracted is not None and result.article is None else None
+            )
             self.recorder.record_article(
                 article_metrics(item, result.outcome, result.article, selection=selection, extracted_chars=extracted)
             )
@@ -328,7 +337,9 @@ def _research_input(result: NormalizationResult) -> ResearchInput:
     return ResearchInput(article=result.article, links=links)
 
 
-def _decided_state(state: ProcessedState, passed: Sequence[NormalizationResult], output: SelectorOutput, now: datetime) -> ProcessedState:
+def _decided_state(
+    state: ProcessedState, passed: Sequence[NormalizationResult], output: SelectorOutput, now: datetime
+) -> ProcessedState:
     """The processing state with every article the Selector decided and its decision."""
     for result in passed:
         if result.article is None:
@@ -336,21 +347,3 @@ def _decided_state(state: ProcessedState, passed: Sequence[NormalizationResult],
         decision, _tier = output.decision_of(result.article.article_id)
         state = record_article(state, result.article, decision, seen_at=now)
     return state
-
-
-@dataclass(frozen=True)
-class _Snapshot:
-    """The bytes of some files before a publish wrote them, to put back if it fails."""
-
-    before: tuple[tuple[Path, bytes | None], ...]
-
-    @classmethod
-    def of(cls, *paths: Path) -> _Snapshot:
-        return cls(tuple((path, path.read_bytes() if path.exists() else None) for path in paths))
-
-    def restore(self) -> None:
-        for path, content in self.before:
-            if content is None:
-                path.unlink(missing_ok=True)
-            else:
-                path.write_bytes(content)

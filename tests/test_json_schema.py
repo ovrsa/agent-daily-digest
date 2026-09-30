@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import json
 from pathlib import Path
 from typing import Any
@@ -10,19 +11,29 @@ import pytest
 from jsonschema import Draft202012Validator
 from pydantic import BaseModel
 
-import agent_daily_digest.contracts
-from agent_daily_digest.contracts import SOURCE_EVIDENCE_MAX_CHARS, JudgeReport
+from agent_daily_digest.contracts.base import ContractModel
+from agent_daily_digest.contracts.editorial import (
+    SOURCE_EVIDENCE_MAX_CHARS,
+    JudgeReport,
+)
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
+CONTRACT_MODULES = tuple(
+    importlib.import_module(f"agent_daily_digest.contracts.{name}")
+    for name in ("base", "articles", "research", "editorial", "metrics")
+)
 PUBLIC_MODELS = sorted(
-    (
+    {
         obj
-        for name in agent_daily_digest.contracts.__all__
-        if isinstance(obj := getattr(agent_daily_digest.contracts, name), type)
+        for module in CONTRACT_MODULES
+        for name, obj in vars(module).items()
+        if not name.startswith("_")
+        and isinstance(obj, type)
         and issubclass(obj, BaseModel)
-        and obj is not agent_daily_digest.contracts.ContractModel
-    ),
+        and obj is not BaseModel
+        and obj is not ContractModel
+    },
     key=lambda model: model.__name__,
 )
 

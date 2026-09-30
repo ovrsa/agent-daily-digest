@@ -10,12 +10,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import collect_support as s
 import pytest
 
-from agent_daily_digest.collect import CollectionConfig, HttpResponse, collect_all, load_collection_config
-from agent_daily_digest.contracts import SourceFetchStatus, SourceKind
-
-import collect_support as s
+from agent_daily_digest.collect.run import (
+    CollectionConfig,
+    collect_all,
+    load_collection_config,
+)
+from agent_daily_digest.collect.transport import HttpResponse
+from agent_daily_digest.contracts.articles import SourceFetchStatus, SourceKind
 
 CONFIG_PATH = Path(__file__).resolve().parents[1] / "config.json"
 

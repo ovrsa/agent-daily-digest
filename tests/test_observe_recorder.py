@@ -5,26 +5,33 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 import factories as f
-from agent_daily_digest.contracts import (
+import pytest
+from observe_support import START, FakeClock
+
+from agent_daily_digest.contracts.articles import (
     CollectedItem,
-    ErrorKind,
-    ErrorRecord,
-    FindingMetrics,
     GateOutcome,
-    LLMCallMetrics,
     NormalizedArticle,
+    SourceMetrics,
+)
+from agent_daily_digest.contracts.base import ErrorKind, ErrorRecord
+from agent_daily_digest.contracts.editorial import FindingMetrics, SelectorOutput
+from agent_daily_digest.contracts.metrics import (
+    LLMCallMetrics,
     RunMetrics,
     RunStatus,
-    SelectorOutput,
-    SourceMetrics,
     StageName,
     StageStatus,
 )
-from agent_daily_digest.observe.recorder import RunAborted, RunRecorder, StageFailed, article_metrics, derive_status, new_run_id
-from observe_support import START, FakeClock
+from agent_daily_digest.observe.recorder import (
+    RunAborted,
+    RunRecorder,
+    StageFailed,
+    article_metrics,
+    derive_status,
+    new_run_id,
+)
 
 SELECTOR_FIXTURE = Path(__file__).parent / "fixtures" / "selector_output.valid.json"
 FLOW = (StageName.COLLECT, StageName.NORMALIZE, StageName.GATE, StageName.RESEARCH, StageName.SELECT, StageName.RENDER, StageName.PUBLISH)

@@ -19,9 +19,10 @@ import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from pydantic import BaseModel, ConfigDict, Field
-from agent_daily_digest.contracts import CostBasis, CostRecord, TokenUsage
 
+from pydantic import BaseModel, ConfigDict, Field
+
+from agent_daily_digest.contracts.metrics import CostBasis, CostRecord, TokenUsage
 
 MODELS_KEY = "models"
 PRICING_KEY = "pricing_usd_per_mtok"

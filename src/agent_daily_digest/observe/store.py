@@ -18,24 +18,20 @@ from __future__ import annotations
 import os
 import re
 import tempfile
-from collections.abc import Iterable
+from collections.abc import Callable, Collection, Iterable, Iterator
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from agent_daily_digest.contracts import RunMetrics
-from collections.abc import Callable
-
-from collections.abc import Collection, Iterable, Iterator
-from dataclasses import dataclass
 from typing import Any
-from agent_daily_digest.contracts import ERROR_DETAIL_MAX_CHARS
 
+from agent_daily_digest.contracts.base import ERROR_DETAIL_MAX_CHARS
+from agent_daily_digest.contracts.metrics import RunMetrics
 
 Clock = Callable[[], datetime]
 
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
-
 
 
 DEFAULT_METRICS_DIR = Path("logs/metrics")
@@ -218,9 +214,7 @@ class MetricsLeakError(ValueError):
 
     def __init__(self, leaks: tuple[Leak, ...]) -> None:
         self.leaks = leaks
-        super().__init__(
-            "refusing to write metrics: " + ", ".join(f"{leak.location} ({leak.kind})" for leak in leaks)
-        )
+        super().__init__("refusing to write metrics: " + ", ".join(f"{leak.location} ({leak.kind})" for leak in leaks))
 
 
 def find_leaks(

@@ -5,9 +5,11 @@ from __future__ import annotations
 import inspect
 
 import factories as f
-from agent_daily_digest.contracts import ErrorKind, LLMRole, RunMetrics, RunStatus, Severity
-from agent_daily_digest.observe.summary import render_summary, summarize
 
+from agent_daily_digest.contracts.base import ErrorKind
+from agent_daily_digest.contracts.editorial import Severity
+from agent_daily_digest.contracts.metrics import LLMRole, RunMetrics, RunStatus
+from agent_daily_digest.observe.summary import render_summary, summarize
 
 
 def sample_run() -> RunMetrics:

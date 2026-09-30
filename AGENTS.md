@@ -11,6 +11,8 @@
 | 関心 | ファイル |
 |---|---|
 | 日次実行の流れ（収集から公開、Judge のコメントまで。`python -m agent_daily_digest [--dry-run]`） | [`src/agent_daily_digest/pipeline.py`](./src/agent_daily_digest/pipeline.py) |
+| 工程の入口（収集・正規化・研究・採否・描画・公開・監査） | `collect/run.py:collect_all` / `normalize.py:normalize_items` / `research/run.py:Researcher.run` / `select.py:Selector.select` / `render/digest.py:render_digest` / `publish.py:publish_selection` / `judge.py:Judge.audit`（すべて `src/agent_daily_digest/` 配下） |
+| 本文取得・根拠管理・LLM実行・記録 | `content/` / `research/evidence.py` / `llm/` / `observe/`（同上） |
 | 段と段の間の契約（Pydantic） | [`src/agent_daily_digest/contracts/`](./src/agent_daily_digest/contracts/) |
 | 研究・Selector・Judge のプロンプト | `src/agent_daily_digest/research/prompt.py` / `src/agent_daily_digest/select_prompt.py` / `src/agent_daily_digest/judge_prompt.py` |
 | ソース・モデル・研究の上限 | [`config.json`](./config.json) |
@@ -24,6 +26,7 @@
 - 採否や掲載文の質を変えたい → `src/agent_daily_digest/select_prompt.py`（`PROMPT_VERSION` を上げ、`evals/selector_fixed_set.py` を実行して表を比べる）
 - 監査の観点を変えたい → `src/agent_daily_digest/judge_prompt.py`（同じく `evals/judge_fixed_set.py`）
 - 収集対象を変えたい → `config.json` の `collection`
+- 内部importは実装ファイルを直接参照する。工程専用の型・補助処理は工程内、工程間の型と保存形式は `contracts/` に置く。ファイル書き込みと公開失敗時の復元は `publish.py`、SDK依存は `llm/client.py`。
 - 実行フローや失敗の扱いを変えたい → `src/agent_daily_digest/pipeline.py`（failure policy は Design Doc と合わせる）
 - `digests/` と `state/` は自動生成物。手で編集しない。
 - テストは実リポジトリの `logs/` や `~/Library/LaunchAgents` に触れない。スクリプトのテストは一時ディレクトリに複製して実行する（`tests/test_scheduled_run.py`）。

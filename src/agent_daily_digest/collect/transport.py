@@ -16,10 +16,10 @@ import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from typing import Any, Protocol, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Protocol
 from xml.parsers import expat
 
-from agent_daily_digest.contracts import ErrorKind, ErrorRecord
+from agent_daily_digest.contracts.base import ErrorKind, ErrorRecord
 
 if TYPE_CHECKING:
     from agent_daily_digest.collect.run import HttpSettings
@@ -86,12 +86,8 @@ class UrllibFetcher:
         self._ssl_context = ssl_context or ssl.create_default_context()
 
     def get(self, url: str, *, accept: str = "*/*") -> HttpResponse:
-        request = urllib.request.Request(
-            url, headers={"User-Agent": self._user_agent, "Accept": accept}
-        )
-        with urllib.request.urlopen(
-            request, timeout=self._timeout, context=self._ssl_context
-        ) as response:
+        request = urllib.request.Request(url, headers={"User-Agent": self._user_agent, "Accept": accept})
+        with urllib.request.urlopen(request, timeout=self._timeout, context=self._ssl_context) as response:
             # One byte over the cap is enough to tell the difference between a
             # response that fits and one that was truncated.
             body = response.read(self._max_bytes + 1)

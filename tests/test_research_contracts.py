@@ -4,15 +4,15 @@ from __future__ import annotations
 
 import pytest
 from pydantic import ValidationError
+from research_support import PUBLISHED
 
-from agent_daily_digest.contracts import (
+from agent_daily_digest.contracts.research import (
     EvidencePacket,
     ResearchBudget,
     SourceDocument,
     make_evidence_id,
     parse_evidence_id,
 )
-from research_support import PUBLISHED
 
 
 def packet(**overrides) -> dict:

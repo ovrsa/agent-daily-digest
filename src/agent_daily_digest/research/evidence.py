@@ -10,16 +10,21 @@ the same paragraph ids and an Evidence ID resolves the same way on every run.
 
 Everything a page wrote - title, author, links, paragraphs - reaches the model
 inside one delimited block, through `escape_untrusted`, the same boundary
-`agent_daily_digest.normalize.as_untrusted_block` uses.
+`agent_daily_digest.content.text.as_untrusted_block` uses.
 """
 
 from __future__ import annotations
 
-from collections.abc import Collection
-from agent_daily_digest.contracts import NormalizedArticle, Paragraph, SourceDocument
-from agent_daily_digest.content.text import HEADER, UNTRUSTED_CLOSE, UNTRUSTED_OPEN, escape_untrusted
-from collections.abc import Iterable, Sequence
-from agent_daily_digest.contracts import (
+from collections.abc import Collection, Iterable, Sequence
+
+from agent_daily_digest.content.text import (
+    HEADER,
+    UNTRUSTED_CLOSE,
+    UNTRUSTED_OPEN,
+    escape_untrusted,
+)
+from agent_daily_digest.contracts.articles import NormalizedArticle
+from agent_daily_digest.contracts.research import (
     Claim,
     Concept,
     Evidence,
@@ -30,7 +35,6 @@ from agent_daily_digest.contracts import (
     parse_evidence_id,
 )
 from agent_daily_digest.research.extraction import EvidenceMap
-
 
 _FENCE = "```"
 
@@ -94,7 +98,9 @@ def render_article(
     return _block(header, document, max_chars=max_chars, only=only)
 
 
-def render_reference(document: SourceDocument, *, max_chars: int, only: Collection[str] | None = None) -> tuple[str, tuple[str, ...]]:
+def render_reference(
+    document: SourceDocument, *, max_chars: int, only: Collection[str] | None = None
+) -> tuple[str, tuple[str, ...]]:
     """A page the article links to, as its own untrusted block."""
     return _block([f"url: {escape_untrusted(document.url)}"], document, max_chars=max_chars, only=only)
 
@@ -205,7 +211,12 @@ def render_packet(packet: EvidencePacket) -> str:
 def render_map(evidence_map: EvidenceMap) -> str:
     """An Evidence Map in progress, for the next research round."""
     return "\n".join(
-        [UNTRUSTED_OPEN, HEADER, *_map_lines(evidence_map.evidence, evidence_map.claims, evidence_map.concepts, evidence_map.limitations), UNTRUSTED_CLOSE]
+        [
+            UNTRUSTED_OPEN,
+            HEADER,
+            *_map_lines(evidence_map.evidence, evidence_map.claims, evidence_map.concepts, evidence_map.limitations),
+            UNTRUSTED_CLOSE,
+        ]
     )
 
 
@@ -220,7 +231,9 @@ def _map_lines(
         lines.append("claims:")
         for claim in claims:
             flags = [flag for flag, on in (("numeric", claim.numeric), ("reproducible", claim.reproducible)) if on]
-            conditions = f" conditions: {', '.join(claim.condition_evidence_ids)}" if claim.condition_evidence_ids else ""
+            conditions = (
+                f" conditions: {', '.join(claim.condition_evidence_ids)}" if claim.condition_evidence_ids else ""
+            )
             lines.append(
                 f"- {claim.claim_id} ({claim.kind.value}{', ' + ', '.join(flags) if flags else ''}) "
                 f"{escape_untrusted(claim.text)} evidence: {', '.join(claim.evidence_ids)}{conditions}"

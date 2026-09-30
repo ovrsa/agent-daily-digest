@@ -6,40 +6,18 @@ deleted or added file is reflected on the next run without a separate state.
 
 from __future__ import annotations
 
-import re
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from datetime import date
-from pathlib import Path
 
-from agent_daily_digest.contracts import NormalizedArticle, SelectorOutput
-
-from .digest import IndexMarkerError, digest_filename, render_digest
+from agent_daily_digest.render.digest import (
+    IndexMarkerError,
+)
 
 INDEX_BEGIN = "<!-- INDEX:START -->"
 INDEX_END = "<!-- INDEX:END -->"
 INDEX_MAX_ENTRIES = 30
 INDEX_EMPTY_TEXT = "_（まだダイジェストはありません。最初の実行で生成されます。）_"
 README_FILENAME = "README.md"
-
-_DIGEST_FILENAME = re.compile(r"^(\d{4}-\d{2}-\d{2})\.md$")
-
-
-def list_digest_dates(digests_dir: Path) -> tuple[date, ...]:
-    """Dates of the digest files in `digests_dir`, newest first.
-
-    Anything that is not a `YYYY-MM-DD.md` naming a real date is ignored, so
-    `README.md` and stray files do not reach the index.
-    """
-    found = []
-    for path in digests_dir.iterdir():
-        match = _DIGEST_FILENAME.match(path.name)
-        if match is None or not path.is_file():
-            continue
-        try:
-            found.append(date.fromisoformat(match.group(1)))
-        except ValueError:
-            continue
-    return tuple(sorted(found, reverse=True))
 
 
 def render_index(dates: Iterable[date]) -> str:
@@ -61,26 +39,3 @@ def update_index(readme_text: str, dates: Iterable[date]) -> str:
     head = readme_text[: begin + len(INDEX_BEGIN)]
     tail = readme_text[end:]
     return f"{head}\n{render_index(dates)}\n{tail}"
-
-
-def write_digest(
-    selector_output: SelectorOutput,
-    articles: Mapping[str, NormalizedArticle],
-    digest_date: date,
-    digests_dir: Path,
-) -> Path | None:
-    """Write a checked digest and refresh the index; write nothing if none was adopted."""
-    markdown = render_digest(selector_output, articles, digest_date)
-    if markdown is None:
-        return None
-
-    readme_path = digests_dir / README_FILENAME
-    readme_text = update_index(
-        readme_path.read_text(encoding="utf-8"),
-        (digest_date, *list_digest_dates(digests_dir)),
-    )
-
-    digest_path = digests_dir / digest_filename(digest_date)
-    digest_path.write_bytes(markdown.encode("utf-8"))
-    readme_path.write_bytes(readme_text.encode("utf-8"))
-    return digest_path

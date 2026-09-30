@@ -4,12 +4,18 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Hashable, Iterable
+from enum import Enum
 from typing import Annotated
 from urllib.parse import urlsplit
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstraints
-from enum import Enum
-from pydantic import StringConstraints, ValidationError
 
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    ValidationError,
+)
 
 
 class ContractModel(BaseModel):
@@ -52,9 +58,7 @@ SourceId = Annotated[str, StringConstraints(pattern=r"^[a-z0-9][a-z0-9_-]{0,63}$
 ContentHash = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
 """Lowercase hex SHA-256 of the normalized body, see `compute_content_hash`."""
 
-HttpUrlStr = Annotated[
-    str, StringConstraints(min_length=1, max_length=2048), AfterValidator(_check_http_url)
-]
+HttpUrlStr = Annotated[str, StringConstraints(min_length=1, max_length=2048), AfterValidator(_check_http_url)]
 """Absolute http(s) URL kept exactly as given.
 
 Pydantic's `HttpUrl` rewrites values (for example it appends `/` to a bare

@@ -11,9 +11,15 @@ from pathlib import Path
 
 import pytest
 
-from agent_daily_digest.contracts import ErrorKind
+from agent_daily_digest.contracts.base import ErrorKind
 from agent_daily_digest.observe.recorder import StageFailed
-from agent_daily_digest import DRY_RUN_COMMIT, CommandFailed, DryRunPublisher, GitPublisher, run_command
+from agent_daily_digest.publish import (
+    DRY_RUN_COMMIT,
+    CommandFailed,
+    DryRunPublisher,
+    GitPublisher,
+    run_command,
+)
 
 
 def git(cwd: Path, *args: str) -> str:

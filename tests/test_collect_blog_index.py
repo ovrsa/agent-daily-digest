@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 import collect_support as s
 
-from agent_daily_digest.collect import collect_all
+from agent_daily_digest.collect.run import collect_all
 
 URL = "https://nousresearch.com/blog"
 POST = "https://nousresearch.com/refactoring-hermes-with-1393-agents"

@@ -6,13 +6,20 @@ import copy
 from typing import Any
 
 import pytest
-
-from agent_daily_digest.contracts import ErrorKind, LLMCallMetrics, LLMRole, SelectorOutput
-from agent_daily_digest.llm.call import RetryPolicy
-from agent_daily_digest.select import PROMPT_VERSION, SYSTEM_PROMPT, Selector, selection_issues
 from observe_support import PRICING
 from research_support import ScriptedModel
 from selector_support import EXPECTED, PACKETS, library, packet
+
+from agent_daily_digest.contracts.base import ErrorKind
+from agent_daily_digest.contracts.editorial import SelectorOutput
+from agent_daily_digest.contracts.metrics import LLMCallMetrics, LLMRole
+from agent_daily_digest.llm.call import RetryPolicy
+from agent_daily_digest.select import (
+    PROMPT_VERSION,
+    SYSTEM_PROMPT,
+    Selector,
+    selection_issues,
+)
 
 SCORES = {"practicality": 4, "specificity_reproducibility": 4, "novelty": 3, "source_reliability": 4, "reader_impact": 4, "read_original_value": 4}
 LOW = {k: 2 for k in SCORES}

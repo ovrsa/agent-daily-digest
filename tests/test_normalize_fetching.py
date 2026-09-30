@@ -11,9 +11,22 @@ from email.message import Message
 
 import pytest
 
-from agent_daily_digest.contracts import ErrorKind
-from agent_daily_digest.content.fetch import MAX_BODY_BYTES, MAX_REDIRECTS, BlockedTarget, FetchFailure, FetchedPage, decode_html, fetch_page, is_html_content_type, is_public_address
-from agent_daily_digest.content.fetch import BLOCKED_IPV4_NETWORKS, BLOCKED_IPV6_NETWORKS, TRANSLATED_IPV6_NETWORKS, _GuardedRedirectHandler
+from agent_daily_digest.content.fetch import (
+    BLOCKED_IPV4_NETWORKS,
+    BLOCKED_IPV6_NETWORKS,
+    MAX_BODY_BYTES,
+    MAX_REDIRECTS,
+    TRANSLATED_IPV6_NETWORKS,
+    BlockedTarget,
+    FetchedPage,
+    FetchFailure,
+    _GuardedRedirectHandler,
+    decode_html,
+    fetch_page,
+    is_html_content_type,
+    is_public_address,
+)
+from agent_daily_digest.contracts.base import ErrorKind
 
 
 class TestContentType:

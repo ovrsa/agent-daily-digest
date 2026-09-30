@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from agent_daily_digest.contracts import (
+from agent_daily_digest.contracts.editorial import (
     SOURCE_EVIDENCE_MAX_CHARS,
     AuditCategory,
     FindingMetrics,

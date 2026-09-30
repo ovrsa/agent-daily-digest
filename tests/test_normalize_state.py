@@ -7,16 +7,22 @@ import json
 from pathlib import Path
 
 import pytest
+from normalize_helpers import processed_record
 
-from agent_daily_digest.contracts import (
+from agent_daily_digest.contracts.articles import (
     BodySource,
-    Decision,
     NormalizedArticle,
     ProcessedState,
-    compute_content_hash,
 )
-from agent_daily_digest.state import ProcessedIndex, dump_state_json, load_state, record_article, save_state
-from normalize_helpers import processed_record
+from agent_daily_digest.contracts.base import compute_content_hash
+from agent_daily_digest.contracts.editorial import Decision
+from agent_daily_digest.state import (
+    ProcessedIndex,
+    dump_state_json,
+    load_state,
+    record_article,
+    save_state,
+)
 
 UTC = dt.timezone.utc
 NOW = dt.datetime(2026, 9, 17, 6, 0, tzinfo=UTC)

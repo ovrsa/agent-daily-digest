@@ -10,8 +10,14 @@ from pathlib import Path
 from typing import Any
 
 import factories as f
-from agent_daily_digest.contracts import CollectedItem, ErrorKind, ProcessedRecord, ProcessedState
+
 from agent_daily_digest.content.fetch import FetchedPage, FetchFailure
+from agent_daily_digest.contracts.articles import (
+    CollectedItem,
+    ProcessedRecord,
+    ProcessedState,
+)
+from agent_daily_digest.contracts.base import ErrorKind
 
 HTML_DIR = Path(__file__).parent / "fixtures" / "html"
 

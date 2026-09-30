@@ -20,11 +20,15 @@ import socket
 import urllib.error
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass
 from collections.abc import Callable
+from dataclasses import dataclass
 from email.message import Message
-from agent_daily_digest.contracts import ERROR_DETAIL_MAX_CHARS, ErrorKind, ErrorRecord
 
+from agent_daily_digest.contracts.base import (
+    ERROR_DETAIL_MAX_CHARS,
+    ErrorKind,
+    ErrorRecord,
+)
 
 MAX_BODY_BYTES = 2 * 1024 * 1024
 """Bytes read from one page before the fetch is abandoned."""

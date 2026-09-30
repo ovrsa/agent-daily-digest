@@ -23,20 +23,28 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Generic, TypeVar
+
 from pydantic import ValidationError
-from agent_daily_digest.contracts import (
+
+from agent_daily_digest.contracts.base import ErrorKind, ErrorRecord, ValidationIssue
+from agent_daily_digest.contracts.metrics import (
     AttemptStatus,
-    ErrorKind,
-    ErrorRecord,
     LLMAttempt,
     LLMCallMetrics,
     LLMRole,
-    ValidationIssue,
 )
-from agent_daily_digest.observe.recorder import Clock, utc_now
-from agent_daily_digest.llm.pricing import ModelUsage, PricingTable, estimate_cost, token_usage
-from agent_daily_digest.observe.store import describe_exception, safe_detail
-
+from agent_daily_digest.llm.pricing import (
+    ModelUsage,
+    PricingTable,
+    estimate_cost,
+    token_usage,
+)
+from agent_daily_digest.observe.store import (
+    Clock,
+    describe_exception,
+    safe_detail,
+    utc_now,
+)
 
 MIN_MAX_TURNS = 6
 
@@ -65,7 +73,6 @@ class StructuredRequest:
             raise ValueError(f"max_turns below {MIN_MAX_TURNS} leaves no room for schema retries")
         if self.timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be positive")
-
 
 
 T = TypeVar("T")
@@ -258,9 +265,7 @@ def measured_call(
                 outcome = CallOutcome(value=value, metrics=_metrics(spec, attempts))
                 return outcome
 
-            attempts.append(
-                _attempt(number, started, clock(), usage, pricing, failure.error, failure.issues)
-            )
+            attempts.append(_attempt(number, started, clock(), usage, pricing, failure.error, failure.issues))
             if not failure.retryable or number == policy.max_attempts:
                 outcome = CallOutcome(value=None, metrics=_metrics(spec, attempts), error=failure.error)
                 return outcome

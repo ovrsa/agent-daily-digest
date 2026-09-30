@@ -4,12 +4,14 @@ import json
 import xml.etree.ElementTree as ET
 from contextlib import contextmanager
 
+import collect_support as s
 import pytest
 
-from agent_daily_digest.collect import (
+from agent_daily_digest.collect import transport
+from agent_daily_digest.collect.run import HttpSettings
+from agent_daily_digest.collect.transport import (
     DETAIL_MAX_CHARS,
     HttpResponse,
-    HttpSettings,
     ResponseTooLargeError,
     UnsafeXmlError,
     UrllibFetcher,
@@ -18,10 +20,7 @@ from agent_daily_digest.collect import (
     parse_json,
     parse_xml,
 )
-from agent_daily_digest.collect import transport
-from agent_daily_digest.contracts import ErrorKind
-
-import collect_support as s
+from agent_daily_digest.contracts.base import ErrorKind
 
 
 class TestParseXml:

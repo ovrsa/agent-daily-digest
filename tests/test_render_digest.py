@@ -5,17 +5,21 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta, timezone
 
 import pytest
+import render_factories as f
 from pydantic import ValidationError
 
-import render_factories as f
-from agent_daily_digest.contracts import (
+from agent_daily_digest.contracts.editorial import (
     MUST_READ_MAX,
     WORTH_KNOWING_MAX,
     IncludedArticle,
     SelectorOutput,
     Tier,
 )
-from agent_daily_digest.render import MissingArticleError, TierCapError, digest_filename
+from agent_daily_digest.render.digest import (
+    MissingArticleError,
+    TierCapError,
+    digest_filename,
+)
 
 
 def test_matches_the_snapshot_byte_for_byte() -> None:

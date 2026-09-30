@@ -4,9 +4,15 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import Annotated
-from pydantic import Field, StringConstraints, model_validator
-from agent_daily_digest.contracts.base import ArticleId, ContractModel, NonBlankStr, first_duplicate
 
+from pydantic import Field, StringConstraints, model_validator
+
+from agent_daily_digest.contracts.base import (
+    ArticleId,
+    ContractModel,
+    NonBlankStr,
+    first_duplicate,
+)
 
 MUST_READ_MAX = 5
 WORTH_KNOWING_MAX = 8
@@ -215,9 +221,9 @@ class FindingAssessment(ContractModel):
     category: AuditCategory
     severity: Severity
     problem: NonBlankStr = Field(description="問題")
-    source_evidence: Annotated[
-        NonBlankStr, StringConstraints(max_length=SOURCE_EVIDENCE_MAX_CHARS)
-    ] = Field(description="本文上の根拠。短い引用または位置のみ")
+    source_evidence: Annotated[NonBlankStr, StringConstraints(max_length=SOURCE_EVIDENCE_MAX_CHARS)] = Field(
+        description="本文上の根拠。短い引用または位置のみ"
+    )
     confidence: Confidence
 
 

@@ -28,7 +28,9 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
-from agent_daily_digest.contracts import (
+from agent_daily_digest.contracts.articles import NormalizedArticle
+from agent_daily_digest.contracts.base import ValidationIssue
+from agent_daily_digest.contracts.research import (
     CONCRETE_EVIDENCE_KINDS,
     EVIDENCE_QUOTE_MAX_CHARS,
     REPRODUCIBILITY_EVIDENCE_KINDS,
@@ -39,10 +41,8 @@ from agent_daily_digest.contracts import (
     Evidence,
     EvidenceKind,
     Limitation,
-    NormalizedArticle,
     ResearchStatus,
     SourceDocument,
-    ValidationIssue,
     make_evidence_id,
     parse_evidence_id,
 )
@@ -125,7 +125,9 @@ class EvidenceMap:
     questions: tuple[QuestionDraft, ...] = ()
 
 
-def accept(output: ExtractionOutput, documents: Mapping[str, SourceDocument], *, prior: EvidenceMap | None = None) -> EvidenceMap:
+def accept(
+    output: ExtractionOutput, documents: Mapping[str, SourceDocument], *, prior: EvidenceMap | None = None
+) -> EvidenceMap:
     """Check every reference and assign Evidence IDs, or raise `OutputRejected`.
 
     With `prior`, the round adds to an earlier map: earlier evidence keeps its

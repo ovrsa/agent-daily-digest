@@ -6,13 +6,22 @@ import subprocess
 from datetime import timedelta
 from pathlib import Path
 
-import pytest
-
 import factories as f
-from agent_daily_digest.contracts import ErrorKind, ErrorRecord, RunMetrics, StageName
-from agent_daily_digest.observe.store import DEFAULT_METRICS_DIR, MetricsLeakError, MetricsStore, find_leaks, metrics_filename, redact_secrets, safe_detail
-from agent_daily_digest.observe.recorder import RunRecorder
+import pytest
 from observe_support import START, FakeClock
+
+from agent_daily_digest.contracts.base import ErrorKind, ErrorRecord
+from agent_daily_digest.contracts.metrics import RunMetrics, StageName
+from agent_daily_digest.observe.recorder import RunRecorder
+from agent_daily_digest.observe.store import (
+    DEFAULT_METRICS_DIR,
+    MetricsLeakError,
+    MetricsStore,
+    find_leaks,
+    metrics_filename,
+    redact_secrets,
+    safe_detail,
+)
 
 REPO = Path(__file__).resolve().parents[1]
 BODY = (

@@ -13,10 +13,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from agent_daily_digest.contracts import CollectedItem, ProcessedState  # noqa: E402
-from agent_daily_digest.state import ProcessedIndex, dump_state_json, record_article
-from agent_daily_digest.normalize import normalize_items
 from normalize_helpers import HTML_DIR, StubFetcher, page  # noqa: E402
+
+from agent_daily_digest.contracts.articles import CollectedItem, ProcessedState
+from agent_daily_digest.normalize import normalize_items
+from agent_daily_digest.state import ProcessedIndex, dump_state_json, record_article
 
 FIXTURES = sorted(p.stem for p in HTML_DIR.glob("*.html"))
 SEEN_AT = "2026-09-17T06:00:00+00:00"

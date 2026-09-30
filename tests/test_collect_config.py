@@ -5,20 +5,17 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import collect_support as s
 import pytest
 from pydantic import ValidationError
 
-import agent_daily_digest.collect
-from agent_daily_digest.collect import (
+from agent_daily_digest.collect.run import (
     CollectionConfig,
     SitemapSource,
-    UrllibFetcher,
     load_collection_config,
-    make_fetcher,
 )
-from agent_daily_digest.contracts import SourceKind
-
-import collect_support as s
+from agent_daily_digest.collect.transport import UrllibFetcher, make_fetcher
+from agent_daily_digest.contracts.articles import SourceKind
 
 REPO = Path(__file__).resolve().parents[1]
 CONFIG_PATH = REPO / "config.json"
@@ -332,5 +329,4 @@ class TestConfigPath:
             load_collection_config()
 
     def test_the_package_exports_no_default_path(self) -> None:
-        assert "DEFAULT_CONFIG_PATH" not in agent_daily_digest.collect.__all__
-        assert not hasattr(agent_daily_digest.collect, "DEFAULT_CONFIG_PATH")
+        assert not hasattr(__import__("agent_daily_digest.collect.run", fromlist=["run"]), "DEFAULT_CONFIG_PATH")

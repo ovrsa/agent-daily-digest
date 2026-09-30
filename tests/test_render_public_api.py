@@ -26,28 +26,29 @@ LLM_MODULES = {
 }
 
 
-def test_all_names_resolve_and_are_unique() -> None:
-    names = agent_daily_digest.render.__all__
-    assert len(names) == len(set(names))
-    for name in names:
-        assert getattr(agent_daily_digest.render, name) is not None
+def test_renderer_package_is_a_thin_namespace() -> None:
+    import ast
+
+    tree = ast.parse(Path(agent_daily_digest.render.__file__).read_text())
+    assert all(isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) for node in tree.body)
 
 
-def test_everything_public_in_a_submodule_is_reachable_from_the_package_root() -> None:
-    for path in sorted(PACKAGE_DIR.glob("*.py")):
-        if path.stem == "__init__":
-            continue
-        module = importlib.import_module(f"agent_daily_digest.render.{path.stem}")
-        for name, obj in vars(module).items():
-            if name.startswith("_") or getattr(obj, "__module__", None) != module.__name__:
-                continue
-            assert name in agent_daily_digest.render.__all__, f"{module.__name__}.{name}"
+def test_render_modules_contain_no_file_writes() -> None:
+    import ast
+
+    for path in PACKAGE_DIR.glob("*.py"):
+        tree = ast.parse(path.read_text())
+        writes = {"write_text", "write_bytes", "open", "mkdir", "unlink", "replace"}
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+                # str.replace is text formatting, not a filesystem replacement.
+                assert node.func.attr not in writes - {"replace"}, path.name
 
 
 def test_importing_the_renderer_loads_no_model_or_network_module() -> None:
     """The digest is assembled, not written by a model. Nothing here talks to one."""
     # A fresh interpreter, so modules loaded by pytest plugins do not count.
-    code = "import sys, agent_daily_digest.render; print('\\n'.join(sys.modules))"
+    code = "import sys, agent_daily_digest.render.digest, agent_daily_digest.render.index; print('\\n'.join(sys.modules))"
     result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)
     loaded = set(result.stdout.split())
     assert loaded.isdisjoint(LLM_MODULES)
@@ -59,7 +60,7 @@ def test_rendering_a_digest_loads_no_model_or_network_module() -> None:
         "import sys, json, datetime, pathlib\n"
         f"sys.path.insert(0, {str(Path(__file__).parent)!r})\n"
         "import render_factories as f\n"
-        "from agent_daily_digest.render import render_digest\n"
+        "from agent_daily_digest.render.digest import render_digest\n"
         "render_digest(f.selector_output(), f.articles(), datetime.date(2026, 9, 18))\n"
         "print('\\n'.join(sys.modules))"
     )

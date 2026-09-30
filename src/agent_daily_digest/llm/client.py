@@ -17,17 +17,19 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterator, Callable, Mapping
-from dataclasses import dataclass
 from typing import Any
-from agent_daily_digest.contracts import ErrorKind
-from agent_daily_digest.llm.call import LLMInvocationError, LLMResponse, StructuredRequest, invocation_error
-from agent_daily_digest.llm.pricing import ModelUsage
 
+from agent_daily_digest.contracts.base import ErrorKind
+from agent_daily_digest.llm.call import (
+    LLMInvocationError,
+    LLMResponse,
+    StructuredRequest,
+    invocation_error,
+)
+from agent_daily_digest.llm.pricing import ModelUsage
 
 Query = Callable[..., AsyncIterator[Any]]
 """`claude_agent_sdk.query`, or a stand-in with the same keyword arguments."""
-
-
 
 
 def build_options(request: StructuredRequest) -> Any:
@@ -57,10 +59,10 @@ def invoke_structured(request: StructuredRequest, *, query: Query | None = None)
 
 async def run_structured(request: StructuredRequest, *, query: Query | None = None) -> LLMResponse:
     from claude_agent_sdk import (
+        ClaudeSDKError,
         CLIConnectionError,
         CLIJSONDecodeError,
         CLINotFoundError,
-        ClaudeSDKError,
         ProcessError,
         ResultError,
         ResultMessage,
@@ -125,7 +127,9 @@ def to_response(message: Any) -> LLMResponse:
     )
 
 
-def model_usages(model_usage: Mapping[str, Mapping[str, Any]] | None, usage: Mapping[str, Any] | None) -> tuple[ModelUsage, ...]:
+def model_usages(
+    model_usage: Mapping[str, Mapping[str, Any]] | None, usage: Mapping[str, Any] | None
+) -> tuple[ModelUsage, ...]:
     """Per-model usage. Falls back to the top-level `usage` when no breakdown came back."""
     if model_usage:
         return tuple(

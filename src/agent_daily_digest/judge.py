@@ -22,37 +22,46 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
+
 from pydantic import ValidationError
-from agent_daily_digest.contracts import (
+
+from agent_daily_digest.content.text import (
+    HEADER,
+    UNTRUSTED_CLOSE,
+    UNTRUSTED_OPEN,
+    escape_untrusted,
+)
+from agent_daily_digest.contracts.base import ErrorRecord, ValidationIssue
+from agent_daily_digest.contracts.editorial import (
     BOUNDARY_EXCLUDED_AUDIT_MAX,
     AuditTargetKind,
     AxisScores,
     CaveatStatement,
-    ErrorRecord,
-    EvidencePacket,
     ExcludedArticle,
     FactStatement,
+    FindingMetrics,
     IncludedArticle,
+    JudgeFinding,
     JudgeReport,
-    LLMCallMetrics,
-    LLMRole,
     SelectorOutput,
+    Severity,
     Tier,
-    ValidationIssue,
 )
-from agent_daily_digest.llm.call import StructuredRequest
-from agent_daily_digest.content.text import HEADER, UNTRUSTED_CLOSE, UNTRUSTED_OPEN, escape_untrusted
-from agent_daily_digest.llm.call import CallSpec, LLMResponse, OutputRejected, RetryPolicy, measured_call
-from agent_daily_digest.llm.pricing import PricingTable
-from agent_daily_digest.research import SourceLibrary, render_packet
+from agent_daily_digest.contracts.metrics import LLMCallMetrics, LLMRole
+from agent_daily_digest.contracts.research import EvidencePacket
 from agent_daily_digest.judge_prompt import PROMPT_VERSION, SYSTEM_PROMPT, audit_prompt
-
-from collections.abc import Mapping, Sequence
-from agent_daily_digest.contracts import AuditTargetKind, EvidencePacket, FindingMetrics, JudgeFinding, JudgeReport, Severity
+from agent_daily_digest.llm.call import (
+    CallSpec,
+    LLMResponse,
+    OutputRejected,
+    RetryPolicy,
+    StructuredRequest,
+    measured_call,
+)
+from agent_daily_digest.llm.pricing import PricingTable
 from agent_daily_digest.observe.store import redact_secrets
-from agent_daily_digest.render import inline, link
-
-
+from agent_daily_digest.render.digest import inline, link
+from agent_daily_digest.research.evidence import SourceLibrary, render_packet
 
 Invoker = Callable[[StructuredRequest], LLMResponse]
 
@@ -154,7 +163,9 @@ class Judge:
         # The entry's citations come first so the character cap trims the claims' evidence, not them.
         cited = [*_cited(output, target.article_id), *(i for claim in packet.claims for i in claim.evidence_ids)]
         if cited:
-            parts.append("掲載文と主張が引いた根拠の原文段落:\n" + self.library.excerpt(cited, max_chars=self.excerpt_chars))
+            parts.append(
+                "掲載文と主張が引いた根拠の原文段落:\n" + self.library.excerpt(cited, max_chars=self.excerpt_chars)
+            )
         for group in output.duplicate_groups:
             if group.representative_id == target.article_id:
                 for member in group.duplicate_ids:
@@ -277,8 +288,6 @@ def _boundary_key(article: ExcludedArticle) -> tuple[int, int, int, str]:
     return (-total, -original, -impact, article.article_id)
 
 
-
-
 __all__ = [
     "ANSWERS",
     "CALL_ID",
@@ -330,7 +339,12 @@ def finding_metrics(report: JudgeReport | None) -> tuple[FindingMetrics, ...]:
 def render_report(result: JudgeResult, packets: Sequence[EvidencePacket]) -> str:
     """Markdown for the digest commit. A failed Judge renders as a short failure note."""
     by_id = {packet.article_id: packet for packet in packets}
-    lines = ["## Judge レポート", "", f"- モデル: {result.model} / プロンプト: {result.prompt_version}", f"- 監査対象: {_targets_line(result)}"]
+    lines = [
+        "## Judge レポート",
+        "",
+        f"- モデル: {result.model} / プロンプト: {result.prompt_version}",
+        f"- 監査対象: {_targets_line(result)}",
+    ]
     if result.report is None:
         kind = result.error.kind.value if result.error is not None else "unknown"
         lines += [f"- 結果: 失敗（{kind}）。ダイジェストは公開済みで、この回の指摘は無い", ""]
@@ -341,7 +355,10 @@ def render_report(result: JudgeResult, packets: Sequence[EvidencePacket]) -> str
     for finding in shown:
         lines += _finding_lines(finding, by_id)
     if omitted:
-        lines += ["", f"ほかに {_findings_line(omitted)} の指摘は、コメントの大きさを抑えるため載せていない。分類は実行メトリクスに残る。"]
+        lines += [
+            "",
+            f"ほかに {_findings_line(omitted)} の指摘は、コメントの大きさを抑えるため載せていない。分類は実行メトリクスに残る。",
+        ]
     if shown:
         lines += [
             "",

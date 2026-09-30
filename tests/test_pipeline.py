@@ -6,11 +6,6 @@ from datetime import timedelta
 from pathlib import Path
 
 import pytest
-
-from agent_daily_digest.contracts import Decision, ErrorKind, RunStatus, StageName, StageStatus
-from agent_daily_digest.llm.call import LLMInvocationError
-from agent_daily_digest.observe.store import MetricsStore
-from agent_daily_digest.content.extract import extract_document
 from normalize_helpers import read_html
 from pipeline_support import (
     DIGEST_DATE,
@@ -25,6 +20,13 @@ from pipeline_support import (
     state_of,
     workspace,
 )
+
+from agent_daily_digest.content.extract import extract_document
+from agent_daily_digest.contracts.base import ErrorKind
+from agent_daily_digest.contracts.editorial import Decision
+from agent_daily_digest.contracts.metrics import RunStatus, StageName, StageStatus
+from agent_daily_digest.llm.call import LLMInvocationError
+from agent_daily_digest.observe.store import MetricsStore
 
 RUN_ID = "run-20260925T070000Z-abcdef"
 
@@ -160,9 +162,10 @@ def test_a_cap_researches_only_that_many_and_leaves_the_rest_for_a_later_run(tmp
 def test_the_cap_takes_fixed_watch_first_then_the_newest_and_keeps_collection_order() -> None:
     from types import SimpleNamespace
 
-    from agent_daily_digest.contracts import SourceKind
-    from agent_daily_digest.pipeline import _within
     from research_support import PUBLISHED, article
+
+    from agent_daily_digest.contracts.articles import SourceKind
+    from agent_daily_digest.pipeline import _within
 
     def result(article_id, kind, hours):
         return SimpleNamespace(article=article(article_id, kind=kind, published_at=PUBLISHED - timedelta(hours=hours)))
@@ -185,8 +188,8 @@ def test_the_cap_takes_fixed_watch_first_then_the_newest_and_keeps_collection_or
 
 
 def test_under_a_cap_a_fixed_watch_article_is_researched_before_a_newer_discovery_one(tmp_path) -> None:
-    from agent_daily_digest.collect import CollectionReport
-    from agent_daily_digest.contracts import SourceFetchResult
+    from agent_daily_digest.collect.run import CollectionReport
+    from agent_daily_digest.contracts.articles import SourceFetchResult
 
     def fetched(source_id, kind, entry):
         return SourceFetchResult.model_validate(
@@ -351,7 +354,7 @@ def test_a_render_failure_publishes_nothing(tmp_path, monkeypatch) -> None:
     # The Selector already rejects what the renderer bans, so this guard is a second line;
     # force it to prove the stage stops the run on its own.
     from agent_daily_digest import pipeline as module
-    from agent_daily_digest.render import ForbiddenArtifactError
+    from agent_daily_digest.render.digest import ForbiddenArtifactError
 
     def refuse(*args, **kwargs):
         raise ForbiddenArtifactError(())

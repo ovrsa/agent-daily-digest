@@ -5,12 +5,12 @@ import json
 from pathlib import Path
 from typing import Any
 
+import factories as f
 import pytest
 from jsonschema import Draft202012Validator
 from pydantic import ValidationError
 
-import factories as f
-from agent_daily_digest.contracts import (
+from agent_daily_digest.contracts.editorial import (
     MUST_READ_MAX,
     WORTH_KNOWING_MAX,
     AxisScores,

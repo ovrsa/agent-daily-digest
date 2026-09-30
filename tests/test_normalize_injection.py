@@ -11,12 +11,18 @@ from __future__ import annotations
 import datetime as dt
 
 import pytest
-
-from agent_daily_digest.contracts import BodySource, NormalizedArticle, compute_content_hash
-from agent_daily_digest.content.text import UNTRUSTED_CLOSE, UNTRUSTED_OPEN, as_untrusted_block, escape_untrusted
-from agent_daily_digest.content.extract import extract_document
-from agent_daily_digest.normalize import normalize_item
 from normalize_helpers import StubFetcher, collected, page, read_html
+
+from agent_daily_digest.content.extract import extract_document
+from agent_daily_digest.content.text import (
+    UNTRUSTED_CLOSE,
+    UNTRUSTED_OPEN,
+    as_untrusted_block,
+    escape_untrusted,
+)
+from agent_daily_digest.contracts.articles import BodySource, NormalizedArticle
+from agent_daily_digest.contracts.base import compute_content_hash
+from agent_daily_digest.normalize import normalize_item
 
 # Every channel is exercised from inside <article>, so dropping one defence
 # cannot be covered for by the content-root selection dropping it anyway.

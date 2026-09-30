@@ -31,31 +31,43 @@ from dataclasses import dataclass, field, replace
 
 from pydantic import ValidationError
 
-from agent_daily_digest.contracts import (
+from agent_daily_digest.contracts.base import ErrorRecord, ValidationIssue
+from agent_daily_digest.contracts.editorial import IncludedArticle, SelectorOutput
+from agent_daily_digest.contracts.metrics import LLMCallMetrics, LLMRole
+from agent_daily_digest.contracts.research import (
     CONCRETE_EVIDENCE_KINDS,
-    ErrorRecord,
     EvidencePacket,
-    IncludedArticle,
-    LLMCallMetrics,
-    LLMRole,
     ResearchStatus,
-    SelectorOutput,
-    ValidationIssue,
 )
-from agent_daily_digest.llm.call import StructuredRequest
-from agent_daily_digest.llm.call import CallSpec, LLMResponse, OutputRejected, RetryPolicy, measured_call
+from agent_daily_digest.llm.call import (
+    CallSpec,
+    LLMResponse,
+    OutputRejected,
+    RetryPolicy,
+    StructuredRequest,
+    measured_call,
+)
 from agent_daily_digest.llm.pricing import PricingTable
-from agent_daily_digest.render import forbidden_artifacts_in
-from agent_daily_digest.research import SourceLibrary, render_packet
-
-from .select_prompt import PROMPT_VERSION, SYSTEM_PROMPT, selection_prompt
+from agent_daily_digest.render.digest import forbidden_artifacts_in
+from agent_daily_digest.research.evidence import SourceLibrary, render_packet
+from agent_daily_digest.select_prompt import (
+    PROMPT_VERSION,
+    SYSTEM_PROMPT,
+    selection_prompt,
+)
 
 Invoker = Callable[[StructuredRequest], LLMResponse]
 
 DEFAULT_RETRY = RetryPolicy(max_attempts=3)
 """Up to two retries, each told which rules the previous decision broke."""
 
-ENTRY_TEXT_MAX: Mapping[str, int] = {"what_happened": 200, "why_read": 200, "evidence": 200, "caveat": 200, "headline": 40}
+ENTRY_TEXT_MAX: Mapping[str, int] = {
+    "what_happened": 200,
+    "why_read": 200,
+    "evidence": 200,
+    "caveat": 200,
+    "headline": 40,
+}
 """Characters per entry field. The contract has no cap; the published digest needs one.
 
 The headline has to fit one line of the overview at the top of the digest. What
@@ -184,7 +196,11 @@ def checked(output: SelectorOutput, packets: Mapping[str, EvidencePacket]) -> Se
 def selection_issues(output: SelectorOutput, packets: Mapping[str, EvidencePacket]) -> tuple[ValidationIssue, ...]:
     issues: list[ValidationIssue] = []
     decided = set(output.article_ids)
-    for bucket, articles in (("must_read", output.must_read), ("worth_knowing", output.worth_knowing), ("excluded", output.excluded)):
+    for bucket, articles in (
+        ("must_read", output.must_read),
+        ("worth_knowing", output.worth_knowing),
+        ("excluded", output.excluded),
+    ):
         for index, article in enumerate(articles):
             if article.article_id not in packets:
                 issues.append(ValidationIssue(loc=f"{bucket}.{index}.article_id", type="unknown_article"))
@@ -215,14 +231,19 @@ def _included_issues(at: str, article: IncludedArticle, packet: EvidencePacket) 
     statements = [("what_happened", entry.what_happened), ("evidence", entry.evidence)]
     if entry.caveat is not None:
         statements.append(("caveat", entry.caveat))
-    texts = {name: statement.text for name, statement in statements} | {"why_read": entry.why_read, "headline": entry.headline}
+    texts = {name: statement.text for name, statement in statements} | {
+        "why_read": entry.why_read,
+        "headline": entry.headline,
+    }
     for name, text in texts.items():
         if len(text) > ENTRY_TEXT_MAX[name]:
             issues.append(ValidationIssue(loc=f"{at}.entry.{name}", type="entry_too_long"))
     for name, statement in statements:
         for position, evidence_id in enumerate(statement.evidence_ids):
             if evidence_id not in packet.evidence_ids:
-                issues.append(ValidationIssue(loc=f"{at}.entry.{name}.evidence_ids.{position}", type="unknown_evidence_id"))
+                issues.append(
+                    ValidationIssue(loc=f"{at}.entry.{name}.evidence_ids.{position}", type="unknown_evidence_id")
+                )
     kinds = {evidence.evidence_id: evidence.kind for evidence in packet.evidence}
     if not any(kinds.get(i) in CONCRETE_EVIDENCE_KINDS for i in entry.evidence.evidence_ids):
         issues.append(ValidationIssue(loc=f"{at}.entry.evidence.evidence_ids", type="evidence_not_concrete"))
