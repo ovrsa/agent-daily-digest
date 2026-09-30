@@ -9,10 +9,12 @@ layer owns. Article bodies are not fetched here; that is #5.
 from .collector import CollectionReport, SourceProbeStats, collect_all, collect_source
 from .config import (
     COLLECTION_KEY,
+    BlogIndexSource,
     CollectionConfig,
     FeedSource,
     GitHubReleasesSource,
     HackerNewsSource,
+    HermesStoriesSource,
     HttpSettings,
     HuggingFacePapersSource,
     SitemapSource,
@@ -52,6 +54,8 @@ __all__ = [
     "CollectionReport",
     "Fetcher",
     "FeedSource",
+    "BlogIndexSource",
+    "HermesStoriesSource",
     "GitHubReleasesSource",
     "HackerNewsSource",
     "HttpResponse",

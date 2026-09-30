@@ -284,7 +284,37 @@ CASES: tuple[Case, ...] = (
     ),
 )
 
+# Synthetic cases for #40: business and everyday use, not coding workflows.
+CASES += (
+    case(
+        "invoice_intake", "Hermes handles our invoice intake, with a human approving payment",
+        evidence=(
+            ("procedure", "Our accounts team forwards supplier invoices to a dedicated inbox. Hermes extracts supplier, amount and due date into a review sheet; the accountant approves payment outside the agent."),
+            ("failure", "An invoice with two currencies was assigned the wrong total. We now route mixed-currency invoices to manual review and retain the source PDF beside each row."),
+        ),
+        claims=(("what_happened", "経理担当者は Hermes で請求書を確認用の表に整理し、複数通貨の請求書は手動確認へ回す。支払いは人が承認する。", (0, 1), False, ()),),
+        limitations=("投稿者自身の運用報告で、削減時間は測定されていない。",),
+    ),
+    case(
+        "apartment_alerts", "Hermes reads listing alerts instead of scraping rental websites",
+        evidence=(
+            ("failure", "My first Hermes apartment scout hit bot protection and returned apartments that had already been rented."),
+            ("procedure", "I now route saved-search alerts to a dedicated inbox. Hermes checks my criteria each morning and emails a shortlist. I contact landlords and decide myself."),
+        ),
+        claims=(("what_happened", "著者は Hermes による物件サイト巡回を通知メールの選別に変更し、問い合わせと決定は自分で行っている。", (0, 1), False, ()),),
+    ),
+    case(
+        "backoffice_promo", "OpenClaw will revolutionize your back office",
+        evidence=(("statement", "Our OpenClaw service transforms finance and HR. Contact sales for details."),),
+        claims=(("what_happened", "ベンダーは OpenClaw による経理・人事向けサービスを宣伝している。", (0,), False, ()),),
+        limitations=("手順、設定、成果、具体例は示されていない。",),
+    ),
+)
+
 EXPECTED: dict[str, str] = {
+    "invoice_intake": "include",
+    "apartment_alerts": "include",
+    "backoffice_promo": "exclude",
     "harness_retry": "either",  # a team's own harness; since #31 the reader uses agents rather than builds them
     "funding_news": "exclude",
     "thin_post": "exclude",

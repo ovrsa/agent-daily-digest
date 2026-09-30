@@ -75,6 +75,23 @@ class SitemapSource(_Spec):
     max_metadata_probes: int = Field(ge=0, le=50)
 
 
+class BlogIndexSource(_Spec):
+    """Blog listing in newest-first order, with bounded publication-date probes."""
+
+    connector: Literal["blog_index"]
+    url: HttpUrlStr
+    url_prefix: HttpUrlStr
+    link_class: NonBlankStr
+    max_metadata_probes: int = Field(ge=1, le=50)
+
+
+class HermesStoriesSource(_Spec):
+    """Official story cards; dates belong to the linked original posts."""
+
+    connector: Literal["hermes_stories"]
+    url: HttpUrlStr
+
+
 class HackerNewsSource(_Spec):
     connector: Literal["hackernews"]
     url: HttpUrlStr = "https://hn.algolia.com/api/v1/search"
@@ -99,6 +116,8 @@ class GitHubReleasesSource(_Spec):
 SourceSpec = Annotated[
     Union[
         FeedSource,
+        HermesStoriesSource,
+        BlogIndexSource,
         SitemapSource,
         HackerNewsSource,
         HuggingFacePapersSource,

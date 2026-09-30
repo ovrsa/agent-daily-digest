@@ -215,10 +215,10 @@ def test_entry_text_over_its_length_cap_is_rejected(field: str, limit: int) -> N
     assert "entry_too_long" not in issue_types(data)
 
 
-def test_the_prompt_is_written_for_developers_who_use_coding_agents() -> None:
+def test_the_prompt_covers_coding_and_personal_agent_readers() -> None:
     """#31: the reader uses Claude Code, Codex or Hermes; agent internals and bug-fix notes are out."""
-    assert PROMPT_VERSION == "selector-v2"
-    assert "Coding Agent を日々の開発に使う開発者" in SYSTEM_PROMPT
+    assert PROMPT_VERSION == "selector-v3"
+    assert "OpenClaw" in SYSTEM_PROMPT and "Hermes Agent" in SYSTEM_PROMPT
     for target in ("新しいモデル", "新しい概念や手法", "活用事例", "使い方が変わる新機能"):
         assert target in SYSTEM_PROMPT
     for out in ("不具合修正が中心のリリースノート", "内部の実装の詳細"):

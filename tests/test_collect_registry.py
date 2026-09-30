@@ -53,8 +53,10 @@ RECORDED_FEEDS = (
     "openai_news",
     "cursor_changelog",
     "reddit_coding_agents",
+    "openclaw_blog",
+    "reddit_personal_agents",
 )
-"""Sources added in #31 and #38, each replayed from its own recording.
+"""Sources added in #31, #38 and #40, each replayed from its own recording.
 
 The fetcher finds each recording by the URL the shipped config gives the
 source; `test_collect_config.py` pins those URLs, so a drifted URL fails there."""
@@ -63,6 +65,9 @@ EVERY_ENTRY = 3650
 """A window in days wide enough to keep every recorded entry."""
 
 BY_URL = {
+    "https://nousresearch.com/blog": "nous_blog.html",
+    "https://nousresearch.com/refactoring-hermes-with-1393-agents": "nous_post_head.html",
+    "https://hermes-agent.nousresearch.com/docs/user-stories/": "hermes_stories.html",
     "https://simonwillison.net/atom/everything/": "simonwillison_atom.xml",
     "https://boristane.com/rss.xml": "boristane_rss.xml",
     "https://nyosegawa.com/feed.xml": "nyosegawa_rss.xml",
@@ -233,3 +238,24 @@ class TestPartialFailure:
 def report_with_window(shipped: CollectionConfig, days: int):
     widened = shipped.model_copy(update={"window_days": days})
     return collect_all(widened, fetcher=RegistryFetcher(), now=s.NOW)
+
+
+def test_personal_agent_sources_collect_original_articles() -> None:
+    from datetime import datetime, timezone
+
+    config = load_collection_config(CONFIG_PATH)
+    sources = tuple(config.source(name) for name in
+                    ('openclaw_blog', 'hermes_stories', 'reddit_personal_agents', 'nous_blog'))
+    config = config.model_copy(update={'sources': sources, 'window_days': 3650})
+    routes = {
+        'https://nousresearch.com/blog': s.read('nous_blog.html'),
+        'https://nousresearch.com/refactoring-hermes-with-1393-agents': s.read('nous_post_head.html'),
+        'https://openclaw.ai/rss.xml': s.read('openclaw_blog_feed.xml'),
+        'https://hermes-agent.nousresearch.com/docs/user-stories/': s.read('hermes_stories.html'),
+        'https://www.reddit.com/r/openclaw+hermesagent/top.rss?t=day&limit=5': s.read('reddit_personal_agents_feed.xml'),
+    }
+    report = collect_all(config, fetcher=s.FixtureFetcher(routes),
+                         now=datetime(2026, 9, 29, tzinfo=timezone.utc))
+    assert report.failed_source_ids == ()
+    assert [r.item_count for r in report.results] == [2, 2, 2, 1]
+    assert all(item.url and item.published_at for item in report.items)

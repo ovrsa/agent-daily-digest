@@ -234,7 +234,9 @@
           "cline",
           "aider",
           "swe-bench",
-          "mcp"
+          "mcp",
+          "openclaw",
+          "hermes agent"
         ],
         "min_points": 30,
         "window_hours": 24,
@@ -255,6 +257,38 @@
         "enabled": true,
         "window_days": 30,
         "url": "https://export.arxiv.org/api/query?search_query=cat:cs.SE+AND+ti:survey+AND+abs:agent&sortBy=submittedDate&sortOrder=descending&max_results=20"
+      },
+      {
+        "id": "openclaw_blog",
+        "kind": "fixed_watch",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://openclaw.ai/rss.xml"
+      },
+      {
+        "id": "hermes_stories",
+        "kind": "discovery",
+        "connector": "hermes_stories",
+        "enabled": true,
+        "url": "https://hermes-agent.nousresearch.com/docs/user-stories/"
+      },
+      {
+        "id": "reddit_personal_agents",
+        "kind": "discovery",
+        "connector": "feed",
+        "enabled": true,
+        "url": "https://www.reddit.com/r/openclaw+hermesagent/top.rss?t=day&limit=5",
+        "max_items": 5
+      },
+      {
+        "id": "nous_blog",
+        "kind": "fixed_watch",
+        "connector": "blog_index",
+        "enabled": true,
+        "url": "https://nousresearch.com/blog",
+        "url_prefix": "https://nousresearch.com/",
+        "link_class": "nw-catalogue-link",
+        "max_metadata_probes": 10
       }
     ]
   },
