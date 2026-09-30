@@ -25,16 +25,7 @@ from typing import Any
 
 from agent_daily_digest.contracts import CollectedItem, SourceKind
 
-from .config import (
-    BlogIndexSource,
-    FeedSource,
-    GitHubReleasesSource,
-    HackerNewsSource,
-    HermesStoriesSource,
-    HuggingFacePapersSource,
-    SitemapSource,
-    SourceSpec,
-)
+from agent_daily_digest.collect.run import BlogIndexSource, FeedSource, GitHubReleasesSource, HackerNewsSource, HermesStoriesSource, HuggingFacePapersSource, SitemapSource, SourceSpec
 from .transport import Fetcher, SitemapIndexError, parse_json, parse_xml
 
 ATOM_NS = "http://www.w3.org/2005/Atom"

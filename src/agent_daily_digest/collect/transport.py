@@ -16,12 +16,13 @@ import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any, Protocol, TYPE_CHECKING
 from xml.parsers import expat
 
 from agent_daily_digest.contracts import ErrorKind, ErrorRecord
 
-from .config import HttpSettings
+if TYPE_CHECKING:
+    from agent_daily_digest.collect.run import HttpSettings
 
 DETAIL_MAX_CHARS = 200
 """Cap for `ErrorRecord.detail` written here.

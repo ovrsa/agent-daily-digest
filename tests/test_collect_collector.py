@@ -383,7 +383,7 @@ class TestCollectSource:
     def test_a_single_source_can_be_collected_on_its_own(self) -> None:
         import datetime as dt
 
-        from agent_daily_digest.collect.config import SOURCE_SPEC_ADAPTER
+        from agent_daily_digest.collect.run import SOURCE_SPEC_ADAPTER
 
         spec = SOURCE_SPEC_ADAPTER.validate_python(s.feed_source(url=SIMONW_URL))
         result, stats = collect_source(

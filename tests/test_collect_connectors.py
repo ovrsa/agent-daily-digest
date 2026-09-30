@@ -15,7 +15,7 @@ from agent_daily_digest.collect import (
     make_article_id,
     read_head_metadata,
 )
-from agent_daily_digest.collect.config import SOURCE_SPEC_ADAPTER
+from agent_daily_digest.collect.run import SOURCE_SPEC_ADAPTER
 from agent_daily_digest.collect.connectors import CONNECTORS, parse_w3c_datetime
 
 import collect_support as s
