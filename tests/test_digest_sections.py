@@ -90,3 +90,35 @@ def test_two_topics_publish_one_file_and_restore_all_files_on_failure(tmp_path, 
         assert all(path.read_bytes() == data for path, data in before.items())
     else:
         assert publish().digest_path == directory / '2026-09-18.md'
+
+
+@pytest.mark.parametrize('article_id,section', [('overlap_coding', 'coding_agent'), ('overlap_equal', 'hermes_use_cases')])
+def test_overlapping_source_keeps_one_topic_and_evidence_through_selector_and_judge(article_id, section):
+    from observe_support import PRICING
+    from research_support import ScriptedModel
+    from selector_support import packet, library
+    from agent_daily_digest.select import Selector
+    from agent_daily_digest.judge import Judge
+
+    source = packet(article_id)
+    item = f.included_payload(article_id)
+    ids = [e.evidence_id for e in source.evidence]
+    item.update(section=section, decision_reason='原文の主題に沿って一つの掲載先を選ぶ。')
+    item['entry'] = {
+        'what_happened': {'text': source.claims[0].text, 'evidence_ids': [ids[0]]},
+        'why_read': '著者が人の確認を残した作業の分け方を検討する材料になる。',
+        'evidence': {'text': source.evidence[1].quote, 'evidence_ids': [ids[1]]},
+        'headline': '開発と業務でAgentを使い分ける事例',
+    }
+    model = ScriptedModel({'must_read': [item], 'worth_knowing': [], 'excluded': [], 'duplicate_groups': []})
+    selected = Selector(invoke=model, pricing=PRICING, model='claude-sonnet-5', library=library()).select((source,))
+    assert selected.succeeded and selected.output.included[0].section.value == section
+    article = f.normalized_article(article_id=article_id, title=source.title, canonical_url=source.canonical_url)
+    rendered = f.render(selected.output, {article_id: article})
+    assert rendered.count('#### 1. [') == 1
+    assert f'1. **{selected.output.included[0].section.heading} / Must Read**' in rendered
+    auditor = ScriptedModel({'findings': []})
+    audited = Judge(invoke=auditor, pricing=PRICING, model='claude-sonnet-5', library=library()).audit(selected.output, (source,))
+    assert audited.succeeded
+    assert f'editor_section: {section}' in auditor.requests[0].prompt
+    assert ids[1] in auditor.requests[0].prompt

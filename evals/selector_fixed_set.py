@@ -19,7 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tests"))
 
-from selector_support import EXPECTED, PACKETS, library  # noqa: E402
+from selector_support import EXPECTED, EXPECTED_SECTIONS, PACKETS, library  # noqa: E402
 
 from agent_daily_digest.llm.client import invoke_structured
 from agent_daily_digest.llm.pricing import load_pricing
@@ -55,6 +55,8 @@ def main() -> None:
         chosen = "include" if decision.value == "included" else "exclude"
         verdict = "ok" if expected == chosen else ("review" if expected == "either" else "MISMATCH")
         section = next((a.section.value for a in output.included if a.article_id == article_id), "-")
+        if chosen == "include" and article_id in EXPECTED_SECTIONS and section != EXPECTED_SECTIONS[article_id]:
+            verdict = "SECTION MISMATCH"
         print(f"| {article_id} | {expected} | {chosen} | {section} | {order or '-'} | {verdict} |")
     print(f"\nduplicate groups: {[(g.representative_id, g.duplicate_ids) for g in output.duplicate_groups]}")
     for article in output.included:
