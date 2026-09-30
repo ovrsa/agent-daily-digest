@@ -16,16 +16,22 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
-from agent_daily_digest.collect import collect_all, load_collection_config, make_fetcher
-from agent_daily_digest.contracts import RunStatus
-from agent_daily_digest.llm import invoke_structured
-from agent_daily_digest.normalize import DEFAULT_STATE_PATH, BodyFetcher, fetch_page
-from agent_daily_digest.observe import DEFAULT_METRICS_DIR, MetricsStore, load_pricing, new_run_id, utc_now
-from agent_daily_digest.research import load_research_budget
-
-from .config import load_max_articles, load_models
-from .pipeline import Collector, Invoker, Paths, Pipeline, RunResult
-from .publisher import DryRunPublisher, GitPublisher
+from agent_daily_digest.collect.run import collect_all, load_collection_config
+from agent_daily_digest.collect.transport import make_fetcher
+from agent_daily_digest.config import (
+    load_max_articles,
+    load_models,
+    load_research_budget,
+)
+from agent_daily_digest.content.fetch import BodyFetcher, fetch_page
+from agent_daily_digest.contracts.metrics import RunStatus
+from agent_daily_digest.llm.client import invoke_structured
+from agent_daily_digest.llm.pricing import load_pricing
+from agent_daily_digest.observe.recorder import new_run_id
+from agent_daily_digest.observe.store import DEFAULT_METRICS_DIR, MetricsStore, utc_now
+from agent_daily_digest.pipeline import Collector, Invoker, Paths, Pipeline, RunResult
+from agent_daily_digest.publish import DryRunPublisher, GitPublisher
+from agent_daily_digest.state import DEFAULT_STATE_PATH
 
 DEFAULT_CONFIG = Path("config.json")
 DIGESTS_DIR = Path("digests")
@@ -125,9 +131,15 @@ def _positive(value: str) -> int:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m agent_daily_digest", description=__doc__.splitlines()[0])
-    parser.add_argument("--dry-run", action="store_true", help="publish nothing; write the result under logs/dry-run/<run_id>/")
-    parser.add_argument("--date", type=date.fromisoformat, default=None, help="digest date (YYYY-MM-DD); today by default")
-    parser.add_argument("--repo", type=Path, default=Path.cwd(), help="repository root; the current directory by default")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="publish nothing; write the result under logs/dry-run/<run_id>/"
+    )
+    parser.add_argument(
+        "--date", type=date.fromisoformat, default=None, help="digest date (YYYY-MM-DD); today by default"
+    )
+    parser.add_argument(
+        "--repo", type=Path, default=Path.cwd(), help="repository root; the current directory by default"
+    )
     parser.add_argument(
         "--max-articles",
         type=_positive,

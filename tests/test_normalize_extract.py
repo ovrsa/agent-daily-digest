@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import pytest
-
-from agent_daily_digest.normalize import extract_document
 from normalize_helpers import read_html
+
+from agent_daily_digest.content.extract import extract_document
 
 BASIC_BODY = (
     "# Harness retry budget\n"

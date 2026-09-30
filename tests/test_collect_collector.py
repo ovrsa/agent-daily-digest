@@ -2,13 +2,22 @@
 
 from __future__ import annotations
 
+import collect_support as s
 import pytest
 from pydantic import ValidationError
 
-from agent_daily_digest.collect import CollectionReport, SourceProbeStats, collect_all, collect_source
-from agent_daily_digest.contracts import ErrorKind, SourceFetchStatus, SourceKind, SourceMetrics
-
-import collect_support as s
+from agent_daily_digest.collect.run import (
+    CollectionReport,
+    SourceProbeStats,
+    collect_all,
+    collect_source,
+)
+from agent_daily_digest.contracts.articles import (
+    SourceFetchStatus,
+    SourceKind,
+    SourceMetrics,
+)
+from agent_daily_digest.contracts.base import ErrorKind
 
 SIMONW_URL = "https://simonwillison.net/atom/everything/"
 BORISTANE_URL = "https://boristane.com/rss.xml"
@@ -223,7 +232,7 @@ class TestProbeReport:
                 self.routes = {s.CLAUDE_SITEMAP: s.read("claude_sitemap.xml")}
 
             def get(self, url, *, accept="*/*"):
-                from agent_daily_digest.collect import HttpResponse
+                from agent_daily_digest.collect.transport import HttpResponse
 
                 if url in self.routes:
                     return HttpResponse(url=url, status=200, body=self.routes[url])
@@ -248,7 +257,7 @@ class TestProbeReport:
                 self.seen = 0
 
             def get(self, url, *, accept="*/*"):
-                from agent_daily_digest.collect import HttpResponse
+                from agent_daily_digest.collect.transport import HttpResponse
 
                 if url == s.CLAUDE_SITEMAP:
                     return HttpResponse(url=url, status=200, body=s.read("claude_sitemap.xml"))
@@ -383,7 +392,7 @@ class TestCollectSource:
     def test_a_single_source_can_be_collected_on_its_own(self) -> None:
         import datetime as dt
 
-        from agent_daily_digest.collect.config import SOURCE_SPEC_ADAPTER
+        from agent_daily_digest.collect.run import SOURCE_SPEC_ADAPTER
 
         spec = SOURCE_SPEC_ADAPTER.validate_python(s.feed_source(url=SIMONW_URL))
         result, stats = collect_source(

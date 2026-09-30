@@ -8,8 +8,8 @@ from urllib.parse import urlsplit
 import pytest
 from pydantic import TypeAdapter
 
-from agent_daily_digest.contracts import HttpUrlStr
-from agent_daily_digest.normalize import UrlProblem, UrlRejected, canonicalize_url
+from agent_daily_digest.content.urls import UrlProblem, UrlRejected, canonicalize_url
+from agent_daily_digest.contracts.base import HttpUrlStr
 
 _URL = TypeAdapter(HttpUrlStr)
 

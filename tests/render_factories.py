@@ -13,8 +13,10 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from agent_daily_digest.contracts import NormalizedArticle, SelectorOutput, compute_content_hash
-from agent_daily_digest.render import render_digest
+from agent_daily_digest.contracts.articles import NormalizedArticle
+from agent_daily_digest.contracts.base import compute_content_hash
+from agent_daily_digest.contracts.editorial import SelectorOutput
+from agent_daily_digest.render.digest import render_digest
 
 DIGEST_DATE = date(2026, 9, 18)
 """The date the snapshot was rendered for."""

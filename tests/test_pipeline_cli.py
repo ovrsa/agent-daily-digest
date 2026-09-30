@@ -6,10 +6,21 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from agent_daily_digest.contracts import RunStatus
-from agent_daily_digest import DRY_RUN_COMMIT, DryRunPublisher, GitPublisher, RunResult, build, summary
+from pipeline_support import (
+    DIGEST_DATE,
+    ROOT,
+    RoutedModel,
+    decision,
+    fetcher,
+    finding,
+    report,
+)
+
+from agent_daily_digest.cli import build, summary
 from agent_daily_digest.config import DEFAULT_MAX_ARTICLES, load_max_articles
-from pipeline_support import DIGEST_DATE, ROOT, RoutedModel, decision, fetcher, finding, report
+from agent_daily_digest.contracts.metrics import RunStatus
+from agent_daily_digest.pipeline import RunResult
+from agent_daily_digest.publish import DRY_RUN_COMMIT, DryRunPublisher, GitPublisher
 
 RUN_ID = "run-20260925T070000Z-abcdef"
 
@@ -129,8 +140,8 @@ def test_the_summary_names_the_run_its_status_and_where_to_look(tmp_path: Path) 
 
 
 def test_the_exit_code_is_zero_only_when_the_digest_run_finished_cleanly(tmp_path: Path, monkeypatch, capsys) -> None:
-    from agent_daily_digest.contracts import ErrorKind, ErrorRecord
     from agent_daily_digest import cli
+    from agent_daily_digest.contracts.base import ErrorKind, ErrorRecord
 
     outcomes = {
         RunStatus.SUCCEEDED: 0,

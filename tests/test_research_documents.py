@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
-from agent_daily_digest.normalize import UNTRUSTED_CLOSE, UNTRUSTED_OPEN
-from agent_daily_digest.research import SourceLibrary, render_article, source_document, split_paragraphs
 from research_support import article
+
+from agent_daily_digest.content.text import UNTRUSTED_CLOSE, UNTRUSTED_OPEN
+from agent_daily_digest.research.evidence import (
+    SourceLibrary,
+    render_article,
+    source_document,
+    split_paragraphs,
+)
 
 
 def test_a_code_block_with_blank_lines_stays_one_paragraph() -> None:

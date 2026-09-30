@@ -1,17 +1,17 @@
 from __future__ import annotations
 
+import factories as f
 import pytest
 from pydantic import ValidationError
 
-import factories as f
-from agent_daily_digest.contracts import (
+from agent_daily_digest.contracts.articles import (
     CollectedItem,
     NormalizedArticle,
     ProcessedRecord,
     ProcessedState,
     SourceFetchResult,
-    compute_content_hash,
 )
+from agent_daily_digest.contracts.base import compute_content_hash
 
 
 class TestCollectedItem:

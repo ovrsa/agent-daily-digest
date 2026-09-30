@@ -23,10 +23,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from agent_daily_digest.contracts import EvidencePacket, SelectorOutput, SourceKind
-from agent_daily_digest.research import SourceLibrary
 from selector_support import CASES, case
 from selector_support import library as selector_library
+
+from agent_daily_digest.contracts.articles import SourceKind
+from agent_daily_digest.contracts.editorial import SelectorOutput
+from agent_daily_digest.contracts.research import EvidencePacket
+from agent_daily_digest.research.evidence import SourceLibrary
 
 REPOST = case(
     "hooks_repost",

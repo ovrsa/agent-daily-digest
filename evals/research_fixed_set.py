@@ -18,11 +18,18 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tests"))
 
-from agent_daily_digest.contracts import LLMCallMetrics  # noqa: E402
-from agent_daily_digest.llm import invoke_structured  # noqa: E402
-from agent_daily_digest.observe import load_pricing  # noqa: E402
-from agent_daily_digest.research import Researcher, ResearchInput, render_packet  # noqa: E402
-from research_support import RESULTS_PAGE, RESULTS_URL, ScriptedWeb, article  # noqa: E402
+from research_support import (  # noqa: E402
+    RESULTS_PAGE,
+    RESULTS_URL,
+    ScriptedWeb,
+    article,
+)
+
+from agent_daily_digest.contracts.metrics import LLMCallMetrics
+from agent_daily_digest.llm.client import invoke_structured
+from agent_daily_digest.llm.pricing import load_pricing
+from agent_daily_digest.research.evidence import render_packet
+from agent_daily_digest.research.run import Researcher, ResearchInput
 
 CASES = (
     ("complete in one round", ResearchInput(article("basic"))),

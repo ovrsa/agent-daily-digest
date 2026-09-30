@@ -7,11 +7,11 @@ import sys
 from datetime import datetime, timedelta, timezone
 
 import pytest
-
-import agent_daily_digest.research
-from agent_daily_digest.contracts import SourceKind
-from agent_daily_digest.research import cluster_articles, load_research_budget, resolve_links
 from research_support import PUBLISHED, article
+
+from agent_daily_digest.config import load_research_budget
+from agent_daily_digest.contracts.articles import SourceKind
+from agent_daily_digest.research.run import cluster_articles, resolve_links
 
 
 def test_an_article_linking_to_another_joins_its_cluster() -> None:
@@ -77,8 +77,6 @@ def test_the_budget_is_read_from_the_config(tmp_path) -> None:
 
 
 def test_the_public_names_resolve_and_importing_does_not_load_the_sdk() -> None:
-    names = agent_daily_digest.research.__all__
-    assert len(names) == len(set(names)) and all(getattr(agent_daily_digest.research, n) is not None for n in names)
-    code = "import sys, agent_daily_digest.research; print('\\n'.join(sys.modules))"
+    code = "import sys, agent_daily_digest.research.run, agent_daily_digest.research.evidence; print('\\n'.join(sys.modules))"
     loaded = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True).stdout.split()
     assert "claude_agent_sdk" not in loaded

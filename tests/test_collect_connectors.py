@@ -5,20 +5,20 @@ from __future__ import annotations
 import datetime as dt
 import json
 
+import collect_support as s
 import pytest
 
-from agent_daily_digest.collect import (
+from agent_daily_digest.collect.connectors import (
+    CONNECTORS,
     CollectContext,
     PageMetadata,
     ProbeRecorder,
-    SitemapIndexError,
     make_article_id,
+    parse_w3c_datetime,
     read_head_metadata,
 )
-from agent_daily_digest.collect.config import SOURCE_SPEC_ADAPTER
-from agent_daily_digest.collect.connectors import CONNECTORS, parse_w3c_datetime
-
-import collect_support as s
+from agent_daily_digest.collect.run import SOURCE_SPEC_ADAPTER
+from agent_daily_digest.collect.transport import SitemapIndexError
 
 CLAUDE_POST = "https://claude.com/blog/build-artifacts"
 ANTHROPIC_POST = "https://www.anthropic.com/engineering/building-effective-agents"
@@ -624,7 +624,7 @@ class TestHackerNewsConnector:
                 self.requested.append(url)
                 if "llm" in url:
                     raise s.http_error(503)
-                from agent_daily_digest.collect import HttpResponse
+                from agent_daily_digest.collect.transport import HttpResponse
 
                 return HttpResponse(url=url, status=200, body=good)
 

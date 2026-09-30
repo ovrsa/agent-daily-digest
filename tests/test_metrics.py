@@ -4,29 +4,33 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+import factories as f
 import pytest
 from pydantic import BaseModel, RootModel, ValidationError
 
-import factories as f
-from agent_daily_digest.contracts import (
-    ALLOWED_RUN_TRANSITIONS,
-    ALLOWED_STAGE_TRANSITIONS,
-    MUST_READ_MAX,
-    WORTH_KNOWING_MAX,
-    ArticleMetrics,
+from agent_daily_digest.contracts.articles import SourceMetrics
+from agent_daily_digest.contracts.base import (
     ErrorKind,
     ErrorRecord,
     InvalidTransitionError,
+    ValidationIssue,
+)
+from agent_daily_digest.contracts.editorial import (
+    MUST_READ_MAX,
+    WORTH_KNOWING_MAX,
+    SelectorOutput,
+)
+from agent_daily_digest.contracts.metrics import (
+    ALLOWED_RUN_TRANSITIONS,
+    ALLOWED_STAGE_TRANSITIONS,
+    ArticleMetrics,
     LLMAttempt,
     LLMCallMetrics,
     RunMetrics,
     RunStatus,
-    SelectorOutput,
-    SourceMetrics,
     StageMetrics,
     StageName,
     StageStatus,
-    ValidationIssue,
 )
 
 SELECTOR_FIXTURE = Path(__file__).parent / "fixtures" / "selector_output.valid.json"

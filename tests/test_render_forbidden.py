@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import pytest
-
 import render_factories as f
-from agent_daily_digest.contracts import SelectorOutput
-from agent_daily_digest.render import (
+
+from agent_daily_digest.contracts.editorial import SelectorOutput
+from agent_daily_digest.render.digest import (
     RULE_DESCRIPTIONS,
     ForbiddenArtifactError,
     ForbiddenRule,

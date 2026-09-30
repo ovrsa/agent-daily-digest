@@ -22,47 +22,72 @@ discarded. Research runs once per cluster, on the representative.
 
 from __future__ import annotations
 
+import re
 import time
+import unicodedata
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
+from datetime import timezone
 from urllib.parse import urljoin
 
-from agent_daily_digest.contracts import (
-    ErrorRecord,
+from agent_daily_digest.content.extract import extract_document
+from agent_daily_digest.content.fetch import BodyFetcher, FetchedPage
+from agent_daily_digest.content.urls import UrlRejected, canonicalize_url
+from agent_daily_digest.contracts.articles import NormalizedArticle, SourceKind
+from agent_daily_digest.contracts.base import ErrorRecord, compute_content_hash
+from agent_daily_digest.contracts.metrics import LLMCallMetrics, LLMRole
+from agent_daily_digest.contracts.research import (
     EvidencePacket,
     FetchedReference,
-    LLMCallMetrics,
-    LLMRole,
-    NormalizedArticle,
     ResearchBudget,
     ResearchStatus,
     ResearchStopReason,
     ResearchTrace,
     SourceDocument,
-    compute_content_hash,
 )
-from agent_daily_digest.llm import StructuredRequest
-from agent_daily_digest.normalize import (
-    MIN_PRIMARY_INFO_CHARS,
-    BodyFetcher,
-    FetchedPage,
-    ProcessedIndex,
-    UrlRejected,
-    canonicalize_url,
-    extract_document,
+from agent_daily_digest.llm.call import (
+    CallOutcome,
+    CallSpec,
+    LLMResponse,
+    RetryPolicy,
+    StructuredRequest,
+    measured_call,
 )
-from agent_daily_digest.observe import CallOutcome, CallSpec, LLMResponse, PricingTable, RetryPolicy, measured_call
-
-from .clusters import Cluster, cluster_articles
-from .documents import render_article, render_reference, source_document
-from .extraction import Assessment, EvidenceMap, ExtractionOutput, QuestionDraft, accept, assess
-from .library import SourceLibrary, render_map
-from .prompt import PROMPT_VERSION, SYSTEM_PROMPT, round_one_prompt, round_two_prompt
+from agent_daily_digest.llm.pricing import PricingTable
+from agent_daily_digest.normalize import MIN_PRIMARY_INFO_CHARS
+from agent_daily_digest.research.evidence import (
+    SourceLibrary,
+    render_article,
+    render_map,
+    render_reference,
+    source_document,
+)
+from agent_daily_digest.research.extraction import (
+    Assessment,
+    EvidenceMap,
+    ExtractionOutput,
+    QuestionDraft,
+    accept,
+    assess,
+)
+from agent_daily_digest.research.prompt import (
+    PROMPT_VERSION,
+    SYSTEM_PROMPT,
+    round_one_prompt,
+    round_two_prompt,
+)
+from agent_daily_digest.state import ProcessedIndex
 
 Invoker = Callable[[StructuredRequest], LLMResponse]
 
 DEFAULT_RETRY = RetryPolicy(max_attempts=2)
 """One retry per round. A map that fails the reference checks twice is an extraction failure."""
+
+
+@dataclass(frozen=True)
+class Cluster:
+    representative: NormalizedArticle
+    supporting: tuple[NormalizedArticle, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -127,7 +152,9 @@ class Researcher:
         return ResearchResult(packets=tuple(sorted(packets, key=lambda p: order[p.article_id])), library=library)
 
     # -- one cluster ------------------------------------------------------
-    def _research(self, cluster: Cluster, links: tuple[str, ...], library: SourceLibrary, seen: _Seen) -> EvidencePacket:
+    def _research(
+        self, cluster: Cluster, links: tuple[str, ...], library: SourceLibrary, seen: _Seen
+    ) -> EvidencePacket:
         article = cluster.representative
         started = self.monotonic()
         state = _State(article=article, cluster=cluster, links=links if self.budget.max_link_depth >= 1 else ())
@@ -167,7 +194,9 @@ class Researcher:
             outcome = self._round(state, round_two_prompt(render_map(state.map), asked, blocks), prior=state.map)
             if not outcome.succeeded:
                 state.unresolved.append(f"追加の確認で根拠を抽出できなかった（{outcome.error.kind.value}）")
-                return state.packet(assess(article, state.map), ResearchStopReason.EXTRACTION_FAILED, self._elapsed(started))
+                return state.packet(
+                    assess(article, state.map), ResearchStopReason.EXTRACTION_FAILED, self._elapsed(started)
+                )
             state.map = outcome.value
 
     def _round(self, state: _State, prompt: str, *, prior: EvidenceMap | None) -> CallOutcome[EvidenceMap]:
@@ -208,7 +237,10 @@ class Researcher:
                 url = self._allowed_url(state, question.url, seen)
                 if url is None:
                     continue
-                if len(state.references) >= self.budget.max_extra_pages or self._elapsed(started) >= self.budget.max_seconds * 1000:
+                if (
+                    len(state.references) >= self.budget.max_extra_pages
+                    or self._elapsed(started) >= self.budget.max_seconds * 1000
+                ):
                     state.unresolved.append(f"上限に達したため参照先を取得していない: {url}")
                     capped = True
                     continue
@@ -351,3 +383,77 @@ def _has(document: SourceDocument | None, paragraph_id: str) -> bool:
     except KeyError:
         return False
     return True
+
+
+TITLE_SIMILARITY = 0.6
+"""Jaccard similarity of title words at or above which two titles name one topic."""
+
+MIN_SHARED_TITLE_WORDS = 3
+
+OFFICIAL_SOURCE_PREFIXES = ("claude_blog", "anthropic_engineering", "gh_")
+"""Sources that publish first-hand: the vendor's own posts and release notes."""
+
+_WORD = re.compile(r"[0-9a-z]+|[぀-ヿ一-鿿]+")
+_STOP = frozenset({"a", "an", "the", "of", "to", "in", "on", "for", "and", "with", "how", "we", "is", "our", "your"})
+
+
+def cluster_articles(
+    articles: Sequence[NormalizedArticle],
+    links: Mapping[str, Sequence[str]] | None = None,
+) -> tuple[Cluster, ...]:
+    """Clusters in the order their representatives first appear in `articles`.
+
+    `links` maps an article id to the canonical URLs its page links to.
+    """
+    links = links or {}
+    parent = list(range(len(articles)))
+
+    def find(index: int) -> int:
+        while parent[index] != index:
+            parent[index] = parent[parent[index]]
+            index = parent[index]
+        return index
+
+    def union(a: int, b: int) -> None:
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[max(ra, rb)] = min(ra, rb)
+
+    by_url = {article.canonical_url: i for i, article in enumerate(articles)}
+    for i, article in enumerate(articles):
+        for url in links.get(article.article_id, ()):
+            j = by_url.get(url)
+            if j is not None and articles[j].source_id != article.source_id:
+                union(i, j)
+    words = [_title_words(article.title) for article in articles]
+    for i in range(len(articles)):
+        for j in range(i + 1, len(articles)):
+            shared = words[i] & words[j]
+            union_size = len(words[i] | words[j])
+            if len(shared) >= MIN_SHARED_TITLE_WORDS and union_size and len(shared) / union_size >= TITLE_SIMILARITY:
+                union(i, j)
+
+    groups: dict[int, list[NormalizedArticle]] = {}
+    for i, article in enumerate(articles):
+        groups.setdefault(find(i), []).append(article)
+    clusters = []
+    for root in sorted(groups):
+        members = sorted(groups[root], key=_priority)
+        clusters.append(Cluster(representative=members[0], supporting=tuple(members[1:])))
+    return tuple(clusters)
+
+
+def _priority(article: NormalizedArticle) -> tuple[int, str, str]:
+    if article.source_id.startswith(OFFICIAL_SOURCE_PREFIXES):
+        rank = 0
+    elif article.source_kind is SourceKind.FIXED_WATCH:
+        rank = 1
+    else:
+        rank = 2
+    # Earliest first, compared in one zone: offsets differ between feeds.
+    return (rank, article.published_at.astimezone(timezone.utc).isoformat(), article.article_id)
+
+
+def _title_words(title: str) -> frozenset[str]:
+    text = unicodedata.normalize("NFKC", title).lower()
+    return frozenset(word for word in _WORD.findall(text) if word not in _STOP)

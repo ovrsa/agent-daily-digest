@@ -1,6 +1,7 @@
 """Where a run touches GitHub: bring the checkout up to date, commit and push, comment.
 
-Every side effect of a run goes through a `Publisher`, so a dry run swaps in
+Digest, index and state writes are coordinated by `publish_selection`.
+External side effects of a run go through a `Publisher`, so a dry run swaps in
 `DryRunPublisher` and nothing leaves the machine. `GitPublisher` uses the local
 `git` and `gh` with the credentials already configured on the Mac (#2's
 decision), never a token of its own.
@@ -15,19 +16,65 @@ the next run's fast-forward brings it back.
 
 from __future__ import annotations
 
+import re
 import subprocess
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
+from datetime import date
 from pathlib import Path
 from typing import Protocol
 
-from agent_daily_digest.contracts import ErrorKind
-from agent_daily_digest.observe import StageFailed, safe_detail
+from agent_daily_digest.contracts.articles import NormalizedArticle, ProcessedState
+from agent_daily_digest.contracts.base import ErrorKind
+from agent_daily_digest.contracts.editorial import SelectorOutput
+from agent_daily_digest.observe.recorder import StageFailed
+from agent_daily_digest.observe.store import safe_detail
+from agent_daily_digest.render.digest import digest_filename, render_digest
+from agent_daily_digest.render.index import README_FILENAME, update_index
+from agent_daily_digest.state import save_state
 
 COMMAND_TIMEOUT_SECONDS = 120.0
 
 DRY_RUN_COMMIT = "dry-run"
 """What `DryRunPublisher.publish` returns in place of a commit id."""
+
+
+_DIGEST_FILENAME = re.compile(r"^(\d{4}-\d{2}-\d{2})\.md$")
+
+
+@dataclass(frozen=True)
+class Publication:
+    commit: str
+    digest_path: Path | None
+
+
+def publish_selection(
+    output: SelectorOutput,
+    articles: Mapping[str, NormalizedArticle],
+    decided: ProcessedState,
+    digest_date: date,
+    *,
+    digests_dir: Path,
+    state_path: Path,
+    publisher: Publisher,
+    adopted: bool,
+) -> Publication:
+    """Write the digest/index and decided state, publish them, and restore files on any failure."""
+    digest_path = digests_dir / digest_filename(digest_date)
+    written = _Snapshot.of(digest_path, digests_dir / README_FILENAME, state_path)
+    try:
+        files: list[Path] = []
+        if adopted:
+            digest = write_digest(output, articles, digest_date, digests_dir)
+            files += [digest, digests_dir / README_FILENAME]
+        save_state(state_path, decided)
+        files.append(state_path)
+        kind = "digest" if adopted else "state"
+        commit = publisher.publish(files, f"{kind}: {digest_date.isoformat()}")
+    except BaseException:
+        written.restore()
+        raise
+    return Publication(commit, digest_path if adopted else None)
 
 
 class Publisher(Protocol):
@@ -148,3 +195,62 @@ class DryRunPublisher:
         self.comments.append((commit, body))
         self.out_dir.mkdir(parents=True, exist_ok=True)
         (self.out_dir / "comment.md").write_text(body, encoding="utf-8")
+
+
+def list_digest_dates(digests_dir: Path) -> tuple[date, ...]:
+    """Dates of the digest files in `digests_dir`, newest first.
+
+    Anything that is not a `YYYY-MM-DD.md` naming a real date is ignored, so
+    `README.md` and stray files do not reach the index.
+    """
+    found = []
+    for path in digests_dir.iterdir():
+        match = _DIGEST_FILENAME.match(path.name)
+        if match is None or not path.is_file():
+            continue
+        try:
+            found.append(date.fromisoformat(match.group(1)))
+        except ValueError:
+            continue
+    return tuple(sorted(found, reverse=True))
+
+
+def write_digest(
+    selector_output: SelectorOutput,
+    articles: Mapping[str, NormalizedArticle],
+    digest_date: date,
+    digests_dir: Path,
+) -> Path | None:
+    """Write a checked digest and refresh the index; write nothing if none was adopted."""
+    markdown = render_digest(selector_output, articles, digest_date)
+    if markdown is None:
+        return None
+
+    readme_path = digests_dir / README_FILENAME
+    readme_text = update_index(
+        readme_path.read_text(encoding="utf-8"),
+        (digest_date, *list_digest_dates(digests_dir)),
+    )
+
+    digest_path = digests_dir / digest_filename(digest_date)
+    digest_path.write_bytes(markdown.encode("utf-8"))
+    readme_path.write_bytes(readme_text.encode("utf-8"))
+    return digest_path
+
+
+@dataclass(frozen=True)
+class _Snapshot:
+    """The bytes of some files before a publish wrote them, to put back if it fails."""
+
+    before: tuple[tuple[Path, bytes | None], ...]
+
+    @classmethod
+    def of(cls, *paths: Path) -> _Snapshot:
+        return cls(tuple((path, path.read_bytes() if path.exists() else None) for path in paths))
+
+    def restore(self) -> None:
+        for path, content in self.before:
+            if content is None:
+                path.unlink(missing_ok=True)
+            else:
+                path.write_bytes(content)

@@ -14,15 +14,14 @@ import agent_daily_digest.contracts
 PACKAGE_DIR = Path(agent_daily_digest.contracts.__file__).parent
 
 
-def test_all_names_resolve_and_are_unique() -> None:
-    names = agent_daily_digest.contracts.__all__
-    assert len(names) == len(set(names))
-    for name in names:
-        assert getattr(agent_daily_digest.contracts, name) is not None
+def test_contract_package_is_a_thin_namespace() -> None:
+    import ast
+
+    tree = ast.parse(Path(agent_daily_digest.contracts.__file__).read_text())
+    assert all(isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) for node in tree.body)
 
 
-def test_every_model_is_reachable_from_the_package_root() -> None:
-    """A model a caller can build has to be in `__all__`, not only in its submodule."""
+def test_every_model_is_reachable_from_its_implementation_module() -> None:
     for path in PACKAGE_DIR.glob("*.py"):
         if path.stem == "__init__":
             continue
@@ -31,7 +30,7 @@ def test_every_model_is_reachable_from_the_package_root() -> None:
             if name.startswith("_") or not isinstance(obj, type):
                 continue
             if issubclass(obj, BaseModel) and obj.__module__ == module.__name__:
-                assert name in agent_daily_digest.contracts.__all__, f"{module.__name__}.{name}"
+                assert getattr(importlib.import_module(obj.__module__), name) is obj
 
 
 def test_no_sdk_or_network_dependency_is_imported() -> None:
@@ -58,4 +57,5 @@ def test_research_contracts_are_defined_only_in_the_research_module() -> None:
             name for name in owned_by_research if getattr(getattr(module, name, None), "__module__", None) == module.__name__
         }
         assert defined_here == (owned_by_research if path.stem == "research" else set()), path.stem
-    assert owned_by_research <= set(agent_daily_digest.contracts.__all__)
+    research = importlib.import_module("agent_daily_digest.contracts.research")
+    assert all(getattr(research, name).__module__ == research.__name__ for name in owned_by_research)

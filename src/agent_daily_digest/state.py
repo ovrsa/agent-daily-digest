@@ -16,14 +16,13 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from agent_daily_digest.contracts import (
-    ContentHash,
-    Decision,
-    HttpUrlStr,
+from agent_daily_digest.contracts.articles import (
     NormalizedArticle,
     ProcessedRecord,
     ProcessedState,
 )
+from agent_daily_digest.contracts.base import ContentHash, HttpUrlStr
+from agent_daily_digest.contracts.editorial import Decision
 
 DEFAULT_STATE_PATH = Path("state/processed.json")
 """Where the pipeline keeps the state unless #10 points it elsewhere."""

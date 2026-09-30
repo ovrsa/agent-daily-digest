@@ -2,26 +2,10 @@
 
 from __future__ import annotations
 
-import os
 from importlib import import_module
 from pathlib import Path
 
 import pytest
-
-from agent_daily_digest.contracts import (
-    ErrorKind,
-    LLMCallMetrics,
-    LLMRole,
-    ProcessedRecord,
-    ProcessedState,
-    ResearchBudget,
-    ResearchStatus,
-    ResearchStopReason,
-    SourceKind,
-)
-from agent_daily_digest.normalize import ProcessedIndex, extract_document
-from agent_daily_digest.observe import LLMResponse
-from agent_daily_digest.research import Researcher, ResearchInput, render_packet
 from observe_support import PRICING
 from research_support import (
     PUBLISHED,
@@ -33,6 +17,24 @@ from research_support import (
     complete_map,
     statement_only_map,
 )
+
+from agent_daily_digest.content.extract import extract_document
+from agent_daily_digest.contracts.articles import (
+    ProcessedRecord,
+    ProcessedState,
+    SourceKind,
+)
+from agent_daily_digest.contracts.base import ErrorKind
+from agent_daily_digest.contracts.metrics import LLMCallMetrics, LLMRole
+from agent_daily_digest.contracts.research import (
+    ResearchBudget,
+    ResearchStatus,
+    ResearchStopReason,
+)
+from agent_daily_digest.llm.call import LLMResponse
+from agent_daily_digest.research.evidence import render_packet
+from agent_daily_digest.research.run import Researcher, ResearchInput
+from agent_daily_digest.state import ProcessedIndex
 
 LINKS_ARTICLE = article(fixture="article_links", title="Evaluating agent harnesses", url="https://example.com/posts/harness-eval")
 LINKS_INPUT = ResearchInput(LINKS_ARTICLE, links=(RESULTS_URL, "/posts/eval-method", "#section-2", "mailto:a@example.com"))

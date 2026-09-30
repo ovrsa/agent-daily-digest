@@ -11,12 +11,12 @@ Claude Code・Codex などを開発に、OpenClaw・Hermes Agent などを業務
 | 場所 | 役割 |
 |---|---|
 | `src/agent_daily_digest/__main__.py`・`cli.py`・`pipeline.py` | 実行入口、設定と部品の組み立て、処理順と失敗時の扱い |
-| `src/agent_daily_digest/collect/`・`normalize/` | 候補の収集、本文取得、正規化とゲート |
+| `src/agent_daily_digest/collect/`・`normalize.py`・`content/`・`state.py` | 候補の収集、本文取得、正規化とゲート |
 | `src/agent_daily_digest/research/`・`select.py`・`select_prompt.py` | 根拠の調査、採否と掲載文の決定。調査用プロンプトは `research/prompt.py` |
 | `src/agent_daily_digest/render/`・`judge.py`・`judge_prompt.py` | Markdown の生成、公開後の監査 |
 | `src/agent_daily_digest/contracts/` | 段階間で渡す Pydantic の型 |
-| `src/agent_daily_digest/llm.py`・`observe/` | モデル呼び出し、実行記録と費用計測 |
-| `src/agent_daily_digest/publisher.py`・`config.py` | Git への公開と実行設定の読み込み |
+| `src/agent_daily_digest/llm/`・`observe/` | モデル呼び出し、実行記録と費用計測 |
+| `src/agent_daily_digest/publish.py`・`config.py` | Git への公開と実行設定の読み込み |
 | `config.json` | 収集ソース、モデル、研究と実行の上限 |
 | `ops/` | 手動・定期実行のスクリプトと launchd の登録 |
 | `tests/`・`evals/` | 自動テスト、プロンプト変更を比べる固定セット評価 |
@@ -28,7 +28,7 @@ Claude Code・Codex などを開発に、OpenClaw・Hermes Agent などを業務
 
 1. この README の「仕組み」で段階の順序をつかむ。
 2. `src/agent_daily_digest/cli.py` で設定と各処理の組み立てを、`src/agent_daily_digest/pipeline.py` で呼び出し順と失敗時の扱いを見る。
-3. 関心のある段階の `collect/`・`normalize/`・`research/`・`select.py`・`render/`・`judge.py` を読む。段階間のデータ型は `contracts/`、実際のソースとモデルは `config.json` で確認する。
+3. 関心のある段階の `collect/run.py`・`normalize.py`・`research/run.py`・`select.py`・`render/`・`judge.py` を読む。段階間のデータ型は `contracts/`、実際のソースとモデルは `config.json` で確認する。
 
 ## 仕組み
 

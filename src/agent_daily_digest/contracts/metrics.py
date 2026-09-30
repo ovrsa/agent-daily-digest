@@ -10,21 +10,28 @@ from typing import Annotated, Any
 
 from pydantic import AwareDatetime, Field, StringConstraints, model_validator
 
-from ._base import (
+from agent_daily_digest.contracts.articles import BodySource, GateOutcome, SourceMetrics
+from agent_daily_digest.contracts.base import (
     ArticleId,
     ContractModel,
+    ErrorKind,
+    ErrorRecord,
     HttpUrlStr,
     InvalidTransitionError,
     NonBlankStr,
     NonNegativeInt,
     SourceId,
+    ValidationIssue,
     first_duplicate,
 )
-from .articles import BodySource, SourceMetrics
-from .errors import ErrorKind, ErrorRecord, ValidationIssue
-from .gates import GateOutcome
-from .judge import FindingMetrics
-from .selection import MUST_READ_MAX, WORTH_KNOWING_MAX, AxisScores, Decision, Tier
+from agent_daily_digest.contracts.editorial import (
+    MUST_READ_MAX,
+    WORTH_KNOWING_MAX,
+    AxisScores,
+    Decision,
+    FindingMetrics,
+    Tier,
+)
 
 RecordId = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$")]
 """Identifier of a run or an LLM call."""

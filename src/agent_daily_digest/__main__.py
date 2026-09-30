@@ -1,5 +1,5 @@
 import sys
 
-from .cli import main
+from agent_daily_digest.cli import main
 
 sys.exit(main())

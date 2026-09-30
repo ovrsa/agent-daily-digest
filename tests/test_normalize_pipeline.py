@@ -5,26 +5,31 @@ from __future__ import annotations
 import datetime as dt
 
 import pytest
+from normalize_helpers import (
+    FEED_URL,
+    StubFetcher,
+    collected,
+    feed_summary,
+    page,
+    processed_record,
+)
 
-from agent_daily_digest.contracts import (
+from agent_daily_digest.content.extract import extract_document
+from agent_daily_digest.content.fetch import FetchedPage, FetchFailure
+from agent_daily_digest.contracts.articles import (
     GATE_ORDER,
     BodySource,
-    ErrorKind,
     GateExclusionReason,
     GateName,
     ProcessedState,
-    compute_content_hash,
 )
+from agent_daily_digest.contracts.base import ErrorKind, compute_content_hash
 from agent_daily_digest.normalize import (
     MIN_PRIMARY_INFO_CHARS,
-    FetchFailure,
-    FetchedPage,
-    ProcessedIndex,
-    extract_document,
     normalize_item,
     normalize_items,
 )
-from normalize_helpers import FEED_URL, StubFetcher, collected, feed_summary, page, processed_record
+from agent_daily_digest.state import ProcessedIndex
 
 JST = dt.timezone(dt.timedelta(hours=9))
 

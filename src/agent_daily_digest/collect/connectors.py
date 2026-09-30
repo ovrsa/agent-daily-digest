@@ -23,9 +23,7 @@ from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from typing import Any
 
-from agent_daily_digest.contracts import CollectedItem, SourceKind
-
-from .config import (
+from agent_daily_digest.collect.run import (
     BlogIndexSource,
     FeedSource,
     GitHubReleasesSource,
@@ -35,7 +33,13 @@ from .config import (
     SitemapSource,
     SourceSpec,
 )
-from .transport import Fetcher, SitemapIndexError, parse_json, parse_xml
+from agent_daily_digest.collect.transport import (
+    Fetcher,
+    SitemapIndexError,
+    parse_json,
+    parse_xml,
+)
+from agent_daily_digest.contracts.articles import CollectedItem, SourceKind
 
 ATOM_NS = "http://www.w3.org/2005/Atom"
 SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -154,9 +158,7 @@ def _feed_entries(root: ET.Element) -> Iterator[_FeedEntry]:
             _text(entry.findtext(f"{{{ATOM_NS}}}title")),
             _atom_link(entry),
             _first_text(entry, f"{{{ATOM_NS}}}published", f"{{{ATOM_NS}}}updated"),
-            _strip_markup(
-                entry.findtext(f"{{{ATOM_NS}}}summary") or entry.findtext(f"{{{ATOM_NS}}}content")
-            ),
+            _strip_markup(entry.findtext(f"{{{ATOM_NS}}}summary") or entry.findtext(f"{{{ATOM_NS}}}content")),
             tuple(category.get("term") or "" for category in entry.findall(f"{{{ATOM_NS}}}category")),
         )
 
@@ -189,9 +191,7 @@ def _atom_link(entry: ET.Element) -> str | None:
 
 
 def collect_feed(spec: FeedSource, ctx: CollectContext) -> tuple[CollectedItem, ...]:
-    response = ctx.fetcher.get(
-        spec.url, accept="application/atom+xml, application/rss+xml, application/xml"
-    )
+    response = ctx.fetcher.get(spec.url, accept="application/atom+xml, application/rss+xml, application/xml")
     root = parse_xml(response.body)
     cutoff = ctx.now - ctx.window
     wanted = frozenset(map(_category_key, spec.categories)) if spec.categories else None
@@ -207,9 +207,7 @@ def collect_feed(spec: FeedSource, ctx: CollectContext) -> tuple[CollectedItem, 
         published_dt = _feed_date(published)
         if published_dt is not None and published_dt < cutoff:
             continue
-        items.append(
-            _item(spec, url=url, title=title, published_at=published, feed_summary=summary)
-        )
+        items.append(_item(spec, url=url, title=title, published_at=published, feed_summary=summary))
         if len(items) >= ctx.max_items:
             break
     return tuple(items)
@@ -238,20 +236,25 @@ def collect_blog_index(spec: BlogIndexSource, ctx: CollectContext) -> tuple[Coll
     ctx.probe.skipped_over_cap = max(0, len(urls) - spec.max_metadata_probes)
     items = []
     dated_pages = 0
-    for url in urls[:spec.max_metadata_probes]:
+    for url in urls[: spec.max_metadata_probes]:
         metadata = _probe(url, spec.url_prefix, ctx)
         date = parse_w3c_datetime(metadata.published_at)
         dated_pages += date is not None
         if date is None or not ctx.now - ctx.window <= date <= ctx.now:
             continue
         items.append(
-            _item(spec, url=url, title=metadata.title,
-                  published_at=metadata.published_at, feed_summary=metadata.description)
+            _item(
+                spec,
+                url=url,
+                title=metadata.title,
+                published_at=metadata.published_at,
+                feed_summary=metadata.description,
+            )
         )
     if ctx.probe.attempted and not dated_pages:
         raise ET.ParseError("No publication dates from blog metadata probes")
     items.sort(key=lambda item: parse_w3c_datetime(item.published_at), reverse=True)
-    return tuple(items[:ctx.max_items])
+    return tuple(items[: ctx.max_items])
 
 
 class _StoryCards(HTMLParser):
@@ -310,14 +313,11 @@ def collect_hermes_stories(spec: HermesStoriesSource, ctx: CollectContext) -> tu
             continue
         if url in ctx.known_urls:
             continue
-        items.append(
-            _item(spec, url=url, title=row.get("title"),
-                  published_at=published, feed_summary=None)
-        )
+        items.append(_item(spec, url=url, title=row.get("title"), published_at=published, feed_summary=None))
     if not dated_cards:
         raise ET.ParseError("No dated Hermes stories; directory markup may have changed")
     items.sort(key=lambda item: item.published_at or "", reverse=True)
-    return dedupe(items)[:ctx.max_items]
+    return dedupe(items)[: ctx.max_items]
 
 
 # --------------------------------------------------------------------------
@@ -333,9 +333,7 @@ class PageMetadata:
 
 _META_TAG = re.compile(r"<meta\b[^>]*>", re.I)
 _ATTR = re.compile(r"""([\w:-]+)\s*=\s*("([^"]*)"|'([^']*)')""")
-_LD_JSON = re.compile(
-    r"<script\b[^>]*type\s*=\s*[\"']application/ld\+json[\"'][^>]*>(.*?)</script>", re.I | re.S
-)
+_LD_JSON = re.compile(r"<script\b[^>]*type\s*=\s*[\"']application/ld\+json[\"'][^>]*>(.*?)</script>", re.I | re.S)
 _TITLE_TAG = re.compile(r"<title\b[^>]*>(.*?)</title>", re.I | re.S)
 _ARTICLE_TYPES = frozenset({"blogposting", "article", "newsarticle", "techarticle", "report"})
 
@@ -365,9 +363,7 @@ def read_head_metadata(body: bytes) -> PageMetadata:
 
     metas = _meta_attributes(head)
     title = title or _clean(metas.get("og:title")) or _clean(_first_group(_TITLE_TAG, head))
-    published_at = published_at or _clean(
-        metas.get("article:published_time") or metas.get("datePublished")
-    )
+    published_at = published_at or _clean(metas.get("article:published_time") or metas.get("datePublished"))
     description = description or _clean(metas.get("og:description") or metas.get("description"))
     return PageMetadata(
         title=title,
@@ -396,8 +392,7 @@ def _meta_attributes(head: str) -> dict[str, str]:
     found: dict[str, str] = {}
     for tag in _META_TAG.findall(head):
         attrs = {
-            name.lower(): (double if double is not None else single)
-            for name, _, double, single in _ATTR.findall(tag)
+            name.lower(): (double if double is not None else single) for name, _, double, single in _ATTR.findall(tag)
         }
         key = attrs.get("property") or attrs.get("name")
         content = attrs.get("content")
@@ -571,9 +566,7 @@ def collect_hackernews(spec: HackerNewsSource, ctx: CollectContext) -> tuple[Col
     return tuple(item for item, _ in ranked[: ctx.max_items])
 
 
-def collect_hf_papers(
-    spec: HuggingFacePapersSource, ctx: CollectContext
-) -> tuple[CollectedItem, ...]:
+def collect_hf_papers(spec: HuggingFacePapersSource, ctx: CollectContext) -> tuple[CollectedItem, ...]:
     # `?date=<today>` answers 400 until the day's list is published, so the
     # previous day is the working request for most of the morning. The fallback
     # chain is kept from the retired `src/fetch.py`.

@@ -17,38 +17,19 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterator, Callable, Mapping
-from dataclasses import dataclass
 from typing import Any
 
-from agent_daily_digest.contracts import ErrorKind
-from agent_daily_digest.observe import LLMInvocationError, LLMResponse, ModelUsage, invocation_error
-
-MIN_MAX_TURNS = 6
-DEFAULT_MAX_TURNS = 8
-DEFAULT_TIMEOUT_SECONDS = 300.0
+from agent_daily_digest.contracts.base import ErrorKind
+from agent_daily_digest.llm.call import (
+    LLMInvocationError,
+    LLMResponse,
+    StructuredRequest,
+    invocation_error,
+)
+from agent_daily_digest.llm.pricing import ModelUsage
 
 Query = Callable[..., AsyncIterator[Any]]
 """`claude_agent_sdk.query`, or a stand-in with the same keyword arguments."""
-
-
-@dataclass(frozen=True)
-class StructuredRequest:
-    """One request. `schema` is the JSON Schema the output must satisfy."""
-
-    model: str
-    system_prompt: str
-    prompt: str
-    schema: Mapping[str, Any]
-    max_turns: int = DEFAULT_MAX_TURNS
-    timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS
-    max_budget_usd: float | None = None
-    """Passed to the CLI, which stops the call once its list-price cost passes this."""
-
-    def __post_init__(self) -> None:
-        if self.max_turns < MIN_MAX_TURNS:
-            raise ValueError(f"max_turns below {MIN_MAX_TURNS} leaves no room for schema retries")
-        if self.timeout_seconds <= 0:
-            raise ValueError("timeout_seconds must be positive")
 
 
 def build_options(request: StructuredRequest) -> Any:
@@ -78,10 +59,10 @@ def invoke_structured(request: StructuredRequest, *, query: Query | None = None)
 
 async def run_structured(request: StructuredRequest, *, query: Query | None = None) -> LLMResponse:
     from claude_agent_sdk import (
+        ClaudeSDKError,
         CLIConnectionError,
         CLIJSONDecodeError,
         CLINotFoundError,
-        ClaudeSDKError,
         ProcessError,
         ResultError,
         ResultMessage,
@@ -146,7 +127,9 @@ def to_response(message: Any) -> LLMResponse:
     )
 
 
-def model_usages(model_usage: Mapping[str, Mapping[str, Any]] | None, usage: Mapping[str, Any] | None) -> tuple[ModelUsage, ...]:
+def model_usages(
+    model_usage: Mapping[str, Mapping[str, Any]] | None, usage: Mapping[str, Any] | None
+) -> tuple[ModelUsage, ...]:
     """Per-model usage. Falls back to the top-level `usage` when no breakdown came back."""
     if model_usage:
         return tuple(
@@ -178,11 +161,7 @@ def _int(value: Any) -> int:
 
 
 __all__ = [
-    "DEFAULT_MAX_TURNS",
-    "DEFAULT_TIMEOUT_SECONDS",
-    "MIN_MAX_TURNS",
     "Query",
-    "StructuredRequest",
     "build_options",
     "invoke_structured",
     "model_usages",

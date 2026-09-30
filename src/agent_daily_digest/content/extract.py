@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from html.parser import HTMLParser
 from typing import TypeVar
 
-from ._text import collapse_text, is_blank, normalize_block
+from agent_daily_digest.content.text import collapse_text, is_blank, normalize_block
 
 MAX_AUTHOR_CHARS = 100
 """An author is a name. A longer value is prose that landed in the wrong tag."""
@@ -30,14 +30,32 @@ _VOID_TAGS = frozenset(
 _SKIP_TAGS = frozenset(
     {
         # executable or non-textual
-        "script", "style", "noscript", "template", "svg", "math", "iframe", "object", "embed", "canvas",
+        "script",
+        "style",
+        "noscript",
+        "template",
+        "svg",
+        "math",
+        "iframe",
+        "object",
+        "embed",
+        "canvas",
         # interactive
-        "form", "select", "textarea", "button", "input", "label",
+        "form",
+        "select",
+        "textarea",
+        "button",
+        "input",
+        "label",
         # site chrome. A byline inside <header> is lost with it; the feed
         # already carries the title, and the author comes from <meta>.
-        "nav", "header", "footer", "aside",
+        "nav",
+        "header",
+        "footer",
+        "aside",
         # metadata, read through `_read_metadata` rather than as text
-        "head", "title",
+        "head",
+        "title",
     }
 )
 
@@ -52,8 +70,30 @@ _HEADINGS = {f"h{level}": level for level in range(1, 7)}
 
 _BLOCK_TAGS = frozenset(
     {
-        "address", "article", "blockquote", "dd", "div", "dl", "dt", "fieldset", "figcaption", "figure",
-        "hr", "li", "main", "ol", "p", "pre", "section", "table", "tbody", "td", "th", "thead", "tr", "ul",
+        "address",
+        "article",
+        "blockquote",
+        "dd",
+        "div",
+        "dl",
+        "dt",
+        "fieldset",
+        "figcaption",
+        "figure",
+        "hr",
+        "li",
+        "main",
+        "ol",
+        "p",
+        "pre",
+        "section",
+        "table",
+        "tbody",
+        "td",
+        "th",
+        "thead",
+        "tr",
+        "ul",
         *_HEADINGS,
     }
 )
@@ -182,9 +222,7 @@ class _Extractor(HTMLParser):
         skipped = self._skipping or tag in _SKIP_TAGS or hidden
         # `<head>` is skipped as text but is where metadata belongs, so the two
         # reasons to stop reading are tracked apart.
-        hides_metadata = (
-            self._hiding_metadata or hidden or (tag in _SKIP_TAGS and tag not in _METADATA_CONTAINERS)
-        )
+        hides_metadata = self._hiding_metadata or hidden or (tag in _SKIP_TAGS and tag not in _METADATA_CONTAINERS)
         # Whatever is buffered belongs to the element that is still open.
         if skipped or tag in _BLOCK_TAGS:
             self._flush()
