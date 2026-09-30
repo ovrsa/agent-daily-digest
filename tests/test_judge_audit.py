@@ -203,7 +203,7 @@ def test_each_target_shows_the_decision_the_entry_and_the_cited_source() -> None
 
 def test_the_prompt_audits_coding_and_personal_agent_articles() -> None:
     """#31: scope_fit judges against the reader who uses coding agents, and the headline is checked."""
-    assert PROMPT_VERSION == "judge-v3"
+    assert PROMPT_VERSION == "judge-v4"
     assert "OpenClaw" in SYSTEM_PROMPT and "Hermes Agent" in SYSTEM_PROMPT
     assert "Coding Agent を実装・運用する開発者" not in SYSTEM_PROMPT
     assert "headline" in SYSTEM_PROMPT
@@ -405,3 +405,15 @@ def test_finding_metrics_keep_the_classification_without_the_text() -> None:
 def test_the_audit_fixture_is_a_decision_the_selector_checks_accept() -> None:
     # The planted problems are the ones only an audit can catch.
     assert selection_issues(OUTPUT, {p.article_id: p for p in PACKETS}) == ()
+
+
+def test_judge_receives_topic_placement_with_original_evidence():
+    data = OUTPUT.model_dump(mode='json')
+    data['must_read'][0]['section'] = 'hermes_use_cases'
+    model = ScriptedModel({'findings': []})
+    result = judge(model).audit(SelectorOutput.model_validate(data), PACKETS)
+    assert result.succeeded
+    prompt = model.requests[0].prompt
+    assert 'editor_section: hermes_use_cases (Hermes系Agentの活用事例)' in prompt
+    assert 'editor_section: coding_agent (Coding Agent)' in prompt
+    assert '[harness_retry#main/p3#1]' in prompt

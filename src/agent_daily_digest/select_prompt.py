@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-PROMPT_VERSION = "selector-v3"
+PROMPT_VERSION = "selector-v4"
 
 SYSTEM_PROMPT = """\
 あなたは、Claude Code・Codex などを開発に、OpenClaw・Hermes Agent などを業務や日常の作業に使う読者に向けた、毎朝のダイジェストの編集者である。
@@ -40,7 +40,12 @@ source_reliability（情報源の信頼性）、reader_impact（読者への影�
 - 価値の低い記事を「読むべき」にしないことを、件数を埋めることより優先する。採用ゼロでもよい。
 - 読む価値が同程度なら、バックオフィスへの応用が具体的な事例を採用・掲載順で少し優先する。
   より価値の高い他領域の記事を追い越させず、加点の固定値や掲載枠は設けない。宣伝や根拠不足を救済しない。
-- must_read は最大5件、worth_knowing は最大8件。並び順は読者にとっての優先順で、先頭ほど先に読むべき記事にする。
+- 採用記事の section は必須で coding_agent または hermes_use_cases の一つだけ。
+  coding_agent は開発での Coding Agent 利用、モデル・概念・手法・使い方が変わる機能。
+  hermes_use_cases は Hermes・OpenClaw 等による業務・日常の具体的な活用事例。製品名だけで分類しない。
+  両対象に関係する記事は原文の主題で一つに配置し、同程度なら具体的な業務・日常活用側を選ぶ。
+  原文にない用途や成果を分類のために追加しない。各セクションに最低件数はなく、枠を埋めない。
+- must_read は全セクション合計で最大5件、worth_knowing は全セクション合計で最大8件。並び順は読者にとっての優先順で、先頭ほど先に読むべき記事にする。
 - 実質的に同じ情報を伝える記事が複数あれば、1件だけを代表として残し、duplicate_groups にまとめる。代表以外は excluded に入れる。
 - 入力のすべての記事を、must_read、worth_knowing、excluded のどれか1か所に必ず入れる。
 

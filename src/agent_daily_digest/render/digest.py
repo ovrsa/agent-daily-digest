@@ -18,6 +18,7 @@ from agent_daily_digest.contracts.articles import NormalizedArticle
 from agent_daily_digest.contracts.editorial import (
     MUST_READ_MAX,
     WORTH_KNOWING_MAX,
+    DigestSection,
     IncludedArticle,
     SelectorOutput,
     Tier,
@@ -113,13 +114,19 @@ def render_digest(
     ]
     numbered = list(enumerate(_running_order(selector_output), start=1))
     for number, (heading, included) in numbered:
-        lines += _overview_lines(number, heading, included, articles[included.article_id])
-    current = None
-    for number, (heading, included) in numbered:
-        if heading != current:
-            lines += ["", f"## {heading}"]
-            current = heading
-        lines += _entry_lines(number, included, articles[included.article_id])
+        label = f"{included.section.heading} / {heading}"
+        lines += _overview_lines(number, label, included, articles[included.article_id])
+    for section in DigestSection:
+        lines += ["", f"## {section.heading}"]
+        entries = [(number, heading, item) for number, (heading, item) in numbered if item.section is section]
+        if not entries:
+            lines += ["", "本日の採用記事はありません。"]
+        current = None
+        for number, heading, included in entries:
+            if heading != current:
+                lines += ["", f"### {heading}"]
+                current = heading
+            lines += _entry_lines(number, included, articles[included.article_id])
     return "\n".join(lines) + "\n"
 
 
@@ -138,7 +145,13 @@ def _bucket(selector_output: SelectorOutput, tier: Tier) -> tuple[IncludedArticl
 
 def _running_order(selector_output: SelectorOutput) -> list[tuple[str, IncludedArticle]]:
     """Every adopted article with its tier heading, numbered once for the overview and the body."""
-    return [(heading, included) for tier, heading, _cap in _TIERS for included in _bucket(selector_output, tier)]
+    return [
+        (heading, included)
+        for section in DigestSection
+        for tier, heading, _cap in _TIERS
+        for included in _bucket(selector_output, tier)
+        if included.section is section
+    ]
 
 
 def _overview_lines(number: int, heading: str, included: IncludedArticle, article: NormalizedArticle) -> list[str]:
@@ -155,7 +168,7 @@ def _entry_lines(number: int, included: IncludedArticle, article: NormalizedArti
     entry = included.entry
     lines = [
         "",
-        f"### {number}. {link(article.title, article.canonical_url)}",
+        f"#### {number}. {link(article.title, article.canonical_url)}",
         "",
         _meta_line(article),
     ]

@@ -70,6 +70,7 @@ def _included(article_id: str, reason: str, what: tuple[str, tuple[int, ...]], w
         "article_id": article_id,
         "scores": scores,
         "decision_reason": reason,
+        "section": "coding_agent",
         "entry": {
             "what_happened": {"text": what[0], "evidence_ids": [ids[i] for i in what[1]]},
             "why_read": why,

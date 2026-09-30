@@ -11,6 +11,7 @@
         "read_original_value": 5
       },
       "decision_reason": "Shows a reproducible change to a coding agent loop with measured results.",
+      "section": "coding_agent",
       "entry": {
         "headline": "Planning and execution split into separate sessions",
         "what_happened": {
@@ -41,6 +42,7 @@
         "read_original_value": 3
       },
       "decision_reason": "Adds a permission boundary option that changes tool configuration.",
+      "section": "coding_agent",
       "entry": {
         "headline": "Per-tool permission scopes added",
         "what_happened": {

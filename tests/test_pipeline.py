@@ -72,8 +72,8 @@ def test_a_run_publishes_the_digest_and_posts_the_report_on_its_commit(tmp_path)
     assert (metrics.published_must_read_count, metrics.published_worth_knowing_count) == (1, 0)
     assert [f.finding_id for f in metrics.judge_findings] == ["J1"]
     digest = (digests / "2026-09-25.md").read_text(encoding="utf-8")
-    assert digest.count("### 1. [Harness retry budget") == 1  # one article, under its heading once
-    assert digest.count("1. **Must Read** [Harness retry budget") == 1  # and once in the overview
+    assert digest.count("#### 1. [Harness retry budget") == 1  # one article, under its heading once
+    assert digest.count("1. **Coding Agent / Must Read** [Harness retry budget") == 1  # and once in the overview
     # The Judge only comments: its suggested fix never reaches the published digest.
     assert "留保に、測定した実行の件数" not in digest and publisher.calls[1][1][0][0].read_text(encoding="utf-8") == digest
     assert "[2026-09-25](./2026-09-25.md)" in (digests / "README.md").read_text(encoding="utf-8")

@@ -41,8 +41,8 @@ def entry(article_id: str, *, what: tuple[int, ...] = (0,), evidence: tuple[int,
 def decision(**changes: Any) -> dict:
     """A decision that passes every rule. It adopts two articles and excludes the rest."""
     data = {
-        "must_read": [{"article_id": "harness_retry", "scores": SCORES, "decision_reason": "再現手順と数値がそろう。", "entry": entry("harness_retry")}],
-        "worth_knowing": [{"article_id": "dup_official", "scores": SCORES, "decision_reason": "公式の設定例がある。", "entry": entry("dup_official")}],
+        "must_read": [{"article_id": "harness_retry", "scores": SCORES, "decision_reason": "再現手順と数値がそろう。", "section": "coding_agent", "entry": entry("harness_retry")}],
+        "worth_knowing": [{"article_id": "dup_official", "scores": SCORES, "decision_reason": "公式の設定例がある。", "section": "coding_agent", "entry": entry("dup_official")}],
         "excluded": [
             {"article_id": a, "scores": LOW, "decision_reason": "対象外か根拠が弱い。"}
             for a in EXPECTED
@@ -135,13 +135,13 @@ def test_an_insufficient_or_supporting_article_cannot_be_adopted() -> None:
     data = decision()
     thin = next(e for e in data["excluded"] if e["article_id"] == "thin_post")
     data["excluded"].remove(thin)
-    data["worth_knowing"].append({"article_id": "thin_post", "scores": SCORES, "decision_reason": "x", "entry": entry("thin_post", evidence=(0,))})
+    data["worth_knowing"].append({"article_id": "thin_post", "scores": SCORES, "decision_reason": "x", "section": "coding_agent", "entry": entry("thin_post", evidence=(0,))})
     assert "insufficient_research_included" in issue_types(data)
 
     data = decision(duplicate_groups=[])
     hn = next(e for e in data["excluded"] if e["article_id"] == "dup_hn")
     data["excluded"].remove(hn)
-    data["worth_knowing"].append({"article_id": "dup_hn", "scores": SCORES, "decision_reason": "x", "entry": entry("dup_official")})
+    data["worth_knowing"].append({"article_id": "dup_hn", "scores": SCORES, "decision_reason": "x", "section": "coding_agent", "entry": entry("dup_official")})
     assert "supporting_article_included" in issue_types(data)
 
 
@@ -184,7 +184,7 @@ def test_the_order_of_each_tier_is_kept_as_the_reading_order() -> None:
 def test_the_prompt_tells_the_model_not_to_decide_by_the_total_score() -> None:
     assert "6軸の合計点では決めない" in SYSTEM_PROMPT
     assert "採用ゼロでもよい" in SYSTEM_PROMPT
-    assert "must_read は最大5件、worth_knowing は最大8件" in SYSTEM_PROMPT
+    assert "must_read は全セクション合計で最大5件、worth_knowing は全セクション合計で最大8件" in SYSTEM_PROMPT
 
 
 def test_the_ordinary_input_is_packets_and_partial_packets_add_their_paragraphs() -> None:
@@ -224,7 +224,7 @@ def test_entry_text_over_its_length_cap_is_rejected(field: str, limit: int) -> N
 
 def test_the_prompt_covers_coding_and_personal_agent_readers() -> None:
     """#31: the reader uses Claude Code, Codex or Hermes; agent internals and bug-fix notes are out."""
-    assert PROMPT_VERSION == "selector-v3"
+    assert PROMPT_VERSION == "selector-v4"
     assert "OpenClaw" in SYSTEM_PROMPT and "Hermes Agent" in SYSTEM_PROMPT
     for target in ("新しいモデル", "新しい概念や手法", "活用事例", "使い方が変わる新機能"):
         assert target in SYSTEM_PROMPT

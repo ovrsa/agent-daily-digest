@@ -107,7 +107,7 @@ def included_entry(**changes: Any) -> dict[str, Any]:
 
 
 def decision(*, adopt: bool = True) -> dict[str, Any]:
-    included = [{"article_id": "a001", "scores": SCORES, "decision_reason": "設定と比較の数値がそろう。", "entry": included_entry()}]
+    included = [{"article_id": "a001", "scores": SCORES, "decision_reason": "設定と比較の数値がそろう。", "section": "coding_agent", "entry": included_entry()}]
     excluded = [{"article_id": "a002", "scores": LOW, "decision_reason": "結果は別ページにあり、本文に具体的な根拠が無い。"}]
     if not adopt:
         excluded.append({"article_id": "a001", "scores": LOW, "decision_reason": "今日は採用しない。"})

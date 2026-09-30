@@ -11,6 +11,7 @@
         "read_original_value": 5
       },
       "decision_reason": "計画と実行の分割を、測定結果つきで再現できる粒度で示している。",
+      "section": "coding_agent",
       "entry": {
         "headline": "計画と実行を別セッションに分けた200件の比較",
         "what_happened": {
@@ -39,6 +40,7 @@
         "read_original_value": 3
       },
       "decision_reason": "ツール権限の設定方法が変わる。",
+      "section": "coding_agent",
       "entry": {
         "headline": "ツールごとの権限スコープの追加",
         "what_happened": {
@@ -64,6 +66,7 @@
         "read_original_value": 4
       },
       "decision_reason": "再試行上限の根拠を実測値に置き換えられる。",
+      "section": "coding_agent",
       "entry": {
         "headline": "再試行1回あたりのトークン数の実測",
         "what_happened": {
@@ -94,6 +97,7 @@
         "read_original_value": 3
       },
       "decision_reason": "キャッシュ前提のプロンプト設計を見直す材料になる。",
+      "section": "coding_agent",
       "entry": {
         "headline": "プロンプトキャッシュのヒット率の1週間の記録",
         "what_happened": {
@@ -119,6 +123,7 @@
         "read_original_value": 2
       },
       "decision_reason": "起動時間が問題になっている読者には更新の判断材料になる。",
+      "section": "coding_agent",
       "entry": {
         "headline": "リポジトリマップ生成のインクリメンタル化",
         "what_happened": {

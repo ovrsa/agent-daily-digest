@@ -44,8 +44,8 @@ def main() -> None:
         print(f"selector failed: {result.error}")
         return
     output = result.output
-    print("\n| article | expected | decision | tier / order | verdict |")
-    print("|---|---|---|---|---|")
+    print("\n| article | expected | decision | section | tier / order | verdict |")
+    print("|---|---|---|---|---|---|")
     for article_id, expected in EXPECTED.items():
         decision, tier = output.decision_of(article_id)
         order = ""
@@ -54,7 +54,8 @@ def main() -> None:
             order = f"{tier.value} #{[a.article_id for a in bucket].index(article_id) + 1}"
         chosen = "include" if decision.value == "included" else "exclude"
         verdict = "ok" if expected == chosen else ("review" if expected == "either" else "MISMATCH")
-        print(f"| {article_id} | {expected} | {chosen} | {order or '-'} | {verdict} |")
+        section = next((a.section.value for a in output.included if a.article_id == article_id), "-")
+        print(f"| {article_id} | {expected} | {chosen} | {section} | {order or '-'} | {verdict} |")
     print(f"\nduplicate groups: {[(g.representative_id, g.duplicate_ids) for g in output.duplicate_groups]}")
     for article in output.included:
         e = article.entry
