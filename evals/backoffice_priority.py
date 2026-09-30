@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT / "tests"))
 
 from selector_support import case, library, packet  # noqa: E402
 
-from agent_daily_digest.judge import Judge  # noqa: E402
+from agent_daily_digest.judge import Judge
 from agent_daily_digest.llm.client import invoke_structured
 from agent_daily_digest.llm.pricing import load_pricing
 from agent_daily_digest.select import Selector  # noqa: E402

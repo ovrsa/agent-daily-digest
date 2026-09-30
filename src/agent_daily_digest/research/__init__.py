@@ -9,9 +9,9 @@ Import from this package, not from its submodules.
   short quotes, never the full text
 """
 
-from .clusters import MIN_SHARED_TITLE_WORDS, OFFICIAL_SOURCE_PREFIXES, TITLE_SIMILARITY, Cluster, cluster_articles
+from agent_daily_digest.research.run import MIN_SHARED_TITLE_WORDS, OFFICIAL_SOURCE_PREFIXES, TITLE_SIMILARITY, Cluster, cluster_articles
 from ..config import RESEARCH_KEY, load_research_budget
-from .documents import render_article, render_reference, source_document, split_paragraphs
+from agent_daily_digest.research.evidence import render_article, render_reference, source_document, split_paragraphs
 from .extraction import (
     MAX_CLAIMS,
     MAX_CONCEPTS,
@@ -29,8 +29,8 @@ from .extraction import (
     accept,
     assess,
 )
-from .library import SourceLibrary, render_map, render_packet
-from .loop import DEFAULT_RETRY, Invoker, Researcher, ResearchInput, ResearchResult, resolve_links
+from agent_daily_digest.research.evidence import SourceLibrary, render_map, render_packet
+from agent_daily_digest.research.run import DEFAULT_RETRY, Invoker, Researcher, ResearchInput, ResearchResult, resolve_links
 from .prompt import PROMPT_VERSION, SYSTEM_PROMPT
 
 __all__ = [
