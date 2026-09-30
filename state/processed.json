@@ -1,10 +1,22 @@
 {
   "records": [
     {
+      "canonical_url": "https://appleinsider.com/articles/26/09/28/metas-new-ai-agent-blatantly-ignores-users-permissions",
+      "content_hash": "a7c32d6d1816e654ca3e36a9768ff2e82fc87eaf922d1a7d6bd4ee698bc00eb0",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
+      "last_decision": "excluded"
+    },
+    {
       "canonical_url": "https://claude.com/blog/build-plugins-for-claude",
       "content_hash": "374a6f2b2669fde9bd3470f8034e4c30110c45504196b2a0eb371eb8f107696a",
       "first_seen_at": "2026-09-29T00:19:45.019519Z",
       "last_decision": "included"
+    },
+    {
+      "canonical_url": "https://claude.com/blog/claude-code-on-the-web",
+      "content_hash": "fc0175493f02e2e947a4675fde5e8dca2c293e216ff963e1c01aa05109dc5dad",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
+      "last_decision": "excluded"
     },
     {
       "canonical_url": "https://claude.com/blog/claude-marketplace",
@@ -25,6 +37,12 @@
       "last_decision": "included"
     },
     {
+      "canonical_url": "https://claude.com/blog/cowork-is-now-claude",
+      "content_hash": "5114dea573a5a32a78cd7942c69770e40257274fa56c1f0a40dc11659ba16407",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
+      "last_decision": "excluded"
+    },
+    {
       "canonical_url": "https://claude.com/blog/how-coderabbit-power-digital-and-thoughtspot-scale-with-snowflake-and-vercel-on-claude-marketplace",
       "content_hash": "b51e709c4e5d0f3cb204aa08f446d069c73c140a347bd4b574d8561a8be4a2c6",
       "first_seen_at": "2026-09-29T00:19:45.019519Z",
@@ -35,6 +53,18 @@
       "content_hash": "084eb375b34ac5522f3b4c34d8b8683e9ca03afee92268b9c18530edcb5edb16",
       "first_seen_at": "2026-09-29T00:19:45.019519Z",
       "last_decision": "included"
+    },
+    {
+      "canonical_url": "https://claude.com/blog/the-ai-native-sdlc-playbook",
+      "content_hash": "7fd33b13678880092e58d57ba96913c74a818a104bf8263072480266351d862f",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
+      "last_decision": "included"
+    },
+    {
+      "canonical_url": "https://cursor.com/changelog/rollouts-and-security-reviewer",
+      "content_hash": "379768fbd295f6a1811dd330be98835f82e7b4197771367b6da0e25346eee2e2",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
+      "last_decision": "excluded"
     },
     {
       "canonical_url": "https://ghuntley.com/eighteen-month-recap/",
@@ -55,15 +85,45 @@
       "last_decision": "excluded"
     },
     {
+      "canonical_url": "https://lucumr.pocoo.org/2026/9/29/deser/",
+      "content_hash": "7cc1ed020d97d572b4f4e7f7c4bc7f8b16f1054d33188a675234988f9bf37dbb",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
+      "last_decision": "excluded"
+    },
+    {
       "canonical_url": "https://newsletter.pragmaticengineer.com/p/design-engineering-with-maggie-appleton",
       "content_hash": "8ea672d2e0b6360f30e16a77a7ab55d7fc85a55898a0e2e513fadf806f077d85",
       "first_seen_at": "2026-09-29T00:19:45.019519Z",
       "last_decision": "included"
     },
     {
+      "canonical_url": "https://newsletter.pragmaticengineer.com/p/shopify-native-mobile",
+      "content_hash": "830f3d8ca29c91f1e82bbee2165f7aaef95787992052b66299dc33d70750f542",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
+      "last_decision": "included"
+    },
+    {
       "canonical_url": "https://newsletter.pragmaticengineer.com/p/the-pulse-end-of-coding-by-hand",
       "content_hash": "aab222e7e6a48399501d58ec91ede89137da9811742c8c33885409d414d1107e",
       "first_seen_at": "2026-09-28T09:12:10.186203Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://openai.com/index/chatgpt-ads-expands-southeast-asia-taiwan/",
+      "content_hash": "5784697056606199ed38800e77ffe29a043f55d35abf1c982404281d6c359751",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://openai.com/index/introducing-dots/",
+      "content_hash": "6ad22ed40ce70d5b59a5bd29c3e78636cce5999b30ee516ea84ba8860740df5b",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://openai.com/index/introducing-gpt-6-1-sol/",
+      "content_hash": "fc1f900838e6be04a889a9cbfa30380720dacaae97f73bf3beadc18329e245a7",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
       "last_decision": "excluded"
     },
     {
@@ -169,6 +229,24 @@
       "last_decision": "excluded"
     },
     {
+      "canonical_url": "https://simonwillison.net/2026/Sep/29/anthropic-frontier-red-team/",
+      "content_hash": "0025dc0e6ef58fbb490d449c2fc0e623c50609b5e2979879040b98d0d907e1f3",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://simonwillison.net/2026/Sep/29/openai-devday-2026-live-blog/",
+      "content_hash": "df05273dc9d512c79681fd78211248c6183f2a466994ae1829b41680b5079764",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://status.claude.com/incidents/4xvtc2gnq73l",
+      "content_hash": "5f6e4fd9030796e9ab3f1aad37530c4a0a791b81eecbcf60036e446f91a01b3f",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
+      "last_decision": "excluded"
+    },
+    {
       "canonical_url": "https://syu-m-5151.hatenablog.com/entry/2026/09/23/123604",
       "content_hash": "69c30b0f711eb56b7c6bc38983d664a2102b8670111b409f3700bdae7a36bd11",
       "first_seen_at": "2026-09-29T00:19:45.019519Z",
@@ -205,6 +283,18 @@
       "last_decision": "excluded"
     },
     {
+      "canonical_url": "https://syu-m-5151.hatenablog.com/entry/2026/09/29/161928",
+      "content_hash": "8c9f0852319013a8c7c9108a74835a44735e0ab840df93169b88bb2444e5d792",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://www.latent.space/p/ainews-amd-buys-world-labs-for-82b",
+      "content_hash": "ef0baa0233842b7b169c4e65863d0c2344d939e2b9e77127379440a0520ec7e0",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
+      "last_decision": "included"
+    },
+    {
       "canonical_url": "https://www.latent.space/p/ainews-claude-opus-55-the-new-default",
       "content_hash": "5bd625ac845905c9ae1259903f75df979b31949123112e894f4ad53a9af33a1c",
       "first_seen_at": "2026-09-29T00:19:45.019519Z",
@@ -214,6 +304,12 @@
       "canonical_url": "https://www.latent.space/p/ainews-meta-connect-2026-muse-glasses",
       "content_hash": "4add96063160515dfb17784817cf2116d49e16d8e4a30f1ead4c8c6d6e28a967",
       "first_seen_at": "2026-09-29T00:19:45.019519Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://www.latent.space/p/ainews-opus-55-is-good-at-explainer",
+      "content_hash": "2c21026a479246c4ed0e5b93b078e6b5e2f14a6dd1d614ac5274df8b271f3385",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
       "last_decision": "excluded"
     },
     {
@@ -247,6 +343,24 @@
       "last_decision": "included"
     },
     {
+      "canonical_url": "https://www.latent.space/p/thariq",
+      "content_hash": "029ae5754772b49ec4fe7035043fa3496762014a4781d354ead0f76af7c17e6a",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
+      "last_decision": "included"
+    },
+    {
+      "canonical_url": "https://www.reddit.com/r/ClaudeAI/comments/1wtagdd/sonnet_55_did_this_opus_55_quality_with_half_price/",
+      "content_hash": "6130cfada2a26bab550ce23179ad6e6bc3dac776a22e5fae4d0adcd68476e803",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
+      "last_decision": "excluded"
+    },
+    {
+      "canonical_url": "https://www.reddit.com/r/codex/comments/1wtgv3z/dev_day_l/",
+      "content_hash": "fca7b1330dafe6c63e1c7926eaf6b915c071ea44d2e600ddfad342a2d6214338",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
+      "last_decision": "excluded"
+    },
+    {
       "canonical_url": "https://www.seangoedecke.com/advice-to-a-beginning-software-engineer/",
       "content_hash": "743bb9f0430eb3ac0e0f3ba309ebbe390d39bedf3a8bb28fe3d09767206ae90b",
       "first_seen_at": "2026-09-28T09:12:10.186203Z",
@@ -263,6 +377,12 @@
       "content_hash": "ea3ae5dc5bf8f0212b2de292d4ea371e8cff971d592180764c3f79fea8b5a425",
       "first_seen_at": "2026-09-28T09:12:10.186203Z",
       "last_decision": "included"
+    },
+    {
+      "canonical_url": "https://x.com/thsottiaux/status/2104823812042940713",
+      "content_hash": "ef1f4944fa8dbb4bb4da714e5a703564c6045e910a003ffee4e69a92b2ced58b",
+      "first_seen_at": "2026-09-30T00:20:37.622092Z",
+      "last_decision": "excluded"
     },
     {
       "canonical_url": "https://zenn.dev/mizchi/articles/rust-mutants-proptest-kani",
