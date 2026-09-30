@@ -4,42 +4,11 @@ Import from this package, not from its submodules. Everything listed in
 `__all__` is the public API that later issues build on.
 """
 
-from ._base import (
-    ArticleId,
-    ContentHash,
-    ContractModel,
-    HttpUrlStr,
-    InvalidTransitionError,
-    NonBlankStr,
-    SourceId,
-    compute_content_hash,
-)
-from .articles import (
-    BodySource,
-    CollectedItem,
-    NormalizedArticle,
-    ProcessedRecord,
-    ProcessedState,
-    SourceFetchResult,
-    SourceFetchStatus,
-    SourceKind,
-    SourceMetrics,
-)
-from .errors import ERROR_DETAIL_MAX_CHARS, ErrorKind, ErrorRecord, ValidationIssue
-from .gates import GATE_ORDER, GATE_REASONS, GateExclusionReason, GateName, GateOutcome, GateResult
-from .judge import (
-    BOUNDARY_EXCLUDED_AUDIT_MAX,
-    SOURCE_EVIDENCE_MAX_CHARS,
-    AuditCategory,
-    AuditTargetKind,
-    Confidence,
-    FindingAssessment,
-    FindingMetrics,
-    ImprovementCandidate,
-    JudgeFinding,
-    JudgeReport,
-    Severity,
-)
+from agent_daily_digest.contracts.base import ArticleId, ContentHash, ContractModel, HttpUrlStr, InvalidTransitionError, NonBlankStr, SourceId, compute_content_hash
+from agent_daily_digest.contracts.articles import BodySource, CollectedItem, NormalizedArticle, ProcessedRecord, ProcessedState, SourceFetchResult, SourceFetchStatus, SourceKind, SourceMetrics
+from agent_daily_digest.contracts.base import ERROR_DETAIL_MAX_CHARS, ErrorKind, ErrorRecord, ValidationIssue
+from agent_daily_digest.contracts.articles import GATE_ORDER, GATE_REASONS, GateExclusionReason, GateName, GateOutcome, GateResult
+from agent_daily_digest.contracts.editorial import BOUNDARY_EXCLUDED_AUDIT_MAX, SOURCE_EVIDENCE_MAX_CHARS, AuditCategory, AuditTargetKind, Confidence, FindingAssessment, FindingMetrics, ImprovementCandidate, JudgeFinding, JudgeReport, Severity
 from .metrics import (
     ALLOWED_RUN_TRANSITIONS,
     ALLOWED_STAGE_TRANSITIONS,
@@ -83,21 +52,7 @@ from .research import (
     make_evidence_id,
     parse_evidence_id,
 )
-from .selection import (
-    MUST_READ_MAX,
-    WORTH_KNOWING_MAX,
-    AxisScores,
-    CaveatStatement,
-    Decision,
-    DigestEntry,
-    DuplicateGroup,
-    EvidenceRef,
-    ExcludedArticle,
-    FactStatement,
-    IncludedArticle,
-    SelectorOutput,
-    Tier,
-)
+from agent_daily_digest.contracts.editorial import MUST_READ_MAX, WORTH_KNOWING_MAX, AxisScores, CaveatStatement, Decision, DigestEntry, DuplicateGroup, EvidenceRef, ExcludedArticle, FactStatement, IncludedArticle, SelectorOutput, Tier
 
 __all__ = [
     "ALLOWED_RUN_TRANSITIONS",

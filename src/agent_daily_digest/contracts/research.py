@@ -22,8 +22,8 @@ from typing import Annotated
 
 from pydantic import AwareDatetime, Field, StringConstraints, model_validator
 
-from ._base import ArticleId, ContractModel, HttpUrlStr, NonBlankStr, NonNegativeInt, SourceId, first_duplicate
-from .articles import SourceKind
+from agent_daily_digest.contracts.base import ArticleId, ContractModel, HttpUrlStr, NonBlankStr, NonNegativeInt, SourceId, first_duplicate
+from agent_daily_digest.contracts.articles import SourceKind
 
 EVIDENCE_QUOTE_MAX_CHARS = 300
 """A quote is a pointer into the source, not a copy of it."""
