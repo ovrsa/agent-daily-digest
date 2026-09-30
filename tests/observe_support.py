@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from agent_daily_digest.observe import ModelPrice, PricingTable
+from agent_daily_digest.llm.pricing import ModelPrice, PricingTable
 
 START = datetime(2026, 9, 24, 23, 0, 0, tzinfo=timezone.utc)
 

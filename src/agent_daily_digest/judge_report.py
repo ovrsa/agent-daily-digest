@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 
 from agent_daily_digest.contracts import AuditTargetKind, EvidencePacket, FindingMetrics, JudgeFinding, JudgeReport, Severity
-from agent_daily_digest.observe import redact_secrets
+from agent_daily_digest.observe.store import redact_secrets
 from agent_daily_digest.render import inline, link
 
 from .judge import JudgeResult

@@ -10,16 +10,8 @@ import pytest
 
 import factories as f
 from agent_daily_digest.contracts import ErrorKind, ErrorRecord, RunMetrics, StageName
-from agent_daily_digest.observe import (
-    DEFAULT_METRICS_DIR,
-    MetricsLeakError,
-    MetricsStore,
-    RunRecorder,
-    find_leaks,
-    metrics_filename,
-    redact_secrets,
-    safe_detail,
-)
+from agent_daily_digest.observe.store import DEFAULT_METRICS_DIR, MetricsLeakError, MetricsStore, find_leaks, metrics_filename, redact_secrets, safe_detail
+from agent_daily_digest.observe.recorder import RunRecorder
 from observe_support import START, FakeClock
 
 REPO = Path(__file__).resolve().parents[1]

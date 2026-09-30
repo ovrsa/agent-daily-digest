@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from agent_daily_digest.contracts import ErrorKind
-from agent_daily_digest.observe import StageFailed
+from agent_daily_digest.observe.recorder import StageFailed
 from agent_daily_digest import DRY_RUN_COMMIT, CommandFailed, DryRunPublisher, GitPublisher, run_command
 
 

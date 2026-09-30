@@ -46,7 +46,7 @@ from agent_daily_digest.contracts import (
     make_evidence_id,
     parse_evidence_id,
 )
-from agent_daily_digest.observe import OutputRejected
+from agent_daily_digest.llm.call import OutputRejected
 
 MAX_EVIDENCE = 24
 MAX_CLAIMS = 10

@@ -39,13 +39,10 @@ from agent_daily_digest.contracts import (
     StageStatus,
 )
 
-from .safety import describe_exception, safe_detail
-
-Clock = Callable[[], datetime]
+from .store import Clock, utc_now, describe_exception, safe_detail
 
 
-def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+
 
 
 TOLERATED_STAGE_FAILURES = frozenset({StageName.JUDGE, StageName.COMMENT})

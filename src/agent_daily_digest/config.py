@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from agent_daily_digest.contracts import ResearchBudget
-from agent_daily_digest.observe import MODELS_KEY
+from agent_daily_digest.llm.pricing import MODELS_KEY
 
 RUN_KEY = "run"
 RESEARCH_KEY = "research"

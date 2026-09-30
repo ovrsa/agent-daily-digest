@@ -1,4 +1,4 @@
-"""The package surfaces of `agent_daily_digest.observe` and `agent_daily_digest.llm`, and the SDK boundary between them."""
+"""The package surfaces of `agent_daily_digest.observe` and `agent_daily_digest.llm.client`, and the SDK boundary between them."""
 
 from __future__ import annotations
 
@@ -8,11 +8,11 @@ from pathlib import Path
 
 import pytest
 
-import agent_daily_digest.llm
+import agent_daily_digest.llm.client
 import agent_daily_digest.observe
 
 
-@pytest.mark.parametrize("package", [agent_daily_digest.observe, agent_daily_digest.llm])
+@pytest.mark.parametrize("package", [agent_daily_digest.observe, agent_daily_digest.llm.client])
 def test_all_names_resolve_and_are_unique(package) -> None:
     names = package.__all__
     assert len(names) == len(set(names))
@@ -33,4 +33,4 @@ def test_observe_never_imports_the_sdk() -> None:
 
 
 def test_importing_the_adapter_does_not_load_the_sdk() -> None:
-    assert "claude_agent_sdk" not in loaded_modules("agent_daily_digest.llm")
+    assert "claude_agent_sdk" not in loaded_modules("agent_daily_digest.llm.client")

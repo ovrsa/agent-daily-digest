@@ -23,7 +23,7 @@ from agent_daily_digest.contracts import (
     StageName,
     StageStatus,
 )
-from agent_daily_digest.observe import RunAborted, RunRecorder, StageFailed, article_metrics, derive_status, new_run_id
+from agent_daily_digest.observe.recorder import RunAborted, RunRecorder, StageFailed, article_metrics, derive_status, new_run_id
 from observe_support import START, FakeClock
 
 SELECTOR_FIXTURE = Path(__file__).parent / "fixtures" / "selector_output.valid.json"

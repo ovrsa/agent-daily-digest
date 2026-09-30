@@ -21,7 +21,7 @@ from agent_daily_digest.contracts import (
 )
 from agent_daily_digest.state import ProcessedIndex
 from agent_daily_digest.content.extract import extract_document
-from agent_daily_digest.observe import LLMResponse
+from agent_daily_digest.llm.call import LLMResponse
 from agent_daily_digest.research import Researcher, ResearchInput, render_packet
 from observe_support import PRICING
 from research_support import (

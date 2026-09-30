@@ -22,7 +22,8 @@ from pathlib import Path
 from typing import Protocol
 
 from agent_daily_digest.contracts import ErrorKind
-from agent_daily_digest.observe import StageFailed, safe_detail
+from agent_daily_digest.observe.recorder import StageFailed
+from agent_daily_digest.observe.store import safe_detail
 
 COMMAND_TIMEOUT_SECONDS = 120.0
 

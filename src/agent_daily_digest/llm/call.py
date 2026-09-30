@@ -4,7 +4,7 @@ Research, Selector and Judge each make their call through `measured_call`. It
 times each attempt, prices it, classifies its failure, retries within a fixed
 policy and hands the finished `LLMCallMetrics` to the recorder, including when
 the call is interrupted. The provider is behind `Invoke`, so this module never
-imports the SDK: `agent_daily_digest.llm` supplies the real invoker and tests supply fakes.
+imports the SDK: `agent_daily_digest.llm.client` supplies the real invoker and tests supply fakes.
 
 How a response is judged comes from the #2 spike, not from the SDK's own flags:
 
@@ -19,13 +19,11 @@ from __future__ import annotations
 
 import asyncio
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Generic, TypeVar
-
 from pydantic import ValidationError
-
 from agent_daily_digest.contracts import (
     AttemptStatus,
     ErrorKind,
@@ -35,10 +33,40 @@ from agent_daily_digest.contracts import (
     LLMRole,
     ValidationIssue,
 )
+from agent_daily_digest.observe.recorder import Clock, utc_now
+from agent_daily_digest.llm.pricing import ModelUsage, PricingTable, estimate_cost, token_usage
+from agent_daily_digest.observe.store import describe_exception, safe_detail
 
-from .recorder import Clock, utc_now
-from .pricing import ModelUsage, PricingTable, estimate_cost, token_usage
-from .safety import describe_exception, safe_detail
+
+MIN_MAX_TURNS = 6
+
+
+DEFAULT_MAX_TURNS = 8
+
+
+DEFAULT_TIMEOUT_SECONDS = 300.0
+
+
+@dataclass(frozen=True)
+class StructuredRequest:
+    """One request. `schema` is the JSON Schema the output must satisfy."""
+
+    model: str
+    system_prompt: str
+    prompt: str
+    schema: Mapping[str, Any]
+    max_turns: int = DEFAULT_MAX_TURNS
+    timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS
+    max_budget_usd: float | None = None
+    """Passed to the CLI, which stops the call once its list-price cost passes this."""
+
+    def __post_init__(self) -> None:
+        if self.max_turns < MIN_MAX_TURNS:
+            raise ValueError(f"max_turns below {MIN_MAX_TURNS} leaves no room for schema retries")
+        if self.timeout_seconds <= 0:
+            raise ValueError("timeout_seconds must be positive")
+
+
 
 T = TypeVar("T")
 

@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 
 from agent_daily_digest.contracts import ErrorKind, LLMCallMetrics, LLMRole, SelectorOutput
-from agent_daily_digest.observe import RetryPolicy
+from agent_daily_digest.llm.call import RetryPolicy
 from agent_daily_digest.select import PROMPT_VERSION, SYSTEM_PROMPT, Selector, selection_issues
 from observe_support import PRICING
 from research_support import ScriptedModel

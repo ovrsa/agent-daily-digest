@@ -22,8 +22,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tests"))
 
 from agent_daily_digest.judge import Judge, render_report  # noqa: E402
-from agent_daily_digest.llm import invoke_structured  # noqa: E402
-from agent_daily_digest.observe import load_pricing  # noqa: E402
+from agent_daily_digest.llm.client import invoke_structured
+from agent_daily_digest.llm.pricing import load_pricing
 from judge_support import CONTROL, KNOWN_ISSUES, OUTPUT, PACKETS, library  # noqa: E402
 
 
