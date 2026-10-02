@@ -34,6 +34,17 @@ class Tier(str, Enum):
     WORTH_KNOWING = "worth_knowing"
 
 
+class DigestSection(str, Enum):
+    """掲載先は主題で一つ選ぶ。両対象が同程度なら業務・日常の活用側。"""
+
+    CODING_AGENT = "coding_agent"
+    HERMES_USE_CASES = "hermes_use_cases"
+
+    @property
+    def heading(self) -> str:
+        return "Coding Agent" if self is DigestSection.CODING_AGENT else "Hermes系Agentの活用事例"
+
+
 class AxisScores(ContractModel):
     """Six-axis 1-5 evaluation. The contract does not define a total score."""
 
@@ -97,6 +108,7 @@ class IncludedArticle(ContractModel):
     article_id: ArticleId
     scores: AxisScores
     decision_reason: NonBlankStr
+    section: DigestSection = Field(description="原文の主題に対応する掲載先。同程度ならHermes系の業務・日常活用側")
     entry: DigestEntry
 
 

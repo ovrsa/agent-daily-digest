@@ -311,7 +311,41 @@ CASES += (
     ),
 )
 
+# #43: 同じ製品名を含んでも、原文の主題で掲載先を選ぶ。
+CASES += (
+    case(
+        "overlap_coding",
+        "Codex development with Hermes reminders",
+        evidence=(
+            ("procedure", "The team used Codex worktrees to implement and review five features; Hermes only sent daily development reminders."),
+            ("failure", "Two concurrent Codex agents edited one migration, so a person rebuilt the second change."),
+        ),
+        claims=(("what_happened", "チームはCodexで5機能を実装し、Hermesは開発のリマインダーを送った。", (0,), False, ()),),
+    ),
+    case(
+        "overlap_equal",
+        "Codex invoice parser and Hermes invoice intake",
+        evidence=(
+            ("procedure", "The author gives equal space to using Codex to build an invoice parser and using Hermes to process the invoices each morning."),
+            ("config", "Hermes receives invoices in a dedicated inbox and creates draft ledger rows; a person checks each row before posting."),
+            ("failure", "An invoice without a purchase order was held for a person rather than posted automatically."),
+        ),
+        claims=(("what_happened", "著者はCodexによる請求書パーサー作成と、Hermesによる毎朝の請求書処理を同程度に紹介した。", (0, 1), False, ()),),
+    ),
+)
+
+EXPECTED_SECTIONS = {
+    "invoice_intake": "hermes_use_cases",
+    "apartment_alerts": "hermes_use_cases",
+    "new_model": "coding_agent",
+    "usage_case": "coding_agent",
+    "overlap_coding": "coding_agent",
+    "overlap_equal": "hermes_use_cases",
+}
+
 EXPECTED: dict[str, str] = {
+    "overlap_coding": "include",
+    "overlap_equal": "include",
     "invoice_intake": "include",
     "apartment_alerts": "include",
     "backoffice_promo": "exclude",

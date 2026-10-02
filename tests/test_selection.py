@@ -304,4 +304,4 @@ class TestSelectorStructuredOutput:
 
     def test_scores_come_before_reason_and_entry(self) -> None:
         included_def = self.schema["$defs"]["IncludedArticle"]
-        assert list(included_def["properties"]) == ["article_id", "scores", "decision_reason", "entry"]
+        assert list(included_def["properties"]) == ["article_id", "scores", "decision_reason", "section", "entry"]

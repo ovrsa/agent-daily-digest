@@ -48,12 +48,12 @@ def test_the_running_order_is_the_order_selector_returned() -> None:
     payload["must_read"] = list(reversed(payload["must_read"]))
     rendered = f.render(SelectorOutput.model_validate(payload))
     assert rendered is not None
-    headings = [line for line in rendered.splitlines() if line.startswith("### ")]
-    assert headings[0].startswith("### 1. [Measuring retry cost")
-    assert headings[2].startswith("### 3. [Splitting plan and act")
+    headings = [line for line in rendered.splitlines() if line.startswith("#### ")]
+    assert headings[0].startswith("#### 1. [Measuring retry cost")
+    assert headings[2].startswith("#### 3. [Splitting plan and act")
     listed = [line for line in _overview(rendered).splitlines() if line[:1].isdigit()]
-    assert listed[0].startswith("1. **Must Read** [Measuring retry cost")
-    assert listed[2].startswith("3. **Must Read** [Splitting plan and act")
+    assert listed[0].startswith("1. **Coding Agent / Must Read** [Measuring retry cost")
+    assert listed[2].startswith("3. **Coding Agent / Must Read** [Splitting plan and act")
 
 
 def test_the_overview_lists_every_adopted_article_with_its_tier_and_headline() -> None:
@@ -61,7 +61,7 @@ def test_the_overview_lists_every_adopted_article_with_its_tier_and_headline() -
     assert rendered is not None
     overview = _overview(rendered)
     assert overview.startswith("## 今日の一覧\n")
-    assert rendered.index("## 今日の一覧") < rendered.index("## Must Read")
+    assert rendered.index("## 今日の一覧") < rendered.index("### Must Read")
     for number, (tier, article_id) in enumerate(
         [("Must Read", a) for a in ("a001", "a002", "a003")] + [("Worth Knowing", a) for a in ("a004", "a005")],
         start=1,
@@ -70,7 +70,7 @@ def test_the_overview_lists_every_adopted_article_with_its_tier_and_headline() -
         headline = next(
             a.entry.headline for a in f.selector_output().included if a.article_id == article_id
         )
-        assert f"{number}. **{tier}** " in overview
+        assert f"{number}. **Coding Agent / {tier}** " in overview
         assert f"\n{' ' * len(f'{number}. ')}{headline}\n" in overview
         assert article.canonical_url in overview
 
@@ -86,10 +86,10 @@ def test_the_overview_breaks_the_line_between_the_title_and_the_headline() -> No
 def test_the_article_numbers_run_on_across_the_tiers() -> None:
     rendered = f.render()
     assert rendered is not None
-    headings = [line.split(" ", 2)[1] for line in rendered.splitlines() if line.startswith("### ")]
+    headings = [line.split(" ", 2)[1] for line in rendered.splitlines() if line.startswith("#### ")]
     assert headings == ["1.", "2.", "3.", "4.", "5."]
-    worth_knowing = rendered.split("## Worth Knowing", 1)[1]
-    assert worth_knowing.lstrip().startswith("### 4. ")
+    worth_knowing = rendered.split("### Worth Knowing", 1)[1]
+    assert worth_knowing.lstrip().startswith("#### 4. ")
 
 
 def test_a_full_digest_indents_each_headline_by_the_width_of_its_number() -> None:
@@ -105,10 +105,10 @@ def test_a_full_digest_indents_each_headline_by_the_width_of_its_number() -> Non
     }
     rendered = f.render(SelectorOutput.model_validate(payload), articles=articles)
     assert rendered is not None
-    assert "\n9. **Worth Knowing** " in rendered and "\n   要点 w3\n" in rendered
-    assert "\n10. **Worth Knowing** " in rendered and "\n    要点 w4\n" in rendered
-    assert "\n13. **Worth Knowing** " in rendered and "\n    要点 w7\n" in rendered
-    assert "\n### 13. [" in rendered
+    assert "\n9. **Coding Agent / Worth Knowing** " in rendered and "\n   要点 w3\n" in rendered
+    assert "\n10. **Coding Agent / Worth Knowing** " in rendered and "\n    要点 w4\n" in rendered
+    assert "\n13. **Coding Agent / Worth Knowing** " in rendered and "\n    要点 w7\n" in rendered
+    assert "\n#### 13. [" in rendered
 
 
 def test_a_newline_in_a_headline_stays_on_its_line() -> None:
@@ -141,8 +141,8 @@ def test_a_tier_with_no_entries_gets_no_heading() -> None:
     payload["worth_knowing"] = []
     rendered = f.render(SelectorOutput.model_validate(payload))
     assert rendered is not None
-    assert "## Must Read" in rendered
-    assert "## Worth Knowing" not in rendered
+    assert "### Must Read" in rendered
+    assert "### Worth Knowing" not in rendered
 
 
 @pytest.mark.parametrize(
@@ -214,7 +214,7 @@ def test_an_author_is_shown_only_when_the_article_has_one() -> None:
 def test_markdown_syntax_in_a_title_is_escaped_and_the_url_is_kept() -> None:
     rendered = f.render()
     assert rendered is not None
-    assert "### 2. [Per-tool permission scopes \\[v0.9\\]]" in rendered
+    assert "#### 2. [Per-tool permission scopes \\[v0.9\\]]" in rendered
     assert "(<https://example.com/releases/(2026-09-16)>)" in rendered
 
 
@@ -236,7 +236,7 @@ def test_a_newline_in_a_title_cannot_open_a_new_section() -> None:
     articles["a001"] = f.normalized_article(title="Plan and act\n## injected heading")
     rendered = f.render(articles=articles)
     assert rendered is not None
-    assert "### 1. [Plan and act ## injected heading]" in rendered
+    assert "#### 1. [Plan and act ## injected heading]" in rendered
     assert "\n## injected heading" not in rendered
 
 
@@ -279,10 +279,10 @@ def test_the_filename_is_the_digest_date() -> None:
 
 
 def _overview(rendered: str) -> str:
-    return rendered[rendered.index("## 今日の一覧") : rendered.index("## Must Read")]
+    return rendered[rendered.index("## 今日の一覧") : rendered.index("## Coding Agent")]
 
 
 def _section(rendered: str, title_fragment: str) -> str:
     # The first chunk is the front matter and the overview, which lists every title too.
-    sections = rendered.split("\n### ")[1:]
+    sections = rendered.split("\n#### ")[1:]
     return next(s for s in sections if title_fragment in s)

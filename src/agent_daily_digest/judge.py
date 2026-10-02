@@ -208,6 +208,7 @@ def _decision_lines(output: SelectorOutput, target: AuditTarget) -> list[str]:
     if isinstance(article, IncludedArticle):
         entry = article.entry
         lines += [
+            f"editor_section: {article.section.value} ({article.section.heading})",
             "entry:",
             f"- what_happened: {_statement(entry.what_happened)}",
             f"- why_read: {escape_untrusted(entry.why_read)}",
